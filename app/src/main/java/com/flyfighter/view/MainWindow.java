@@ -1,6 +1,7 @@
 package com.flyfighter.view;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.media.MediaPlayer;
@@ -12,7 +13,10 @@ import android.widget.FrameLayout;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 
+import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class MainWindow extends FrameLayout {
 
@@ -56,13 +60,17 @@ public class MainWindow extends FrameLayout {
     private void loadSound() {
         AssetManager assets = mContext.getAssets();
         try {
+            soundPlayer[0] = new MediaPlayer();
+            soundPlayer[1] = new MediaPlayer();
+
             soundPlayer[0].setDataSource(assets.openFd("sound/0menuselect.wav"));
             soundPlayer[1].setDataSource(assets.openFd("sound/13menumusic.wav"));
 
             soundPlayer[1].setVolume(RMS.volume, RMS.volume);
+            soundPlayer[1].prepare();
             soundPlayer[1].setLooping(true);
             soundPlayer[1].start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

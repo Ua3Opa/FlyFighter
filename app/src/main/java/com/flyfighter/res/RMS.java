@@ -19,8 +19,8 @@ public class RMS {
 
     public static void readConfigData() {
         init();
-        loadSound = MMKV.defaultMMKV().decodeBool("loadSound");
-        volume = MMKV.defaultMMKV().decodeFloat("loadSound",0.5f);
+        loadSound = MMKV.defaultMMKV().decodeBool("loadSound",true);
+        volume = MMKV.defaultMMKV().decodeFloat("loadSound",0.3f);
     }
 
 
