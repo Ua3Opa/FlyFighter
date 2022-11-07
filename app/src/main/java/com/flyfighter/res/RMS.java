@@ -12,6 +12,7 @@ public class RMS {
     public static int[] gConfigData = new int[3];
     public static boolean loadSound;
     public static float volume;
+    public static int difficulty;
     public static byte lastScoreIndex;
     private static List<PlayRecord> playRecords = new ArrayList<>();
     private static int aint;
@@ -19,8 +20,9 @@ public class RMS {
 
     public static void readConfigData() {
         init();
-        loadSound = MMKV.defaultMMKV().decodeBool("loadSound",true);
-        volume = MMKV.defaultMMKV().decodeFloat("loadSound",0.3f);
+        loadSound = MMKV.defaultMMKV().decodeBool("loadSound", true);
+        volume = MMKV.defaultMMKV().decodeFloat("loadSound", 0.3f);
+        difficulty = MMKV.defaultMMKV().decodeInt("difficulty", 1);
     }
 
 

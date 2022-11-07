@@ -1,22 +1,25 @@
 package com.flyfighter.view;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TableRow;
 
+import com.flyfighter.menu.GameCanvas;
+import com.flyfighter.menu.MainMenu;
+import com.flyfighter.menu.MainMenuBackground;
+import com.flyfighter.menu.SelectPlayerMenu;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
-
-import java.io.FileInputStream;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class MainWindow extends FrameLayout {
 
@@ -24,7 +27,7 @@ public class MainWindow extends FrameLayout {
     public static int windowWidth;
     public static int windowHeight;
 
-    MediaPlayer[] soundPlayer = new MediaPlayer[2];
+    public static MediaPlayer[] soundPlayer = new MediaPlayer[2];
 
     public MainWindow(Context context) {
         this(context, null);
@@ -52,27 +55,52 @@ public class MainWindow extends FrameLayout {
         windowHeight = metrics.heightPixels;
         ResInit.loadPicInit(context);
         RMS.readConfigData();
-        if (RMS.loadSound) {
-            loadSound();
+        loadMainMenu();
+    }
+
+    private void loadMainMenu() {
+        addView(new MainMenuBackground(mContext));
+        addView(new MainMenu(mContext), buildCenterLayoutParams());
+    }
+
+
+    public void handleMenuClicked(int position) {
+        switch (position) {
+            case 0://开始游戏-先选择角色
+                addView(new SelectPlayerMenu(mContext), buildCenterLayoutParams());
+                break;
+            case 1://游戏设置
+                break;
+            case 2://战绩排行
+                break;
+            case 3://游戏说明
+                break;
+            case 4://退出游戏
+                ((Activity) mContext).finish();
+                break;
+            default:
+                break;
+
         }
     }
 
-    private void loadSound() {
-        AssetManager assets = mContext.getAssets();
-        try {
-            soundPlayer[0] = new MediaPlayer();
-            soundPlayer[1] = new MediaPlayer();
+    public void startGame(SelectPlayerMenu menu, int player) {
+        removeView(menu);
+        stopPlayMedia();
+        addView(new GameCanvas(mContext, player));
+    }
 
-            soundPlayer[0].setDataSource(assets.openFd("sound/0menuselect.wav"));
-            soundPlayer[1].setDataSource(assets.openFd("sound/13menumusic.wav"));
-
-            soundPlayer[1].setVolume(RMS.volume, RMS.volume);
-            soundPlayer[1].prepare();
-            soundPlayer[1].setLooping(true);
-            soundPlayer[1].start();
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void stopPlayMedia() {
+        for (MediaPlayer mediaPlayer : soundPlayer) {
+            mediaPlayer.stop();
+            mediaPlayer.reset();
         }
+    }
+
+    private LayoutParams buildCenterLayoutParams() {
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER;
+        return layoutParams;
     }
 
     @Override
