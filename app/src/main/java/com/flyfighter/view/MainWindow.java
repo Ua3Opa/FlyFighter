@@ -6,13 +6,10 @@ import android.graphics.Canvas;
 import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
-import android.view.ViewGroup;
+import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.TableRow;
 
 import com.flyfighter.menu.GameCanvas;
 import com.flyfighter.menu.MainMenu;
@@ -85,7 +82,7 @@ public class MainWindow extends FrameLayout {
     }
 
     public void startGame(SelectPlayerMenu menu, int player) {
-        removeView(menu);
+        removeAllViews();
         stopPlayMedia();
         addView(new GameCanvas(mContext, player));
     }
@@ -98,7 +95,7 @@ public class MainWindow extends FrameLayout {
     }
 
     private LayoutParams buildCenterLayoutParams() {
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         layoutParams.gravity = Gravity.CENTER;
         return layoutParams;
     }

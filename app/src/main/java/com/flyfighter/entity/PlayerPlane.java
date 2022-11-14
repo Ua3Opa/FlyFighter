@@ -24,5 +24,35 @@ public class PlayerPlane {
         this.power = power;
     }
 
+    public void setType(int type) {
+        this.type = type;
+    }
 
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    public void setLife(int life) {
+        this.life = life;
+    }
+
+    public void setBomb(int bomb) {
+        this.bomb = bomb;
+    }
+
+    public void setPicId(int picId) {
+        this.picId = picId;
+    }
+
+    public void setPower(int power) {
+        this.power = power;
+    }
 }

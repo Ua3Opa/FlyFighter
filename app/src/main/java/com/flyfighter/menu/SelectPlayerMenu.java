@@ -8,7 +8,6 @@ import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
@@ -16,7 +15,7 @@ import com.flyfighter.view.MainWindow;
 public class SelectPlayerMenu extends FrameLayout {
 
     Context context;
-    public  int selectPlayer = 0;
+    public int selectPlayer = 0;
     private int rectIndex;
     Handler handler = new Handler(msg -> {
         switch (msg.what) {
@@ -27,6 +26,8 @@ public class SelectPlayerMenu extends FrameLayout {
         return false;
     });
     private ImageView ivRect;
+    private int rectY;
+    private ImageView ivPlayerBg;
 
     public SelectPlayerMenu(Context context) {
         this(context, null);
@@ -47,16 +48,18 @@ public class SelectPlayerMenu extends FrameLayout {
     }
 
     private void initSelectImage() {
-        ImageView imageView = new ImageView(context);
-        imageView.setImageBitmap(ResInit.playerSelectImage[selectPlayer]);
-        addView(imageView);
+        ivPlayerBg = new ImageView(context);
+        ivPlayerBg.setImageBitmap(ResInit.playerSelectImage[selectPlayer]);
+        ivPlayerBg.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER;
+        ivPlayerBg.setLayoutParams(layoutParams);
+        addView(ivPlayerBg);
 
         ivRect = new ImageView(context);
         ivRect.setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         addView(ivRect);
         handler.sendEmptyMessage(0);
-
-
     }
 
     private void handleChangeBackgroundImg() {
@@ -65,6 +68,7 @@ public class SelectPlayerMenu extends FrameLayout {
         FrameLayout.LayoutParams params = (LayoutParams) ivRect.getLayoutParams();
         params.gravity = Gravity.LEFT | Gravity.BOTTOM;
         params.leftMargin = getWidth() / 2 - 90 + 190 * this.selectPlayer;
+        params.bottomMargin = (int) (getHeight() - ivPlayerBg.getY() - ivPlayerBg.getHeight());
         ivRect.setLayoutParams(params);
         handler.sendEmptyMessageDelayed(0, 500);
     }
@@ -93,15 +97,23 @@ public class SelectPlayerMenu extends FrameLayout {
     }
 
     public void handleSelectPlayerByPosition(int x, int y) {
-        if (y <= getHeight() - ivRect.getHeight()) {
+        int playerBgBottom = (int) (ivPlayerBg.getY() + ivPlayerBg.getHeight());
+        if(y< ivPlayerBg.getY() || y > playerBgBottom){
+            ((ViewGroup)getParent()).removeView(this);
             return;
         }
+
+        if (y < (playerBgBottom - ivRect.getHeight()) || y > playerBgBottom) {
+            return;
+        }
+
         if (x < getWidth() / 2 - 90 || x > getWidth() / 2 - 90 + 190 * 3) {
             return;
         }
+
         int selectNum = (x - (getWidth() / 2 - 90)) / 190;
         if (selectPlayer == selectNum) {
-            ((MainWindow) getParent()).startGame(this,selectPlayer);
+            ((MainWindow) getParent()).startGame(this, selectPlayer);
         } else {
             selectPlayer = selectNum;
             handler.sendEmptyMessage(0);

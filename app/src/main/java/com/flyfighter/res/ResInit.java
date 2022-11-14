@@ -109,12 +109,12 @@ public class ResInit {
                 menuImageSelected[i] = Bitmap.createBitmap(bitmap, 0, i * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
 
                 if (i == 0) {
-                    menuImage[1] = Bitmap.createBitmap(bitmap, 0, 1 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
                     menuImage[2] = Bitmap.createBitmap(bitmap, 0, 2 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
                     menuImage[3] = Bitmap.createBitmap(bitmap, 0, 3 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
                     menuImage[4] = Bitmap.createBitmap(bitmap, 0, 4 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
-                } else if (i == 1) {
+                } else if (i == 3) {
                     menuImage[0] = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight() / 5);
+                    menuImage[1] = Bitmap.createBitmap(bitmap, 0, 1 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
                 }
 
             }
@@ -229,5 +229,21 @@ public class ResInit {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void loadStagePic(Context context, int stage) {
+        try {
+            BackgroundImage = new Bitmap[5];
+            BackgroundImage[stage - 1] = loadRes(context, "BackScr/fly_backscr" + stage + ".png");
+
+            enemyImage = new Bitmap[51][4];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static Bitmap loadRes(Context context, String name) throws Exception {
+        return BitmapFactory.decodeStream(context.getAssets().open(name));
     }
 }

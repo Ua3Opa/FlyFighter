@@ -1,18 +1,16 @@
 package com.flyfighter.menu;
 
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.media.MediaPlayer;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.core.content.ContextCompat;
 
+import com.flyfighter.R;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
@@ -26,6 +24,7 @@ public class MainMenu extends LinearLayout {
     Context context;
     private int selectedIndex = 0;
     private List<ImageView> menus = new ArrayList<>();
+    private int currentSelect = 0;
 
     public MainMenu(Context context) {
         this(context, null);
@@ -42,10 +41,8 @@ public class MainMenu extends LinearLayout {
 
     private void init(Context context) {
         this.context = context;
-        LayoutParams layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.CENTER;
-        setLayoutParams(layoutParams);
         setOrientation(VERTICAL);
+        setGravity(Gravity.CENTER);
         initMenuItem();
     }
 
@@ -60,6 +57,7 @@ public class MainMenu extends LinearLayout {
             }
             imageView.setTag(i);
             imageView.setOnClickListener(this::handleMenuClicked);
+
             addView(imageView);
             menus.add(imageView);
         }
@@ -70,8 +68,10 @@ public class MainMenu extends LinearLayout {
         handlePlayMenuSelectSound();
         int tag = (int) view.getTag();
         menus.get(tag).setImageBitmap(ResInit.menuImageSelected[tag]);
-
-        ((MainWindow)getParent()).handleMenuClicked(tag);
+        if (currentSelect == tag) {
+            ((MainWindow) getParent()).handleMenuClicked(currentSelect);
+        }
+        currentSelect = tag;
     }
 
     private void resetMenuSelectState() {
