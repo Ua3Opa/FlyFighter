@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 
 import com.flyfighter.menu.GameCanvas;
 
@@ -106,7 +105,11 @@ public class ResInit {
             for (int i = 0; i < 5; i++) {
                 Bitmap bitmap = BitmapFactory.decodeStream(assets.open("StartSelect/fly_startselect" + (i + 1) + ".png"));
                 //选中状态的图片
-                menuImageSelected[i] = Bitmap.createBitmap(bitmap, 0, i * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
+                if (i != 4) {
+                    menuImageSelected[i] = Bitmap.createBitmap(bitmap, 0, i * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5 + 10);
+                } else {
+                    menuImageSelected[i] = Bitmap.createBitmap(bitmap, 0, i * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);
+                }
 
                 if (i == 0) {
                     menuImage[2] = Bitmap.createBitmap(bitmap, 0, 2 * bitmap.getHeight() / 5, bitmap.getWidth(), bitmap.getHeight() / 5);

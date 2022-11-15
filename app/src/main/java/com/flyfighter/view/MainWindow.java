@@ -84,7 +84,7 @@ public class MainWindow extends FrameLayout {
     public void startGame(SelectPlayerMenu menu, int player) {
         removeAllViews();
         stopPlayMedia();
-        addView(new GameCanvas(mContext, player));
+        addView(new GameCanvas(mContext, player),buildCenterLayoutParams());
     }
 
     private void stopPlayMedia() {

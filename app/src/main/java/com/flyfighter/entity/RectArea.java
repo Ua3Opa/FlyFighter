@@ -2,10 +2,10 @@ package com.flyfighter.entity;
 
 
 public class RectArea {
-    public short x;
-    public short y;
-    public short w;
-    public short h;
+    public int x;
+    public int y;
+    public int w;
+    public int h;
 
     public RectArea() {
         this.x = 0;
@@ -14,7 +14,7 @@ public class RectArea {
         this.h = 0;
     }
 
-    public RectArea(short x, short y, short w, short h) {
+    public RectArea(int x, int y, int w, int h) {
         this.x = x;
         this.y = y;
         this.w = w;
