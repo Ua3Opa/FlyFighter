@@ -22,6 +22,7 @@ public class ResInit {
     public static Bitmap rankingImage = null;
     public static Bitmap[] BackgroundImage = null;
     public static Bitmap[] playerImage = null;
+    public static Bitmap[] playerStateImage = null;
     public static Bitmap[] playerBullet = null;
     public static Bitmap[] enemyBullet = null;
     public static Bitmap[] pauseImage = null;
@@ -148,8 +149,11 @@ public class ResInit {
     public static void loadPlayer(Context context, int player) {
         try {
             playerImage = new Bitmap[3];
+            playerStateImage = new Bitmap[6];
             playerImage[player] = BitmapFactory.decodeStream(context.getAssets().open("Player/fly_player" + (player + 1) + ".png"));
-
+            for (int i = 0; i < 6; i++) {
+                playerStateImage[i] = Bitmap.createBitmap(playerImage[player], playerImage[player].getWidth() / 6 * i, 0, playerImage[player].getWidth() / 6, playerImage[player].getHeight());
+            }
             bombImage = new Bitmap[8];
             for (int i = 0; i < 3; i++) {
                 bombImage[i] = BitmapFactory.decodeStream(context.getAssets().open("Bomb/fly_bomb1" + (i + 1) + ".png"));

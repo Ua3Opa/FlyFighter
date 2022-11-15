@@ -3,6 +3,7 @@ package com.flyfighter.menu;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
@@ -18,6 +19,7 @@ import com.flyfighter.entity.RectArea;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.res.SoundHelper;
+import com.flyfighter.utils.UiUtils;
 import com.flyfighter.view.MainWindow;
 
 import java.util.Random;
@@ -27,9 +29,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private Context context;
     private MediaPlayer[] mediaPlayers = new MediaPlayer[13];
 
-    private int playerType;
+    private int gSelectedPlayer;
     private int difficulty;
-    private PlayerPlane player;
+    private PlayerPlane gPlayer;
     private RectArea gSrcRect;
     private Random random;
 
@@ -157,19 +159,19 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             74, 34, 62, 32, 56, 31, 84, 35, 70, 40, 68, 45, 54, 28, 46, 24, 38, 30, 38, 53, 128, 64, 112, 80, 206, 60,
             152, 62, 170, 53};
 
-    private static final byte[] gGetItemsList = new byte[]
+    private static final int[] gGetItemsList = new int[]
             {5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11};
 
     public static final int[] bulletPic = new int[]{2, 3, 3, 1, 4, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2};
     public static final int[][] playerData = new int[][]{
             {1, 5, 3, 3, 1}, {2, 4, 3, 3, 1}, {3, 6, 3, 3, 1}};
 
-    private static final byte[] explodePic = new byte[]{4, 4, 6, 5, 6, 6, 6, 6};
-    private static final byte[] explodeSize = new byte[]{14, 12, 14, 12, 40, 40, 50, 40, 42, 32, 42, 32, 42, 42, 42, 42};
-    private static final byte[] enemyPic = new byte[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    private static final int[] explodePic = new int[]{4, 4, 6, 5, 6, 6, 6, 6};
+    private static final int[] explodeSize = new int[]{14, 12, 14, 12, 40, 40, 50, 40, 42, 32, 42, 32, 42, 42, 42, 42};
+    private static final int[] enemyPic = new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12, 6, 3, 3, 3, 3, 3};
 
-    private static final byte[][][] bossBullet = new byte[][][]{
+    private static final int[][][] bossBullet = new int[][][]{
             {{13, 3, 17, 35}, {3, 2, 11, 35}, {13, 4, 20, 45},
                     {21, 6, 21, 33}, {2, 4, 10, 28}, {13, 6, 6, 36},
                     {3, 3, 19, 44}, {16, 6, 16, 28}},
@@ -182,15 +184,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             {{3, 4, 16, 20}, {13, 6, 20, 25}, {3, 4, 11, 30}, {23, 6, 21, 20}, {16, 6, 10, 35}, {13, 5, 6, 25},
                     {3, 5, 19, 20}, {12, 6, 17, 25}}};
 
-    private static final byte[] bulletSpeedSL = new byte[]{-2, 1, -2, 2, -1, 2, -1, 3, 3, 1, 3, 1, 2, 2, 2, 2, 1};
+    private static final int[] bulletSpeedSL = new int[]{-2, 1, -2, 2, -1, 2, -1, 3, 3, 1, 3, 1, 2, 2, 2, 2, 1};
 
-    private static final byte[] bulletSpeedToPlayer = new byte[]{0, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2, -1, 2, -1, 2, -2,
+    private static final int[] bulletSpeedToPlayer = new int[]{0, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2, -1, 2, -1, 2, -2,
             1, -2, 1, -2, -3, -1, -3, -1, -1, -2, -1, -2, -1, -2, -1, -2, -3, 1, -2, 1, -1, 1, -1, 1, -1, 3};
 
-    private static final byte[] enemyBulletToFront = new byte[]{0, 4, -1, 4, 1, 4, -1, 4, 4, 1, 4, -1, 4, 4, 1, 4,
+    private static final int[] enemyBulletToFront = new int[]{0, 4, -1, 4, 1, 4, -1, 4, 4, 1, 4, -1, 4, 4, 1, 4,
             -2, 3, -1, 4, 4, 1, 4, 2, 3, -2, 3, -1, 4, 4, 1, 4, 2, 3};
 
-    private static final byte[] playerSize = new byte[]{26, 32, 30, 28, 30, 28};
+    private static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
 
     private int[] gBombType = new int[6];
     private EnemyPlane[] gEnemy = new EnemyPlane[5];
@@ -226,7 +228,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private Paint mPaint = new Paint();
     private final SurfaceHolder surfaceHolder;
 
-    public GameCanvas(Context context, int playerType) {
+    public GameCanvas(Context context, int gSelectedPlayer) {
         super(context, null);
         this.context = context;
 
@@ -234,10 +236,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
-        this.playerType = playerType;
+        this.gSelectedPlayer = gSelectedPlayer;
         this.difficulty = RMS.difficulty;
 
-        this.player = new PlayerPlane();
+        this.gPlayer = new PlayerPlane();
         this.gSrcRect = new RectArea();
         this.random = new Random();
         gameInit();
@@ -245,19 +247,19 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void gameInit() {
-        ResInit.loadPlayer(context, playerType);
+        ResInit.loadPlayer(context, gSelectedPlayer);
         SoundHelper.loadGameSounds(context, mediaPlayers);
         if (RMS.loadSound) {
             playSound(12);
         }
-        int[] data = playerData[playerType];
-        int width = ResInit.playerImage[playerType].getWidth();
-        int height = ResInit.playerImage[playerType].getHeight();
-        this.player.setValue(data[0], (MainWindow.windowWidth - width) / 2, MainWindow.windowHeight + height, data[1], data[2], data[3], data[4], 0);
-        this.player.setLife(6);
-        this.player.setBomb(6);
+        int[] data = playerData[gSelectedPlayer];
+        int width = ResInit.playerImage[gSelectedPlayer].getWidth();
+        int height = ResInit.playerImage[gSelectedPlayer].getHeight();
+        this.gPlayer.setValue(data[0], (MainWindow.windowWidth - width) / 2, MainWindow.windowHeight + height, data[1], data[2], data[3], data[4], 0);
+        this.gPlayer.setLife(6);
+        this.gPlayer.setBomb(6);
         for (int i = 0; i < 6; i++) {
-            this.gBombType[i] = this.player.type;
+            this.gBombType[i] = this.gPlayer.type;
         }
 
         this.gIsSaved = false;
@@ -304,11 +306,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gBossBulletDirect3 = getRand(3);
 
         if (this.gMission == 1) {
-            this.gCorrespondMission = playerType + 1;
+            this.gCorrespondMission = gSelectedPlayer + 1;
         } else if (this.gMission == 2) {
-            if (this.playerType == 0) {
+            if (this.gSelectedPlayer == 0) {
                 this.gCorrespondMission = 2;
-            } else if (this.playerType == 1) {
+            } else if (this.gSelectedPlayer == 1) {
                 this.gCorrespondMission = 3;
             } else {
                 this.gCorrespondMission = 1;
@@ -316,9 +318,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else if (this.gMission == 3) {
             this.gCorrespondMission = 4;
         } else if (this.gMission == 4) {
-            if (this.playerType == 0) {
+            if (this.gSelectedPlayer == 0) {
                 this.gCorrespondMission = 3;
-            } else if (this.playerType == 1) {
+            } else if (this.gSelectedPlayer == 1) {
                 this.gCorrespondMission = 1;
             } else {
                 this.gCorrespondMission = 2;
@@ -373,8 +375,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (int ii = 0; ii < 5; ii++) {
             this.gShootNum_SL[ii] = 0;
         }
-        this.player.x = 105;
-        this.player.y = 319;
+        //默认位置在屏幕外
+        this.gPlayer.x = (MainWindow.windowWidth - ResInit.playerStateImage[5].getWidth()) / 2;
+        this.gPlayer.y = MainWindow.windowHeight + ResInit.playerStateImage[5].getHeight();
     }
 
     private void driveObjects() {
@@ -465,7 +468,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     (this.gEnemy[i]).picId = 0;
                 }
             }
-            if (this.gPlayerInit == 0 && checkIfHit(x, y, wide, high, this.player.x, this.player.y, playerSize[this.playerType * 2], playerSize[this.playerType * 2 + 1])) {
+            if (this.gPlayerInit == 0 && checkIfHit(x, y, wide, high, this.gPlayer.x, this.gPlayer.y, playerSize[this.gSelectedPlayer * 2], playerSize[this.gSelectedPlayer * 2 + 1])) {
                 (this.gEnemy[i]).health = ((this.gEnemy[i]).health - 20);
                 this.gGameScore += 168;
                 if (6 != this.gGameSecretNum) {
@@ -571,9 +574,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         for (i = 0; i < bulletNum; i = (short) (i + 1)) {
             offSet = (short) (offSet + 1);
-            byte spx = enemyBulletToFront[offSet];
+            int spx = enemyBulletToFront[offSet];
             offSet = (short) (offSet + 1);
-            byte spy = enemyBulletToFront[offSet];
+            int spy = enemyBulletToFront[offSet];
             idx = mallocBullet();
             if (idx < 0)
                 return;
@@ -910,8 +913,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void bulletGoToPlayer(int i) {
-        int x = (this.gBullet[i][2] - this.player.x + (playerSize[this.playerType * 2] >> 1));
-        int y = (this.gBullet[i][3] - this.player.y + (playerSize[this.playerType * 2 + 1] >> 1));
+        int x = (this.gBullet[i][2] - this.gPlayer.x + (playerSize[this.gSelectedPlayer * 2] >> 1));
+        int y = (this.gBullet[i][3] - this.gPlayer.y + (playerSize[this.gSelectedPlayer * 2 + 1] >> 1));
 
         boolean flag_x = true;
         boolean flag_y = true;
@@ -986,18 +989,18 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if ((this.gEnemy[i]).type <= 18) {
             if (getRand(10) == 0) {
                 (this.gEnemy[i]).item = 5;
-            } else if (this.player.power == 1 && getRand(10) == 1) {
+            } else if (this.gPlayer.power == 1 && getRand(10) == 1) {
                 (this.gEnemy[i]).item = 7;
             }
         } else {
-            if (this.player.power < 3 && getRand(4) == 0) {
+            if (this.gPlayer.power < 3 && getRand(4) == 0) {
                 (this.gEnemy[i]).item = 7;
                 return;
             }
             if (getRand(6) == 0) {
                 (this.gEnemy[i]).item = gGetItemsList[getRand(20)];
                 if (12 == (this.gEnemy[i]).item) {
-                    (this.gEnemy[i]).item = (this.gEnemy[i]).item + this.playerType;
+                    (this.gEnemy[i]).item = (this.gEnemy[i]).item + this.gSelectedPlayer;
                 }
             }
         }
@@ -1070,8 +1073,18 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return Math.abs(r % i);
     }
 
+    private void setRect(int x, int y, int w, int h) {
+        this.gSrcRect.x = x;
+        this.gSrcRect.y = y;
+        this.gSrcRect.w = w;
+        this.gSrcRect.h = h;
+    }
+
     private void drawBitmapXY(Canvas canvas, Bitmap bitmap, int x, int y) {
         canvas.drawBitmap(bitmap, x, y, mPaint);
+    }
+
+    private void drawRect(Canvas canvas, Bitmap bitmap, int x, int y) {
     }
 
     private void drawBitmapCenter(Canvas canvas, Bitmap bitmap) {
@@ -1132,15 +1145,68 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         //showBoss(canvas);
         //showEnemy(canvas);
         //showBomb(canvas);
-        //showPlayer(canvas);
+        showPlayer(canvas);
         //showItems(canvas);
         //showBullet(canvas);
         //showExplode(canvas);
-        //showActiveLife(canvas);
-        //showActiveBomb(canvas);
-        //showActiveScore(canvas);
-        //showMissionInfo(canvas);
+        showActiveLife(canvas);
+        showActiveBomb(canvas);
+        showActiveScore(canvas);
+        showMissionInfo(canvas);
         //showGameOver(canvas);
+    }
+    //@TODO
+    private void showMissionInfo(Canvas canvas) {
+
+    }
+
+    private void showActiveScore(Canvas canvas) {
+        int textSize = UiUtils.dp2px(context, 20);
+        mPaint.setTextSize(textSize);
+        mPaint.setColor(Color.BLUE);
+        float textWidth = mPaint.measureText(int2string(this.gGameScore));
+        canvas.drawText(int2string(this.gGameScore), MainWindow.windowWidth - textWidth, textSize +30, mPaint);
+    }
+
+    private void showActiveBomb(Canvas canvas) {
+        if (this.gIsGameOver) {
+            return;
+        }
+        for (short i = 0; i < this.gPlayer.bomb; i = (short) (i + 1)) {
+            int x = (27 + i * 45);
+            drawBitmapXY(canvas, ResInit.bombIcon[this.gBombType[i] - 1], x, 120);
+        }
+    }
+
+    private void showActiveLife(Canvas canvas) {
+        for (short i = 0; i < this.gPlayer.life - 1; i = (short) (i + 1)) {
+            int x = (27 + i * 45);
+            drawBitmapXY(canvas, ResInit.lifeIcon[this.gSelectedPlayer], x, 50);
+        }
+    }
+
+    private void showPlayer(Canvas canvas) {
+        if (this.gIsGameOver) {
+            return;
+        }
+        int x = this.gPlayer.x;
+        int y = this.gPlayer.y;
+
+        int wide = playerSize[this.gSelectedPlayer * 2];
+        int high = playerSize[this.gSelectedPlayer * 2 + 1];
+
+        if (x <= -wide || x >= MainWindow.windowWidth || y <= -high || y >= MainWindow.windowHeight) {
+            return;
+        }
+        if (this.gPlayerInit > 0 && (this.gScreenMove & 0x1) != 0) {
+            this.gPlayer.picId = 5;
+        }
+        drawBitmapXY(canvas, ResInit.playerStateImage[gPlayer.picId], gPlayer.x, gPlayer.y);
+
+        if (this.gIsPlayerFire) {
+            gIsPlayerFire = false;
+            drawBitmapXY(canvas, ResInit.playerStateImage[4], gPlayer.x, gPlayer.y);
+        }
     }
 
     private void showBackScreen(Canvas canvas) {
@@ -1156,7 +1222,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             this.gBackgroundOffset = 0;
         }
         if (this.gIsBossAppear) {
-            this.gBackgroundOffset = (this.gBackgroundOffset + 10);
+            this.gBackgroundOffset = (this.gBackgroundOffset + 8);
         } else {
             this.gBackgroundOffset = (this.gBackgroundOffset + 5);
         }
@@ -1168,5 +1234,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         surfaceHolder.unlockCanvasAndPost(lockCanvas);
         Thread.sleep(1000);
         this.gIsLoadGame = false;
+    }
+
+    private String int2string(int value) {
+        String str = String.valueOf(value);
+        int len = str.length();
+        if (len < 7)
+            for (int i = 0; i < 7 - len; i++) {
+                str = "0" + str;
+            }
+        return str;
     }
 }
