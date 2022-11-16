@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 
 import com.flyfighter.menu.GameCanvas;
 
@@ -30,6 +31,7 @@ public class ResInit {
     public static Bitmap[] lifeIcon = null;
     public static Bitmap[] characterImage = null;
     public static Bitmap[] numberImage = null;
+    public static Bitmap[][] numberImageValue = null;
     public static Bitmap[] itemImage = null;
     public static Bitmap[] explodeImage = null;
     public static Bitmap[] bombImage = null;
@@ -60,8 +62,14 @@ public class ResInit {
         otherImage[2] = BitmapFactory.decodeStream(assets.open("Resource/fly_missionload.png"));
 
         numberImage = new Bitmap[3];
+        numberImageValue = new Bitmap[3][10];
         for (int i = 0; i < 3; ++i) {
             numberImage[i] = BitmapFactory.decodeStream(assets.open("Resource/fly_strnumber" + (i + 1) + ".png"));
+
+            for (int j = 0; j < 10; j++) {
+                numberImageValue[i][j] = Bitmap.createBitmap(numberImage[i], numberImage[i].getWidth() / 10 * j, 0, numberImage[i].getWidth() / 10, numberImage[i].getHeight());
+            }
+
         }
 
     }
@@ -140,7 +148,7 @@ public class ResInit {
 
         otherImage[5] = BitmapFactory.decodeStream(assets.open("Resource/fly_strgame.png"));
         otherImage[6] = BitmapFactory.decodeStream(assets.open("Resource/fly_strgameover.png"));
-        otherImage[9] = BitmapFactory.decodeStream(assets.open("Resource/fly_strgameover.png"));
+        otherImage[9] = BitmapFactory.decodeStream(assets.open("Resource/fly_strstage.png"));
         otherImage[10] = BitmapFactory.decodeStream(assets.open("Resource/fly_lastmission.png"));
         otherImage[11] = BitmapFactory.decodeStream(assets.open("Resource/continuetips.png"));
 
@@ -244,6 +252,41 @@ public class ResInit {
             BackgroundImage[stage - 1] = loadRes(context, "BackScr/fly_backscr" + stage + ".png");
 
             enemyImage = new Bitmap[51][4];
+
+            int len = (GameCanvas.stageEnemy[stage - 1]).length;
+            //stageEnemy每关配置的敌人类型
+            //enemyData[type][1] 每种敌人类型有几个图片类型
+            if (stage < 5) {
+                for (int i = 0; i < len; i++) {
+                    //1 2 4 38 44
+                    int type = GameCanvas.stageEnemy[stage - 1][i] - 1;
+                    int kinds = type + 1;//种类
+                    if (type < 6) {
+                        kinds = (type + 1) * 3;
+                    }
+                    for (; type < kinds; type++) {
+                        for (int j = 0; j < GameCanvas.enemyData[type][1]; j++) {
+                            if (type < 9) {
+                                enemyImage[type][j] = loadRes(context, "Enemy/fly_enemy0" + (type + 1) + (j + 1) + ".png");
+                            } else {
+                                enemyImage[type][j] = loadRes(context, "Enemy/fly_enemy" + (type + 1) + (j + 1) + ".png");
+                            }
+                        }
+                    }
+                }
+            } else {//第五关单独设置
+                for (int i = 17; i < 46; i++) {
+                    for (int j = 0; j < GameCanvas.enemyData[i][1]; j++) {
+                        if (i < 9) {
+                            enemyImage[i][j] = loadRes(context, "Enemy/fly_enemy0" + (i + 1) + (j + 1) + ".png");
+                        } else {
+                            enemyImage[i][j] = loadRes(context, "Enemy/fly_enemy" + (i + 1) + (j + 1) + ".png");
+                        }
+                    }
+                }
+            }
+            //boss
+            enemyImage[stage - 1 + 46][0] = loadRes(context, "Boss/fly_enemyboss" + stage + ".png");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -252,5 +295,13 @@ public class ResInit {
 
     public static Bitmap loadRes(Context context, String name) throws Exception {
         return BitmapFactory.decodeStream(context.getAssets().open(name));
+    }
+
+    public static void initRanking(Context context) {
+        try {
+            rankingImage = loadRes(context, "Resource/fly_hero.png");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

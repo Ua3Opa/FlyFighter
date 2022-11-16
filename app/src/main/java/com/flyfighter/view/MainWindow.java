@@ -7,13 +7,13 @@ import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import com.flyfighter.menu.GameCanvas;
 import com.flyfighter.menu.MainMenu;
 import com.flyfighter.menu.MainMenuBackground;
+import com.flyfighter.menu.RankingMenu;
 import com.flyfighter.menu.SelectPlayerMenu;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
@@ -84,7 +84,7 @@ public class MainWindow extends FrameLayout {
     public void startGame(SelectPlayerMenu menu, int player) {
         removeAllViews();
         stopPlayMedia();
-        addView(new GameCanvas(mContext, player),buildCenterLayoutParams());
+        addView(new GameCanvas(mContext, player), buildCenterLayoutParams());
     }
 
     private void stopPlayMedia() {
@@ -103,5 +103,9 @@ public class MainWindow extends FrameLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+    }
+
+    public void showRanking() {
+        addView(new RankingMenu(mContext), buildCenterLayoutParams());
     }
 }
