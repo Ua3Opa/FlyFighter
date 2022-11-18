@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import com.flyfighter.menu.GameCanvas;
+import com.flyfighter.menu.GameWindow;
 import com.flyfighter.menu.MainMenu;
 import com.flyfighter.menu.MainMenuBackground;
 import com.flyfighter.menu.RankingMenu;
@@ -84,7 +85,7 @@ public class MainWindow extends FrameLayout {
     public void startGame(SelectPlayerMenu menu, int player) {
         removeAllViews();
         stopPlayMedia();
-        addView(new GameCanvas(mContext, player), buildCenterLayoutParams());
+        addView(new GameWindow(mContext, player), buildCenterLayoutParams());
     }
 
     private void stopPlayMedia() {

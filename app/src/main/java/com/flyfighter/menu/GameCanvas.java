@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -16,32 +15,37 @@ import androidx.annotation.NonNull;
 import com.flyfighter.entity.EnemyPlane;
 import com.flyfighter.entity.PlayerPlane;
 import com.flyfighter.entity.RectArea;
+import com.flyfighter.interf.Controller;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.res.SoundHelper;
 import com.flyfighter.utils.UiUtils;
 import com.flyfighter.view.MainWindow;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, Runnable {
+public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, Runnable, Controller {
 
     private Context context;
     private MediaPlayer[] mediaPlayers = new MediaPlayer[13];
 
-    private int gSelectedPlayer;
+    private int playerType;
     private int difficulty;
-    private PlayerPlane gPlayer;
+    private PlayerPlane mPlayer;
+    private List<EnemyPlane> enemys = new ArrayList<>();
     private RectArea gSrcRect;
     private Random random;
 
+    private final int maxEnemy = 5;
     private boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
     private boolean gIsSaved;
     private int gContinueNum;
     private boolean gIsGameFinished;
     private boolean gIsPlayerFire;
-    private int gMission;
+    private int mMission;
     private int gGameScore;
     private int gMissileType;
     private int gCurrentMissileMax;
@@ -51,7 +55,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean gIsMissionComplete;
     private int gTempDelay;
     private int gBombDelay;
-    private boolean gIsEnableEnemy;
+    private boolean mIsEnableEnemy;
     private boolean gIsGameOver;
     private boolean gIsBombing;
     private boolean gIsBossAppear;
@@ -71,11 +75,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gBossShootDelay;
     private int gFireDelay;
     private int gApearEnemyType;
-    private boolean gIsPlayerDestroyed;
+    private boolean mIsPlayerDestroyed;
     private int gBossBulletDirect1;
     private int gBossBulletDirect2;
     private int gBossBulletDirect3;
-    private int gCorrespondMission;
+    private int mCorrespondMission;
     private int gBossMoveDownRange;
     private int gBossMoveUpRange;
     private int gGameDifficulty;
@@ -99,23 +103,20 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             {46, 44, 43, 22, 20, 39, 23, 31, 45, 34, 38, 46, 37, 32, 41}
     };
 
-    public static final int[][] enemyData = new int[][]{{1, 4, 1, 0, 0, 20, 0, 12, 0, 0, 0, 0, 156, 38, 2, 4, 3}, {2, 2, 0, 0, -12, 0, 400, 15, 0, 0, 0, 0, 168, 41, 2, 4, 3}, {3, 2, 0, 0, 12, 0, 400, 12, 0, 0, 0, 0, 158, 40, 2, 4, 3}, {4, 4, 1, 0, 0, 20, 0, 20, 0, 0, 0, 0, 166, 38, 2, 5, 3}, {5, 2, 0, 0, -8, 0, 400, 25, 0, 0, 0, 0, 168, 35, 2, 5, 3}, {6, 2, 0, 0, 8, 0, 400, 20, 0, 0, 0, 0,
-            156, 35, 2, 5, 3}, {7, 3, 1, 0, 0, 20, 0, 28, 1, 1, 0, 0, 146, 41, 2, 6, 4}, {8, 1, 0, 0, -12, 0, 400, 22, 0, 0, 0, 0, 138, 36, 2, 6, 4}, {9, 1, 0, 0, 12, 0, 400, 22, 0, 0, 0, 0, 156, 37, 2, 6, 4}, {10, 4, 1, 0, 0, 20, 0, 25, 1, 1, 0, 0, 166, 35, 2, 7, 4}, {11, 2, 0, 0, -8, 0, 400, 33, 0, 0, 0, 0, 168, 37, 2, 7, 4}, {12, 2, 0, 0, 8, 0, 400, 25, 0, 0, 0, 0, 158, 39, 2, 7, 4}, {13, 2, 1, 0, 0, 20, 0, 20, 1, 1, 0, 0, 148, 40, 2, 8, 3}, {14, 2, 0, 0, -12, 0, 400, 15, 0, 0, 0, 0, 150, 41, 2, 8, 3}, {15, 2, 0, 0, 12, 0, 400, 15, 0, 0, 0, 0, 136, 37, 2, 8, 3}, {16, 3, 1, 0, 0, 20, 0, 26, 0, 0, 0, 0, 158, 36, 2, 6, 3}, {17, 1, 0, 0, -12, 0, 400, 25, 0, 0, 0, 0, 166, 35, 2, 6, 4}, {18, 1, 0, 0, 12, 0, 400, 25, 0, 0, 0, 0, 168, 42, 2, 6, 4}, {19, 3, 1, -1, -8, 20, 0, 22, 0, 0, 0, 0, 198, 40, 3, 14, 5}, {20, 3, 1, -1, 8, 20, 0, 18, 0, 0, 0, 0, 188, 42, 3, 14, 5}, {21, 3, 1, 0, 0, 12, 0, 100, 1, 1, 0, 0, 282, 45, 3, 15, 4}, {22, 1, 0, 0, 0, 0, 560, 150, 0, 0, 0, 0, 382, 55, 4, 16, 7}, {23, 1, 1, 0, 0, 8, 180, 160, -1, 1, 0, 0, 383, 52, 4, 17, 8}, {24, 2, 1, 0, 0, 12, 0, 120, 1, 1, 0, 0, 369, 54, 3, 11, 6}, {25, 4, 0, 0, 0, 0, 600, 200, 0, 0, 0, 0, 595, 56, 4, 10, 7}, {26, 2, 1, 0, 0, 12, 0, 200, 1, 1, 0, 0, 478, 52, 3, 14, 4}, {27, 4, 0, 0, 0, 0, 560, 220, 0, 0, 0, 0, 498, 58, 4, 17, 7}, {28, 4, 1, 0, 0, 12, 0, 180, 1, 1, 0, 0, 462, 52, 4, 16, 8}, {29, 4, 1, 0, 0, 12, 0, 80, 1, 1, 0, 0, 290, 46, 3, 6, 5}, {30, 2, 1, 0, 0, 12, 0, 200, 1, 1, 0, 0, 488, 48, 4, 12, 7}, {31, 3, 1, 0, 0, 12, 0, 260, 1, 1, 0, 0, 580, 62, 5, 13, 8}, {32, 1, 1, 0, 0, 8, 200, 250, -1, 1, 0, 0, 552, 52, 5, 9, 7}, {33, 3, 1, 0, 0, 12, 0, 250, 1, 1, 0, 0, 593, 54, 5, 16, 8}, {34, 1, 1, 0, 0, 8, 192, 300, -1, 1, 0, 0, 758, 56, 5, 17, 7}, {35, 4, 0, 0, 0, 0, 520, 200, 0, 0, 0, 0, 486, 48, 4, 11, 8}, {36, 4, 1, 0, 0, 8, 176, 160, -1, 1, 0, 0, 396, 52, 5, 10, 7}, {37, 3, 1, 0, 0, 12, 0, 280, 1, 1, 0, 0, 786, 61, 5, 16, 8}, {38, 4, 1, 0, 0, 12, 0, 80, 1, 1, 0, 0, 286, 44, 4, 7, 7}, {39, 4, 1, 0, 0, 12, 0, 80, 1, 1, 0, 0, 298, 46, 4, 15, 7}, {40, 3, 1, 0, 0, 12, 0, 200, 1, 1, 0, 0, 656, 43, 5, 17, 8}, {41, 4, 1, 0, 0, 12, 0, 200, 1, 1, 0, 0, 631, 53, 5, 12, 7}, {42, 4, 1, 0, 0, 12, 0, 150, 1, 1, 0, 0, 428, 61, 5, 13, 8}, {43, 4, 1, 0, 0, 8, 0, 120, 1, 1, 0, 0, 366, 46, 4, 7, 5}, {44, 3, 1, 0, 0, 8, 0, 100, 1, 1, 0, 0, 356, 37, 3, 6, 6}, {45, 4, 1, 0, 0, 24, 0, 15, 0, 0, 0, 0, 388, 42, 3, 11, 5}, {46, 3, 1, 0, 0, 24, 0, 15, 0, 0, 0, 0, 366, 41, 3, 15, 6}, {201, 1, 50, 0, 8, 8, 240, 5000, 0, 170, 0, 0, 6688, 40, 0, 0, 8}, {202, 1, 50, 0, 8, 8, 240, 5000, 0, 170, 0, 0, 6686, 40, 0, 0, 8}, {203, 1, 50, 0, 8, 8, 240, 5000, 0, 170, 0, 0, 6886, 40, 0, 0, 8}, {204, 1, 50, 0, 8, 8, 240, 7000, 0, 170, 0, 0, 8888, 40, 0, 0, 8}, {205, 1, 50, 0, 8, 8, 240, 9000, 0, 170, 0, 0, 9999, 40, 0, 0, 8}};
-
-
     private static final int[] enemySize = new int[]{126, 103, 108, 126, 108, 126, 135, 117, 117, 135, 117, 135, 171, 126, 126, 171, 126, 171, 189, 126, 126, 189, 126, 189, 153, 94, 99, 153, 99, 153, 144, 121, 153, 162, 153, 162, 171, 198, 171, 198, 333, 139, 261, 180, 261, 180, 252, 139, 423, 130, 333, 162, 405, 157, 369, 144, 243, 175, 423, 126, 378, 144, 279, 189, 279, 189, 315, 162, 189, 265, 189, 265, 333, 153, 279, 144, 252, 139, 378, 157, 315, 180, 306, 202, 243, 126, 207, 108, 171, 135, 171, 238, 576, 288, 504, 360, 927, 270, 684, 279, 765, 238};
 
     private static final int[] gGetItemsList = new int[]
             {5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11};
 
     public static final int[] bulletPic = new int[]{2, 3, 3, 1, 4, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2};
-    public static final int[][] playerData = new int[][]{
-            {1, 5, 3, 3, 1}, {2, 4, 3, 3, 1}, {3, 6, 3, 3, 1}};
+
 
     private static final int[] explodePic = new int[]{4, 4, 6, 5, 6, 6, 6, 6};
     private static final int[] explodeSize = new int[]{14, 12, 14, 12, 40, 40, 50, 40, 42, 32, 42, 32, 42, 42, 42, 42};
     private static final int[] enemyPic = new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12, 6, 3, 3, 3, 3, 3};
+
+    private boolean[] gKey_State = new boolean[]{false, false, false, false, true, true, true};
 
     private static final int[][][] bossBullet = new int[][][]{
             {{13, 3, 17, 35}, {3, 2, 11, 35}, {13, 4, 20, 45},
@@ -130,11 +131,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             {{3, 4, 16, 20}, {13, 6, 20, 25}, {3, 4, 11, 30}, {23, 6, 21, 20}, {16, 6, 10, 35}, {13, 5, 6, 25},
                     {3, 5, 19, 20}, {12, 6, 17, 25}}};
 
-    private static final short[] bulletSize = new short[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
+    private static final int[][] playerBulletData = new int[][]{{0, 9, -2, 0, -23}, {1, 3, 0, 0, -20}, {1, 15, 0, 0, -20}, {1, 3, 0, -1, -20}, {0, 9, -7, 0, -25}, {1, 15, 0, 1, -20}, {1, 0, 0, -1, -20}, {0, 4, 0, 0, -25}, {0, 14, 0, 0, -25}, {1, 18, 0, 1, -20}, {0, 1, 0, -2, -23}, {1, 5, -2, -1, -24}, {0, 9, 0, 0, -28}, {1, 13, -2, 1, -24}, {0, 17, 0, 2, -23}, {1, 10, 0, 0, -23}, {1, 4, 0, 0, -23}, {1, 15, 0, 0, -23}, {0, 4, 0, -1, -23}, {1, 10, 0, 0, -30}, {2, 15, 0, 1, -23}, {0, 1, 0, -1, -23}, {1, 5, 0, 0, -30}, {1, 14, 0, 0, -30}, {2, 18, 0, 1, -23}, {0, 1, 0, -1, -23}, {0, 3, 0, 0, -27}, {1, 10, 2, 0, -33}, {2, 16, 0, 0, -27}, {2, 17, 0, 1, -23}, {1, 14, -5, 0, -23}, {2, 6, 0, 0, -23}, {2, 22, 0, 0, -23}, {2, 4, 1, 0, -23}, {1, 14, -5, 0, -30}, {2, 24, 1, 0, -23}, {2, 2, 1, 0, -23}, {1, 10, -5, 0, -30}, {1, 18, -5, 0, -30}, {2, 26, 1, 0, -23}, {2, -2, -2, 0, -23}, {1, 4, -5, 0, -30}, {1, 14, -2, 0, -30}, {1, 24, -5, 0, -30}, {2, 31, -2, 0, -23}};
+
+    private static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
 
     private static final int[] bulletSpeedSL = new int[]{-2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 1, 2, 2, 2, 2, 1};
 
-    private static final byte[][] playerBulletFloorPower = new byte[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
+    private static final int[][] playerBulletFloorPower = new int[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
 
     private static final int[] bulletSpeedToPlayer = new int[]{0, 9, 4, 9, 4, 4, 9, 4, 9, 4, 9, 4, 9, 0, 9, -4, 9, -4, 9, -9, 4, -9, 4, -9, 0, -13, -4, -13, -4, -4, -9, -4, -9, -4, -9, -4, -9, 0, -13, 4, -9, 4, -4, 4, -4, 4, -4, 13};
 
@@ -142,43 +145,28 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
 
-    private static final byte[] bulletSpeedMissile = new byte[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
+    private static final int[] bulletSpeedMissile = new int[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
 
-    private int[] gBombType = new int[6];
+    private static final int[][] playerBulletFloorNum = new int[][]{{1, 2, 3, 4, 5, 0}, {1, 2, 3, 4, 5, 15}, {1, 2, 3, 4, 5, 30}};
+
+
     private EnemyPlane[] gEnemy = new EnemyPlane[5];
 
     private int[][] gBullet = new int[100][6];
-    private static final byte bu_type = 0;
-    private static final byte bu_picid = 1;
-    private static final byte bu_x = 2;
-    private static final byte bu_y = 3;
-    private static final byte bu_speedx = 4;
-    private static final byte bu_speedy = 5;
 
     private int[][] gMissile = new int[4][7];
-    private static final int mi_type = 0;
-    private static final int mi_aimid = 1;
-    private static final int mi_x = 2;
-    private static final int mi_y = 3;
-    private static final int mi_speedx = 4;
-    private static final int mi_speedy = 5;
-    private static final int mi_power = 6;
 
     private int[][] gExplode = new int[30][4];
-    private static int ex_type = 0;
-    private static int ex_x = 1;
-    private static int ex_y = 2;
-    private static int ex_picid = 3;
 
     private int[][] gItem = new int[6][6];
 
     private boolean[] gShoot_SL = new boolean[5];
     private int[] gShootNum_SL = new int[5];
-
+    private static byte ex_type = 0;
     private Paint mPaint = new Paint();
     private final SurfaceHolder surfaceHolder;
 
-    public GameCanvas(Context context, int gSelectedPlayer) {
+    public GameCanvas(Context context, int playerType) {
         super(context, null);
         this.context = context;
 
@@ -186,37 +174,27 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
-        this.gSelectedPlayer = gSelectedPlayer;
+        this.playerType = playerType;
         this.difficulty = RMS.difficulty;
 
-        this.gPlayer = new PlayerPlane();
         this.gSrcRect = new RectArea();
         this.random = new Random();
+
         gameInit();
         stageInit();
     }
 
     private void gameInit() {
-        ResInit.loadPlayer(context, gSelectedPlayer);
+        ResInit.loadPlayer(context, playerType);
         SoundHelper.loadGameSounds(context, mediaPlayers);
-        if (RMS.loadSound) {
-            playSound(12);
-        }
-        int[] data = playerData[gSelectedPlayer];
-        int width = ResInit.playerImage[gSelectedPlayer].getWidth();
-        int height = ResInit.playerImage[gSelectedPlayer].getHeight();
-        this.gPlayer.setValue(data[0], (MainWindow.windowWidth - width) / 2, MainWindow.windowHeight + height, data[1], data[2], data[3], data[4], 0);
-        this.gPlayer.setLife(6);
-        this.gPlayer.setBomb(6);
-        for (int i = 0; i < 6; i++) {
-            this.gBombType[i] = this.gPlayer.type;
-        }
+
+        this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
 
         this.gIsSaved = false;
         this.gContinueNum = 3;
         this.gIsGameFinished = false;
         this.gIsPlayerFire = false;
-        this.gMission = 1;
+        this.mMission = 1;
         this.gGameScore = 0;
         this.gMissileType = 0;
         this.gCurrentMissileMax = 0;
@@ -229,7 +207,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gIsMissionComplete = false;
         this.gTempDelay = 0;
         this.gBombDelay = 0;
-        this.gIsEnableEnemy = false;
+        this.mIsEnableEnemy = false;
         this.gIsGameOver = false;
         this.gIsBombing = false;
         this.gIsBossAppear = false;
@@ -249,43 +227,43 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gBossShootDelay = 0;
         this.gFireDelay = 0;
         this.gApearEnemyType = 1;
-        this.gIsPlayerDestroyed = false;
+        this.mIsPlayerDestroyed = false;
 
         this.gBossBulletDirect1 = getRand(3);
         this.gBossBulletDirect2 = getRand(3);
         this.gBossBulletDirect3 = getRand(3);
 
-        if (this.gMission == 1) {
-            this.gCorrespondMission = gSelectedPlayer + 1;
-        } else if (this.gMission == 2) {
-            if (this.gSelectedPlayer == 0) {
-                this.gCorrespondMission = 2;
-            } else if (this.gSelectedPlayer == 1) {
-                this.gCorrespondMission = 3;
+        if (this.mMission == 1) {
+            this.mCorrespondMission = playerType + 1;
+        } else if (this.mMission == 2) {
+            if (this.playerType == 0) {
+                this.mCorrespondMission = 2;
+            } else if (this.playerType == 1) {
+                this.mCorrespondMission = 3;
             } else {
-                this.gCorrespondMission = 1;
+                this.mCorrespondMission = 1;
             }
-        } else if (this.gMission == 3) {
-            this.gCorrespondMission = 4;
-        } else if (this.gMission == 4) {
-            if (this.gSelectedPlayer == 0) {
-                this.gCorrespondMission = 3;
-            } else if (this.gSelectedPlayer == 1) {
-                this.gCorrespondMission = 1;
+        } else if (this.mMission == 3) {
+            this.mCorrespondMission = 4;
+        } else if (this.mMission == 4) {
+            if (this.playerType == 0) {
+                this.mCorrespondMission = 3;
+            } else if (this.playerType == 1) {
+                this.mCorrespondMission = 1;
             } else {
-                this.gCorrespondMission = 2;
+                this.mCorrespondMission = 2;
             }
         } else {
-            this.gCorrespondMission = this.gMission;
+            this.mCorrespondMission = this.mMission;
         }
 
-        if (this.gMission > 1) {
+        if (this.mMission > 1) {
             this.gIsLoadGame = true;
-            ResInit.loadStagePic(context, this.gCorrespondMission - 1);
+            ResInit.loadStagePic(context, this.mCorrespondMission - 1);
         }
-        ResInit.loadStagePic(context, this.gCorrespondMission);
+        ResInit.loadStagePic(context, this.mCorrespondMission);
 
-        this.gBackgroundHeight = ResInit.BackgroundImage[this.gCorrespondMission - 1].getHeight();
+        this.gBackgroundHeight = ResInit.BackgroundImage[this.mCorrespondMission - 1].getHeight();
 
         this.gBossMoveDownRange = 180;
         this.gBossMoveUpRange = 90;
@@ -325,538 +303,72 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (int ii = 0; ii < 5; ii++) {
             this.gShootNum_SL[ii] = 0;
         }
-        //默认位置在屏幕外
-        this.gPlayer.x = (MainWindow.windowWidth - ResInit.playerStateImage[5].getWidth()) / 2;
-        this.gPlayer.y = MainWindow.windowHeight + ResInit.playerStateImage[5].getHeight() - 300;
     }
 
     private void driveObjects() {
+        gScreenMove++;
         makeEnemy();
         //makeBoss();
-        dealEnemyState();
+        //dealEnemyState();
 
         //dealBossState();
-        //dealPlayerState();
+        dealPlayerState();
 
-        dealBullet();
+        //dealBullet();
         //dealItems();
         //dealBomb();
     }
 
-    private void dealBullet() {
-        int wide;
-        int high;
-        int[] var10000;
-        for (int i = 0; i < 100; i++) {
-            int type = this.gBullet[i][0];
-            if (type != 0) {
-                var10000 = this.gBullet[i];
-                var10000[2] += this.gBullet[i][4];
-                var10000[3] += this.gBullet[i][5];
-
-                wide = bulletSize[(type - 1) * 2];
-                high = bulletSize[(type - 1) * 2 + 1];
-
-                if (this.gBullet[i][2] + this.gBullet[i][4] > -wide && this.gBullet[i][2] + this.gBullet[i][4] < MainWindow.windowWidth && this.gBullet[i][3] + this.gBullet[i][5] > -high && this.gBullet[i][3] + this.gBullet[i][5] < MainWindow.windowHeight) {
-                    if (type <= 3) {
-                        for (byte j = 0; j < 5 && !this.checkHitEnemy(wide, high, i, j); ++j) {
-                        }
-                    } else {
-                        this.checkHitPlayer(wide, high, i);
-                        if ((this.gScreenMove & 1) != 0) {
-                            ++this.gBullet[i][1];
-                        }
-
-                        if (this.gBullet[i][1] >= bulletPic[type - 1]) {
-                            this.gBullet[i][1] = 0;
-                        }
-                    }
-                } else {
-                    this.destroyBullet(i);
-                }
-
-            }
-        }
-    }
-
-    private void checkHitPlayer(int bullet_wide, int bullet_high, int i) {
-        int player_x = (this.gPlayer.x + 6);
-        int player_y = (this.gPlayer.y + 7);
-        int player_wide = (playerSize[this.gSelectedPlayer * 2] - 10);
-        int player_high = (playerSize[this.gSelectedPlayer * 2 + 1] - 12);
-        if (this.checkIfHit(this.gBullet[i][2], this.gBullet[i][3], bullet_wide, bullet_high, player_x, player_y, player_wide, player_high)) {
-            if (6 != this.gGameSecretNum && this.gPlayerInit == 0 && !this.gIsBombing) {
-                this.gIsPlayerDestroyed = true;
-            }
-
-            if (this.gBullet[i][0] != 21) {
-                this.destroyBullet(i);
-            }
-        }
-
-    }
-
-    private boolean checkHitEnemy(int bulletWide, int bulletHigh, int i, int j) {
-        int type = this.gEnemy[j].type;
-        if (type == 0) {
-            return false;
-        } else {
-            int bullet_x = this.gBullet[i][2];
-            int bullet_y = this.gBullet[i][3];
-            int enemy_x = this.gEnemy[j].x;
-            int enemy_y = this.gEnemy[j].y;
-            int enemy_wide;
-            int enemy_high;
-            if (type > 200) {
-                enemy_wide = enemySize[(47 + this.gCorrespondMission - 2) * 2];
-                enemy_high = enemySize[(47 + this.gCorrespondMission - 2) * 2 + 1];
-            } else {
-                enemy_wide = enemySize[(type - 1) * 2];
-                enemy_high = enemySize[(type - 1) * 2 + 1];
-            }
-
-            if (this.checkIfHit(bullet_x, bullet_y, bulletWide, bulletHigh, enemy_x, enemy_y, enemy_wide, enemy_high)) {
-                if (type > 200) {
-                    this.gEnemy[j].picId = (byte) (enemyPic[47 + this.gCorrespondMission - 2] - 1);
-                } else {
-                    this.gEnemy[j].picId = (byte) (enemyPic[this.gEnemy[j].type - 1] - 1);
-                }
-
-                int idx = this.mallocBlastPT();
-                if (idx >= 0) {
-                    this.gExplode[idx][ex_type] = (1 + this.getRand(2));
-                    this.gExplode[idx][ex_x] = bullet_x;
-                    this.gExplode[idx][ex_y] = (bullet_y - 2);
-                    this.gExplode[idx][ex_picid] = 0;
-                }
-
-                EnemyPlane var10000 = this.gEnemy[j];
-                var10000.health = (var10000.health - (playerBulletFloorPower[this.gSelectedPlayer][this.gPlayer.power - 1] - 1));
-                this.destroyBullet(i);
-                this.gGameScore += 28;
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    private void destroyBullet(int i) {
-        for (int ii = 0; ii < 6; ++ii) {
-            this.gBullet[i][ii] = 0;
-        }
-
-        --this.gBulletCount;
-    }
-
-
-    private void dealEnemyState() {
-        int type = 0;
-        for (int i = 0; i < 5; i++) {
-            type = (this.gEnemy[i]).type;
-            if (type == 0 || type > 200) {
-                continue;
-            }
-            int x = (this.gEnemy[i]).x;
-            int y = (this.gEnemy[i]).y;
-            int wide = enemySize[(type - 1) * 2];
-            int high = enemySize[(type - 1) * 2 + 1];
-
-            if ((this.gEnemy[i]).health <= 0) {
-                int idx = mallocBlastPT();
-                if (idx >= 0) {
-                    this.gExplode[idx][ex_type] = (this.gEnemy[i]).explode;
-                    this.gExplode[idx][ex_x] = (x + (wide >> 1) - (explodeSize[(this.gExplode[idx][ex_type] - 1) * 2] >> 1));
-                    this.gExplode[idx][ex_y] = (y + (high >> 1) - (explodeSize[(this.gExplode[idx][ex_type] - 1) * 2 + 1] >> 1));
-                    this.gExplode[idx][ex_picid] = 0;
-                }
-                this.gGameScore += (this.gEnemy[i]).reward;
-                if (5 == this.gGameSecretNum) {
-                    this.gGameScore += (this.gEnemy[i]).reward;
-                }
-                createItems(i);
-                destroyEnemy(i);
-                continue;
-            }
-
-            if ((this.gEnemy[i]).offset < 300) {
-                if ((this.gEnemy[i]).aliveTime == 0) {
-                    y = (y + (this.gEnemy[i]).speedY);
-                } else if (y < (this.gEnemy[i]).pauseDelay) {
-                    y = (y + (this.gEnemy[i]).speedY);
-                } else if ((this.gEnemy[i]).aliveTime > 0) {
-                    (this.gEnemy[i]).aliveTime = ((this.gEnemy[i]).aliveTime - 1);
-                }
-                x = (x + (this.gEnemy[i]).speedX);
-                //两种情况下方向改变,offset固定触发或者是碰撞到边缘触发
-                if ((this.gEnemy[i]).offset > 0 && this.gScreenMove % ((this.gEnemy[i]).offset * 3) == 0 && getRand(2) == 1) {
-                    (this.gEnemy[i]).speedX = -(this.gEnemy[i]).speedX;
-                }
-                if (y < MainWindow.windowWidth / 3 && (type < 19 || type > 20)
-                        && ((x < 0 - (wide >> 1) && (this.gEnemy[i]).speedX < 0) || (x > MainWindow.windowWidth - (wide >> 1) && (this.gEnemy[i]).speedX > 0))) {
-                    (this.gEnemy[i]).speedX = -(this.gEnemy[i]).speedX;
-                }
-                if (x + (this.gEnemy[i]).speedX <= -wide || x + (this.gEnemy[i]).speedX >= MainWindow.windowWidth ||
-                        y + (this.gEnemy[i]).speedY <= -high || y + (this.gEnemy[i]).speedY >= MainWindow.windowHeight) {
-                    destroyEnemy(i);
-                    continue;
-                }
-            } else {
-                int enemyOffset = ((this.gEnemy[i]).offset - 100);
-                x = (x + (this.gEnemy[i]).speedX);
-                y = (y + (this.gEnemy[i]).speedY);
-                if (enemyOffset != 0 && this.gScreenMove % enemyOffset == 0) {
-                    (this.gEnemy[i]).speedY = -(this.gEnemy[i]).speedY;
-                }
-                if (x + (this.gEnemy[i]).speedX <= -wide || x + (this.gEnemy[i]).speedX >= MainWindow.windowWidth ||
-                        y + (this.gEnemy[i]).speedY <= -high || y + (this.gEnemy[i]).speedY >= MainWindow.windowHeight) {
-                    destroyEnemy(i);
-                    continue;
-                }
-            }
-            if ((this.gEnemy[i]).bulletType > 0) {
-                makeEnemyBullet(i);
-            }
-            (this.gEnemy[i]).x = x;
-            (this.gEnemy[i]).y = y;
-            if ((this.gEnemy[i]).picId != enemyPic[type - 1] - 1) {
-                (this.gEnemy[i]).picId = ((this.gEnemy[i]).picId + 1);
-                if ((this.gEnemy[i]).type < 45 && (this.gEnemy[i]).picId > enemyPic[type - 1] - 2) {
-                    (this.gEnemy[i]).picId = 0;
-                }
-            }
-            if (this.gPlayerInit == 0 && checkIfHit(x, y, wide, high, this.gPlayer.x, this.gPlayer.y, playerSize[this.gSelectedPlayer * 2], playerSize[this.gSelectedPlayer * 2 + 1])) {
-                (this.gEnemy[i]).health = ((this.gEnemy[i]).health - 20);
-                this.gGameScore += 168;
-                if (6 != this.gGameSecretNum) {
-                    if (!this.gIsBombing) {
-                        this.gIsPlayerDestroyed = true;
-                    }
-                }
-            }
-        }
-    }
-
-    private void destroyEnemy(int i) {
-        this.gEnemy[i].setValue(0);
-        this.gEnemyCount = (this.gEnemyCount - 1);
-    }
-
-    private void createItems(int i) {
-        if ((this.gEnemy[i]).item != 0) {
-            short idx = mallocItems();
-
-            if (idx >= 0) {
-                this.gItem[idx][it_type] = (this.gEnemy[i]).item;
-                this.gItem[idx][it_x] = ((this.gEnemy[i]).x + (enemySize[((this.gEnemy[i]).type - 1) * 2] >> 1) - 15);
-                this.gItem[idx][it_y] = ((this.gEnemy[i]).y + (enemySize[((this.gEnemy[i]).type - 1) * 2 + 1] >> 1));
-                this.gItem[idx][it_speedx] = (2 + getRand(3));
-                this.gItem[idx][it_speedy] = 1;
-                this.gItem[idx][it_picid] = 0;
-            }
-        }
-    }
-
-    private short mallocItems() {
-        if (this.gItemCount >= 6)
-            return -1;
-        for (short i = 0; i < 6; i++) {
-            if (this.gItem[i][it_type] == 0) {
-                this.gItemCount = (this.gItemCount + 1);
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private void makeEnemyBullet(int i) {
-        int[] shootpoint = new int[2];
-        int bulletNum = (this.gEnemy[i]).bulletMax;
-        int wide = enemySize[((this.gEnemy[i]).type - 1) * 2];
-        if ((this.gEnemy[i]).y <= 0 || (this.gEnemy[i]).y >= MainWindow.windowHeight - 50 || (this.gEnemy[i]).x <= 50 - wide ||
-                (this.gEnemy[i]).x >= MainWindow.windowWidth - 50) {
-            return;
-        }
-        while (true) {
-            if (this.gShoot_SL[i]) {
-                if (this.gScreenMove % 5 == 0) {
-                    shootpoint[0] = ((enemySize[((this.gEnemy[i]).type - 1) * 2] >> 1) - 22);
-                    shootpoint[1] = (enemySize[((this.gEnemy[i]).type - 1) * 2 + 1] - 22);
-                    makeBossBullet_SL(i, shootpoint, (this.gEnemy[i]).bulletType);
-                    this.gShootNum_SL[i] = (this.gShootNum_SL[i] + 1);
-                    if (this.gShootNum_SL[i] >= bulletNum) {
-                        this.gShoot_SL[i] = false;
-                        this.gShootNum_SL[i] = 0;
-                    }
-                }
-                return;
-            }
-            if ((this.gEnemy[i]).fireDelay == 0) {
-                return;
-            }
-            if (this.gScreenMove % (this.gEnemy[i]).fireDelay != 0) {
-                return;
-            }
-            int ranVal = getRand(3);
-            if (bulletNum >= 3 && ranVal == 0) {
-                this.gShoot_SL[i] = true;
-                continue;
-            }
-            break;
-        }
-        if (getRand(8 - this.gMission - this.gGameDifficulty) > 0) {
-            bulletNum = (1 + getRand(bulletNum));
-        }
-        //受到帧率的过高导致子弹变多,随机变大一点
-        int s1 = getRand(12 - this.gGameDifficulty);
-        if (s1 % 3 == 0) {
-            if (s1 % 6 == 0) {
-                //makeBulletToPlayer(i, bulletNum, 0, 0, 0);
-            } else {
-                makeBulletToFront(i, bulletNum, 0, 0, 0);
-            }
-        }
-    }
-
-    private void makeBulletToFront(int i, int bulletNum, int x, int y, int type) {
-        int idx = 0;
-        if (x == 0 && y == 0) {
-            x = ((this.gEnemy[i]).x + (enemySize[((this.gEnemy[i]).type - 1) * 2] >> 1));
-            y = ((this.gEnemy[i]).y + enemySize[((this.gEnemy[i]).type - 1) * 2 + 1] - 5);
-            type = (this.gEnemy[i]).bulletType;
-        } else {
-            x = (x + (this.gEnemy[i]).x);
-            y = (y + (this.gEnemy[i]).y);
-        }
-        int offSet = 0;
-        for (i = 0; i < bulletNum; i = (i + 1)) {
-            offSet = (offSet + i * 2);
-        }
-        for (i = 0; i < bulletNum; i = (i + 1)) {
-            offSet = (offSet + 1);
-            int spx = enemyBulletToFront[offSet];
-            offSet = (offSet + 1);
-            int spy = enemyBulletToFront[offSet];
-            idx = mallocBullet();
-            if (idx < 0)
-                return;
-            if (spx == 0 && spy == 0) {
-                makeEnemyBulletInit(idx, type, x, y, 0, 4);
-                bulletGoToPlayer(idx);
-            } else {
-                makeEnemyBulletInit(idx, type, x, y, spx, spy);
-            }
-        }
-        if (bulletNum == 1 && getRand(2) == 1) {
-            bulletGoToPlayer(idx);
-        }
-    }
-
-    private void makeBulletToPlayer(int i, int bulletNum, int x, int y, int type) {
-        int direction;
-        if (x == 0 && y == 0) {
-            x = ((this.gEnemy[i]).x + (enemySize[((this.gEnemy[i]).type - 1) * 2] >> 1));
-            y = ((this.gEnemy[i]).y + enemySize[((this.gEnemy[i]).type - 1) * 2 + 1] - 5);
-            type = (this.gEnemy[i]).bulletType;
-        } else {
-            x = (x + (this.gEnemy[i]).x);
-            y = (y + (this.gEnemy[i]).y);
-        }
-        int idx = mallocBullet();
-        if (idx < 0) {
-            return;
-        }
-        makeEnemyBulletInit(idx, type, x, y, 0, 5);
-        bulletGoToPlayer(idx);
-        if (bulletNum <= 1) {
-            return;
-        }
-        //↑ ↓ ← → ↖ ↗ ↘ ↙ ↕
-        if (this.gBullet[idx][4] > 0) {
-            if (this.gBullet[idx][5] > 0) {
-                direction = 1;// →  ↓  ↘
-            } else if (this.gBullet[idx][5] < 0) {
-                direction = 3;// →  ↑  ↗
-            } else {
-                direction = 2;// →     →
-            }
-        } else if (this.gBullet[idx][4] < 0) {
-            if (this.gBullet[idx][5] > 0) {
-                direction = 7;// ←  ↓  ↙
-            } else if (this.gBullet[idx][5] < 0) {
-                direction = 5;// ←  ↑  ↖
-            } else {
-                direction = 6;// ←     ←
-            }
-        } else if (this.gBullet[idx][5] > 0) {
-            direction = 0;//    ↓  ↓
-        } else {
-            direction = 4;//    ↑  ↑
-        }
-
-        if (bulletNum >= 2) {
-            this.gBullet[idx][4] = bulletSpeedToPlayer[direction * 6];
-            this.gBullet[idx][5] = bulletSpeedToPlayer[direction * 6 + 1];
-
-            idx = mallocBullet();
-            if (idx < 0) {
-                return;
-            }
-            makeEnemyBulletInit(idx, type, x, y, 0, 0);
-            this.gBullet[idx][4] = bulletSpeedToPlayer[direction * 6 + 2];
-            this.gBullet[idx][5] = bulletSpeedToPlayer[direction * 6 + 3];
-        }
-
-        if (bulletNum >= 3) {
-            idx = mallocBullet();
-            if (idx < 0)
-                return;
-            makeEnemyBulletInit(idx, type, x, y, 0, 0);
-            if (direction == 0)
-                direction = 8;
-
-            this.gBullet[idx][4] = bulletSpeedToPlayer[direction * 6 - 3];
-            this.gBullet[idx][5] = bulletSpeedToPlayer[direction * 6 - 2];
-        }
-
-        if (bulletNum >= 4) {
-            idx = mallocBullet();
-            if (idx < 0)
-                return;
-            makeEnemyBulletInit(idx, type, x, y, 0, 0);
-            if (direction == 8)
-                direction = 0;
-            this.gBullet[idx][4] = bulletSpeedToPlayer[direction * 6 + 4];
-            this.gBullet[idx][5] = bulletSpeedToPlayer[direction * 6 + 5];
-        }
-        if (bulletNum >= 5) {
-            idx = mallocBullet();
-            if (idx < 0)
-                return;
-            makeEnemyBulletInit(idx, type, x, y, 0, 0);
-            if (direction == 0)
-                direction = 8;
-            this.gBullet[idx][4] = bulletSpeedToPlayer[direction * 6 - 4];
-            this.gBullet[idx][5] = bulletSpeedToPlayer[direction * 6 - 3];
-        }
-        if (bulletNum >= 6) {
-            idx = mallocBullet();
-            if (idx < 0)
-                return;
-            makeEnemyBulletInit(idx, type, x, y, 0, 4);
-            bulletGoToPlayer(idx);
-        }
-    }
-
-    private void makeBossBullet_SL(int i, int[] shootpoint, int bullettype) {
-        int idx = mallocBullet();
-        if (idx < 0) {
-            return;
-        }
-        if (bullettype == 0) {
-            this.gBullet[idx][0] = bossBullet[(this.gEnemy[i]).type - 200 - 1][this.gBossBulletSequenceMax][2];
-        } else {
-            this.gBullet[idx][0] = bullettype;
-        }
-        this.gBullet[idx][2] = ((this.gEnemy[i]).x + shootpoint[0]);
-        this.gBullet[idx][3] = ((this.gEnemy[i]).y + shootpoint[1]);
-        this.gBullet[idx][4] = 0;
-        if (bullettype == 0) {
-            this.gBullet[idx][5] = 5;
-        } else {
-            this.gBullet[idx][5] = 4;
-        }
-        this.gBullet[idx][1] = getRand(bulletPic[this.gBullet[idx][0] - 1]);
-
-        if (getRand(2) == 1) {
-            bulletGoToPlayer(idx);
-        } else {
-            this.gBullet[idx][4] = bulletSpeedSL[getRand(9) * 2];
-            this.gBullet[idx][5] = bulletSpeedSL[getRand(9) * 2 + 1];
-        }
-    }
-
     private void makeEnemy() {
-        this.gScreenMove = this.gScreenMove + 1;
-        if (!this.gIsEnableEnemy) {
+        if (enemys.size() >= maxEnemy || !mIsEnableEnemy) {
             return;
         }
-        if (this.gScreenMove % 10 == 0) {
-            int missionBulletNum;
-            int ranVal = getRand(this.gEnemyCount + 1);
-            if (ranVal > 0) {
-                return;
-            }
-            int idx = mallocEnemy();
-            if (idx < 0) {
-                return;
-            }
-
-            makeEnemyInit(idx);
-            this.gAppearEnemyCount = this.gAppearEnemyCount + 1;
-            if (this.gAppearEnemyCount > this.gApearEnemyType) {
-                if ((this.gApearEnemyType < 15 && this.gMission != 3) || (this.gApearEnemyType < 10 && this.gMission == 3)) {
-                    this.gApearEnemyType = this.gApearEnemyType + 1;
+        int randomType;
+        int type;
+        int ranVal;
+        if (this.mMission <= 4) {
+            randomType = this.getRand(this.gApearEnemyType);
+            type = stageEnemy[this.mCorrespondMission - 1][randomType] - 1;
+            if (type < 6) {
+                ranVal = this.getRand(5);
+                if (ranVal < 3) {
+                    type = (type * 3);
+                } else if (ranVal == 3) {
+                    type = (type * 3 + 1);
                 } else {
-                    playSound(3);
-                    this.gIsBossAppear = true;
-                    this.gIsEnableEnemy = false;
+                    type = (type * 3 + 2);
                 }
-                this.gAppearEnemyCount = 0;
             }
-            if (1 == this.gGameDifficulty) {
-                (this.gEnemy[idx]).health = ((this.gEnemy[idx]).health + ((this.gEnemy[idx]).health >> 2));
-                (this.gEnemy[idx]).fireDelay = ((this.gEnemy[idx]).fireDelay - 5);
-                (this.gEnemy[idx]).bulletMax = ((this.gEnemy[idx]).bulletMax + 1);
-                (this.gEnemy[idx]).reward = ((this.gEnemy[idx]).reward + ((this.gEnemy[idx]).reward >> 1));
-            }
-
-            if (1 == this.gMission) {
-                missionBulletNum = -1;
-            } else if (3 == this.gMission || 5 == this.gMission) {
-                missionBulletNum = 1;
-            } else {
-                missionBulletNum = 0;
-            }
-            if ((this.gEnemy[idx]).bulletMax + missionBulletNum <= 6 && (this.gEnemy[idx]).bulletMax + missionBulletNum >= 1) {
-                (this.gEnemy[idx]).bulletMax = (this.gEnemy[idx]).bulletMax + missionBulletNum;
-            }
-            (this.gEnemy[idx]).colors = getRand(enemyData[(this.gEnemy[idx]).type - 1][1]);
-
+        } else {
+            type = (18 + this.getRand(28));
         }
+        enemys.add(EnemyPlane.mallocEnemy(mMission, type));
+
     }
 
-    private void makeBoss() {
-        if (this.gIsBossAppear && this.gBossIndex < 0 && this.gEnemyCount <= 0 && !this.gIsMissionComplete) {
-            int idx = mallocEnemy();
-            if (idx < 0) {
-                return;
-            }
-
-            int ttmp = 47 + this.gCorrespondMission - 2;
-            this.gEnemy[idx].setValue(enemyData[ttmp][0], enemyData[ttmp][1], enemyData[ttmp][2], enemyData[ttmp][3],
-                    enemyData[ttmp][4], enemyData[ttmp][5], enemyData[ttmp][6],
-                    enemyData[ttmp][7], enemyData[ttmp][8], enemyData[ttmp][9], enemyData[ttmp][10],
-                    enemyData[ttmp][11], enemyData[ttmp][12], enemyData[ttmp][13],
-                    enemyData[ttmp][14], enemyData[ttmp][15], enemyData[ttmp][16]);
-
-
-            (this.gEnemy[idx]).y = -enemySize[(47 + this.gCorrespondMission - 2) * 2 + 1];
-            this.gBossIndex = idx;
-            this.gBossMoveAction = 1;
-            this.gBossInitDirect = true;
-            if (1 == this.gGameDifficulty) {
-                (this.gEnemy[idx]).health = ((this.gEnemy[idx]).health + ((this.gEnemy[idx]).health >> 2));
-                (this.gEnemy[idx]).reward = ((this.gEnemy[idx]).reward + ((this.gEnemy[idx]).reward >> 1));
+    private void dealPlayerState() {
+        if (gIsGameOver) {
+            return;
+        }
+        if (mIsPlayerDestroyed) {
+            mIsPlayerDestroyed = false;
+        } else {
+            if (mPlayer.state == -1) {//进场
+                mPlayer.y -= 5;
+                if (mPlayer.y <= MainWindow.windowHeight - 300) {
+                    mPlayer.state = 0;
+                }
+            } else {//正常状态
+                mPlayer.handleMove();
             }
         }
     }
 
     private void makeEnemyInit(int id) {
         int type;
-        if (this.gMission <= 4) {
+        if (this.mMission <= 4) {
             int ranValTemp = getRand(this.gApearEnemyType);
-            type = (stageEnemy[this.gCorrespondMission - 1][ranValTemp] - 1);
+            type = (stageEnemy[this.mCorrespondMission - 1][ranValTemp] - 1);
             if (type < 6) {
                 int ranVal = getRand(5);
                 if (ranVal < 3) {
@@ -870,12 +382,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             type = (18 + getRand(28));
         }
-        this.gEnemy[id].setValue(enemyData[type][0], enemyData[type][1],
-                enemyData[type][2], enemyData[type][3], enemyData[type][4],
-                enemyData[type][5], enemyData[type][6], enemyData[type][7],
-                enemyData[type][8], enemyData[type][9], enemyData[type][10],
-                enemyData[type][11], enemyData[type][12], enemyData[type][13],
-                enemyData[type][14], enemyData[type][15], enemyData[type][16]);
 
         int wide = enemySize[((this.gEnemy[id]).type - 1) * 2];
         int high = enemySize[((this.gEnemy[id]).type - 1) * 2 + 1];
@@ -904,7 +410,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 } else if (ranVal == 1) {
                     (this.gEnemy[id]).aliveTime = 0;
                     (this.gEnemy[id]).pauseDelay = 0;
-                    (this.gEnemy[id]).offset = (getRand(125) + 125);
+                    (this.gEnemy[id]).offset = (getRand(250) + 125);
                     if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
                         (this.gEnemy[id]).offset = 0;
                     }
@@ -913,8 +419,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     (this.gEnemy[id]).aliveTime = (getRand(320) + 240);
                     //}
 
-                    (this.gEnemy[id]).pauseDelay = getRand(420);
-                    (this.gEnemy[id]).offset = (getRand(125) + 125);
+                    (this.gEnemy[id]).pauseDelay = getRand(320);
+                    (this.gEnemy[id]).offset = (getRand(250) + 125);
                     if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
                         (this.gEnemy[id]).offset = 0;
                     }
@@ -922,8 +428,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     //if ((this.gEnemy[id]).aliveTime > 0) {
                     (this.gEnemy[id]).aliveTime = -1;
 //                    }
-                    (this.gEnemy[id]).pauseDelay = getRand(360);
-                    (this.gEnemy[id]).offset = getRand(125) + 125;
+                    (this.gEnemy[id]).pauseDelay = getRand(320);
+                    (this.gEnemy[id]).offset = getRand(250) + 125;
                     if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
                         (this.gEnemy[id]).offset = 0;
                     }
@@ -947,9 +453,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if ((this.gEnemy[id]).speedY == 0) {
                 int s = getRand(3);
                 if (s == 1) {
-                    (this.gEnemy[id]).speedY = 1;
+                    (this.gEnemy[id]).speedY = 2;
                 } else if (s == 2) {
-                    (this.gEnemy[id]).speedY = -1;
+                    (this.gEnemy[id]).speedY = -2;
                 }
             }
             int ranVal = getRand(2);
@@ -976,8 +482,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void bulletGoToPlayer(int i) {
-        int x = (this.gBullet[i][2] - this.gPlayer.x + (playerSize[this.gSelectedPlayer * 2] >> 1));
-        int y = (this.gBullet[i][3] - this.gPlayer.y + (playerSize[this.gSelectedPlayer * 2 + 1] >> 1));
+        int x = (this.gBullet[i][2] - this.mPlayer.x + (playerSize[this.playerType * 2] >> 1));
+        int y = (this.gBullet[i][3] - this.mPlayer.y + (playerSize[this.playerType * 2 + 1] >> 1));
 
         boolean flag_x = true;
         boolean flag_y = true;
@@ -1056,18 +562,18 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if ((this.gEnemy[i]).type <= 18) {
             if (getRand(10) == 0) {
                 (this.gEnemy[i]).item = 5;
-            } else if (this.gPlayer.power == 1 && getRand(10) == 1) {
+            } else if (this.mPlayer.power == 1 && getRand(10) == 1) {
                 (this.gEnemy[i]).item = 7;
             }
         } else {
-            if (this.gPlayer.power < 3 && getRand(4) == 0) {
+            if (this.mPlayer.power < 3 && getRand(4) == 0) {
                 (this.gEnemy[i]).item = 7;
                 return;
             }
             if (getRand(6) == 0) {
                 (this.gEnemy[i]).item = gGetItemsList[getRand(20)];
                 if (12 == (this.gEnemy[i]).item) {
-                    (this.gEnemy[i]).item = (this.gEnemy[i]).item + this.gSelectedPlayer;
+                    (this.gEnemy[i]).item = (this.gEnemy[i]).item + this.playerType;
                 }
             }
         }
@@ -1108,15 +614,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return false;
     }
 
-    private void playSound(int index) {
-        if (index == 12) {
-            mediaPlayers[index].setLooping(true);
-        }
-
-        mediaPlayers[index].prepareAsync();
-        mediaPlayers[index].isPlaying();
-    }
-
     /**
      * 随机分配一个敌人对象
      *
@@ -1142,13 +639,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int r = this.random.nextInt();
         r = (r >> 24) + (r >> 16) + (r >> 8) + r & 0xFF;
         return Math.abs(r % i);
-    }
-
-    private void setRect(int x, int y, int w, int h) {
-        this.gSrcRect.x = x;
-        this.gSrcRect.y = y;
-        this.gSrcRect.w = w;
-        this.gSrcRect.h = h;
     }
 
     private void drawBitmapXY(Canvas canvas, Bitmap bitmap, int x, int y) {
@@ -1199,19 +689,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        Log.d("TAG", "surfaceCreated: ");
         isThreadAlive = true;
         new Thread(this).start();
     }
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-        Log.d("TAG", "surfaceChanged: " + width + "  " + height);
     }
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-        Log.d("TAG", "surfaceDestroyed: ");
     }
 
     @Override
@@ -1230,7 +717,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (this.gIsLoadGame) {
                     drawLoading(lockCanvas);
                 } else {
-                    driveGameScreen(lockCanvas);
+                    drawObjects(lockCanvas);
                     surfaceHolder.unlockCanvasAndPost(lockCanvas);
                 }
             } catch (Exception e) {
@@ -1239,14 +726,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
     }
 
-    private void driveGameScreen(Canvas canvas) throws Exception {
+    private void drawObjects(Canvas canvas) throws Exception {
         showBackScreen(canvas);
         //showBoss(canvas);
-        showEnemy(canvas);
+        //showEnemy(canvas);
         //showBomb(canvas);
         showPlayer(canvas);
         //showItems(canvas);
-        showBullet(canvas);
+        //showBullet(canvas);
         //showExplode(canvas);
         showActiveLife(canvas);
         showActiveBomb(canvas);
@@ -1256,69 +743,38 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showBullet(Canvas canvas) {
-        //int i;
-        int x;
-        int y;
-        for (int i = 0; i < gBullet.length; i++) {
-            int type = this.gBullet[i][0];
-            if (type != 0) {
-                --type;
-                x = this.gBullet[i][2];
-                y = this.gBullet[i][3];
-                short wide = bulletSize[type * 2];
-                short high = bulletSize[type * 2 + 1];
-                if (x > -wide && x < MainWindow.windowWidth && y > -high && y < MainWindow.windowHeight) {
-                    if (this.gBullet[i][0] >= 21) {
-                        this.setRect((short) (this.gBullet[i][1] * wide), (short) 0, wide, high);
-                        this.destroyBullet(i);
-                        drawBitmapXY(canvas, ResInit.bulletImage[59], x, y);
-                    } else {
-                        short num = 0;
-
-                        for (short j = 0; j < type; ++j) {
-                            num = (short) (num + bulletPic[j]);
-                        }
-                        drawBitmapXY(canvas, ResInit.bulletImage[num + this.gBullet[i][1]], x, y);
-                    }
-                }
-            }
-        }
-
-//        if (this.gCurrentMissileMax > 0) {
-//            for (i = 0; i < 4; ++i) {
-//                if (this.gMissile[i][0] != 0) {
-//                    x = this.gMissile[i][2];
-//                    y = this.gMissile[i][3];
-//                    int wide;
-//                    int high;
-//                    if (this.gMissile[i][0] == 2) {
-//                        short xpic = this.getMissilePicIndex(i);
-//                        wide = 8;
-//                        high = 8;
-//                        if (x > -wide && x < MainWindow.windowWidth && y > -high && y < MainWindow.windowWidth) {
-//                            this.setRect((xpic * wide), 0, wide, high);
-//                            this.gameDrawImage(ResInit.bulletImage[58], x, y, true, g);
-//                        }
+//        for (int i = 0; i < gBullet.length; i++) {
+//            int type = this.gBullet[i][0];
+//            if (type != 0) {
+//                --type;
+//                x = this.gBullet[i][2];
+//                y = this.gBullet[i][3];
+//                int wide = bulletSize[type * 2];
+//                int high = bulletSize[type * 2 + 1];
+//                if (x > -wide && x < MainWindow.windowWidth && y > -high && y < MainWindow.windowHeight) {
+//                    if (this.gBullet[i][0] >= 21) {
+//                        this.setRect((short) (this.gBullet[i][1] * wide), 0, wide, high);
+//                        this.destroyBullet(i);
+//                        drawBitmapXY(canvas, ResInit.bulletImage[59], x, y);
 //                    } else {
-//                        wide = 6;
-//                        high = 28;
-//                        if (x > -wide && x < MainWindow.windowWidth && y > -high && y < MainWindow.windowWidth) {
-//                            this.setRect((short) ((this.gScreenMove & 1) * wide), (short) 0, wide, high);
-//                            this.gameDrawImage(ResInit.bulletImage[57], x, y, true, g);
+//                        int num = 0;
+//
+//                        for (short j = 0; j < type; ++j) {
+//                            num = (num + bulletPic[j]);
 //                        }
+//                        drawBitmapXY(canvas, ResInit.bulletImage[num + this.gBullet[i][1]], x, y);
 //                    }
 //                }
 //            }
 //        }
-
     }
 
-    private byte getMissilePicIndex(int i) {
-        byte misBulletDirection = 0;
+    private int getMissilePicIndex(int i) {
+        int misBulletDirection = 0;
         int xspd = this.gMissile[i][4];
         int yspd = this.gMissile[i][5];
 
-        for (byte temp = 0; temp < 16; ++temp) {
+        for (int temp = 0; temp < 16; ++temp) {
             if (xspd == bulletSpeedMissile[temp * 2] && yspd == bulletSpeedMissile[temp * 2 + 1]) {
                 misBulletDirection = temp;
                 break;
@@ -1368,28 +824,30 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showMissionInfo(Canvas canvas) {
         if (this.gScreenMove < 310 && this.gScreenMove >= 45) {
             if (this.gScreenMove < 250) {
-                if (this.gMission == 5) {
+                if (this.mMission == 5) {
                     drawBitmapCenter(canvas, ResInit.otherImage[10]);
                 } else {
-                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][this.gCorrespondMission], 100);
+                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][this.mCorrespondMission], 100);
                 }
             } else {
-                this.gIsEnableEnemy = true;
+                this.mIsEnableEnemy = true;
             }
         }
+
         if (this.gIsMissionComplete) {
             this.gTempDelay = (this.gTempDelay + 1);
             if (this.gTempDelay > 90 && !this.gIsGameFinished) {
-                if (this.gMission >= 5) {
+                if (this.mMission >= 5) {
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[5], ResInit.otherImage[3], 50);
                 } else {
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[9], ResInit.otherImage[3], 50);
                 }
             }
         }
+
         //按60帧算的话这里应该是6秒左右
         if (this.gTempDelay > 400) {
-            if (this.gMission >= 5) {
+            if (this.mMission >= 5) {
                 drawBitmapCenter(canvas, ResInit.otherImage[0]);
                 if (this.gTempDelay > 800) {
                     this.gIsGameFinished = true;
@@ -1397,7 +855,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 return;
             }
 
-            this.gMission = (this.gMission + 1);
+            this.mMission = (this.mMission + 1);
             this.gScreenMove = 0;
             this.gTempDelay = 0;
             this.gIsMissionComplete = false;
@@ -1417,16 +875,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (this.gIsGameOver) {
             return;
         }
-        for (int i = 0; i < this.gPlayer.bomb; i = (i + 1)) {
+        for (int i = 0; i < mPlayer.bomb; i = (i + 1)) {
             int x = (27 + i * 45);
-            drawBitmapXY(canvas, ResInit.bombIcon[this.gBombType[i] - 1], x, 120);
+            drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes[i]], x, 120);
         }
     }
 
     private void showActiveLife(Canvas canvas) {
-        for (int i = 0; i < this.gPlayer.life - 1; i = (i + 1)) {
+        for (int i = 0; i < this.mPlayer.life - 1; i = (i + 1)) {
             int x = (27 + i * 45);
-            drawBitmapXY(canvas, ResInit.lifeIcon[this.gSelectedPlayer], x, 50);
+            drawBitmapXY(canvas, ResInit.lifeIcon[this.playerType], x, 50);
         }
     }
 
@@ -1434,23 +892,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (this.gIsGameOver) {
             return;
         }
-        int x = this.gPlayer.x;
-        int y = this.gPlayer.y;
-
-        int wide = playerSize[this.gSelectedPlayer * 2];
-        int high = playerSize[this.gSelectedPlayer * 2 + 1];
-
-        if (x <= -wide || x >= MainWindow.windowWidth || y <= -high || y >= MainWindow.windowHeight) {
-            return;
+        if (mPlayer.state == -1 && (this.gScreenMove & 3) != 0) {
+            drawBitmapXY(canvas, mPlayer.stateImg[5], mPlayer.x, mPlayer.y);
+        } else {
+            drawBitmapXY(canvas, mPlayer.stateImg[0], mPlayer.x, mPlayer.y);
         }
-        if (this.gPlayerInit > 0 && (this.gScreenMove & 0x1) != 0) {
-            this.gPlayer.picId = 5;
-        }
-        drawBitmapXY(canvas, ResInit.playerStateImage[gPlayer.picId], gPlayer.x, gPlayer.y);
 
-        if (this.gIsPlayerFire) {
+        if (this.gIsPlayerFire && (this.gScreenMove & 5) != 0) {
             gIsPlayerFire = false;
-            drawBitmapXY(canvas, ResInit.playerStateImage[4], gPlayer.x, gPlayer.y);
+            drawBitmapXY(canvas, mPlayer.stateImg[4], mPlayer.x, mPlayer.y);
         }
     }
 
@@ -1459,9 +909,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gSrcRect.w = MainWindow.windowWidth;
         int Rect_y = -(this.gBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
         if (Rect_y >= 0) {
-            drawBitmapXY(canvas, ResInit.BackgroundImage[this.gCorrespondMission - 1], 0, -(this.gBackgroundHeight - Rect_y));
+            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, -(this.gBackgroundHeight - Rect_y));
         }
-        drawBitmapXY(canvas, ResInit.BackgroundImage[this.gCorrespondMission - 1], 0, Rect_y);
+        drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, Rect_y);
 
         if (Rect_y >= MainWindow.windowHeight) {
             this.gBackgroundOffset = 0;
@@ -1490,4 +940,26 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
         return str;
     }
+
+    @Override
+    public void updatePosition(double xPercent, double yPercent) {
+        if (mPlayer == null || gIsMissionComplete) {
+            return;
+        }
+        mPlayer.handleSpeed(xPercent, yPercent);
+    }
+
+
+    public boolean inScreen(int posX, int posY, Bitmap source) {
+        if ((posX >= 0 && posX <= MainWindow.windowWidth - source.getWidth()) && posY >= 0 && posY <= MainWindow.windowHeight - source.getHeight()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean outScreen(int posX, int posY, Bitmap source) {
+        return !inScreen(posX, posY, source);
+    }
+
+
 }

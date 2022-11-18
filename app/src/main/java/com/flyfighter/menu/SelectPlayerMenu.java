@@ -64,6 +64,7 @@ public class SelectPlayerMenu extends FrameLayout {
 
     private void handleChangeBackgroundImg() {
         rectIndex++;
+        ivPlayerBg.setImageBitmap(ResInit.playerSelectImage[selectPlayer]);
         ivRect.setImageBitmap(ResInit.playerSelectImage[3 + rectIndex % 2]);
         FrameLayout.LayoutParams params = (LayoutParams) ivRect.getLayoutParams();
         params.gravity = Gravity.LEFT | Gravity.BOTTOM;
