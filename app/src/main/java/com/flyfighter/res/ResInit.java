@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 
+import com.flyfighter.entity.EnemyPlane;
 import com.flyfighter.menu.GameCanvas;
 
 import java.io.IOException;
@@ -265,7 +266,7 @@ public class ResInit {
                         kinds = (type + 1) * 3;
                     }
                     for (; type < kinds; type++) {
-                        for (int j = 0; j < GameCanvas.enemyData[type][1]; j++) {
+                        for (int j = 0; j < EnemyPlane.enemyData[type][1]; j++) {
                             if (type < 9) {
                                 enemyImage[type][j] = loadRes(context, "Enemy/fly_enemy0" + (type + 1) + (j + 1) + ".png");
                             } else {
@@ -276,7 +277,7 @@ public class ResInit {
                 }
             } else {//第五关单独设置
                 for (int i = 17; i < 46; i++) {
-                    for (int j = 0; j < GameCanvas.enemyData[i][1]; j++) {
+                    for (int j = 0; j < EnemyPlane.enemyData[i][1]; j++) {
                         if (i < 9) {
                             enemyImage[i][j] = loadRes(context, "Enemy/fly_enemy0" + (i + 1) + (j + 1) + ".png");
                         } else {

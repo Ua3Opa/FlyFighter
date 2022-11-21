@@ -106,21 +106,21 @@ public class PlayerPlane {
     public void handleSpeed(double xPercent, double yPercent) {
         speedX = (int) (speed * xPercent);
         speedY = (int) (speed * yPercent);
-        Log.d("TAG", "handleSpeed: " + speedX + "  " + speedY);
+        //Log.d("TAG", "handleSpeed: " + speedX + "  " + speedY);
     }
 
     public void handleMove() {
-        Log.d("TAG", "handleMove: " + x + "  " + speedX);
+        //Log.d("TAG", "handleMove: " + x + "  " + speedX);
         //在屏幕范围之内
-        if ((x > 0 && (x <= MainWindow.windowWidth - stateImg[0].getWidth()) ||
+        if ((x > 0 && x <= MainWindow.windowWidth - stateImg[0].getWidth()) ||
                 (x <= 0 && speedX >= 0) ||
-                ((x <= MainWindow.windowWidth - stateImg[0].getWidth()) && speedX <= 0))) {
+                (x >= MainWindow.windowWidth - stateImg[0].getWidth() && speedX <= 0)) {
             x += speedX;
         }
         //在屏幕范围之内
-        if (y > 0 && (y <= MainWindow.windowHeight - stateImg[0].getHeight() ||
+        if ((y > 0 && y <= MainWindow.windowHeight - stateImg[0].getHeight())  ||
                 (y <= 0 && speedY >= 0) ||
-                ((y <= MainWindow.windowHeight - stateImg[0].getHeight()) && speedY <= 0))) {
+                (y >= MainWindow.windowHeight - stateImg[0].getHeight() && speedY <= 0)) {
             y += speedY;
         }
     }
