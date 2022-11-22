@@ -198,7 +198,7 @@ public class EnemyPlane {
             enemy.speedX = enemy.speedX + (2 - enemy.getRand(5));
 
             enemy.y = 0 - enemy.height;
-            enemy.x = enemy.getRand(MainWindow.windowWidth - enemy.width);
+            enemy.x = new Random().nextInt(MainWindow.windowWidth - enemy.width);
             if (enemy.getRand(2) == 1) {
                 switch (enemy.getRand(4)) {
                     case 0:
@@ -310,6 +310,8 @@ public class EnemyPlane {
                     y = y + speedY;
                 }
                 if (x <= 0 || x >= MainWindow.windowWidth - sourceImg.getWidth()) {
+                    speedX = -speedX;
+                } else if (Math.abs(x - patrolX) <= 10) {
                     speedX = -speedX;
                 }
             }

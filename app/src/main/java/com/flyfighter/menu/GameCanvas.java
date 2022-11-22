@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -46,7 +45,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean gIsSaved;
     private int gContinueNum;
     private boolean gIsGameFinished;
-    private boolean gIsPlayerFire;
+    private boolean gIsPlayerFire = true;
     private int mMission;
     private int gGameScore;
     private int gMissileType;
@@ -54,7 +53,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gOtherTypeBomb;
     private int gGameSecretNum;
     private int gGamePause;
-    private boolean gIsMissionComplete;
+    private boolean mIsMissionComplete;
     private int gTempDelay;
     private int gBombDelay;
     private boolean mIsEnableEnemy;
@@ -75,7 +74,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gBossBulletSequenceMax;
     private int gBossBulletNum;
     private int gBossShootDelay;
-    private int gFireDelay;
+    private int mFireDelay;
     private int gApearEnemyType;
     private boolean mIsPlayerDestroyed;
     private int gBossBulletDirect1;
@@ -87,7 +86,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int mGameDifficulty;
     private int gBossMoveAction;
     private int gBackgroundHeight;
-
     private static int it_type = 0;
     private static int it_x = 1;
     private static int it_y = 2;
@@ -98,6 +96,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private static final int[] backGroundHeight = new int[5];
 
     public List<Bullet> bullets = new ArrayList<>();
+    public List<Bullet> playerBullets = new ArrayList<>();
 
     public static final int[][] stageEnemy = new int[][]{
             {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
@@ -135,19 +134,37 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             {{3, 4, 16, 20}, {13, 6, 20, 25}, {3, 4, 11, 30}, {23, 6, 21, 20}, {16, 6, 10, 35}, {13, 5, 6, 25},
                     {3, 5, 19, 20}, {12, 6, 17, 25}}};
 
-    private static final int[][] playerBulletData = new int[][]{{0, 9, -2, 0, -23}, {1, 3, 0, 0, -20}, {1, 15, 0, 0, -20}, {1, 3, 0, -1, -20}, {0, 9, -7, 0, -25}, {1, 15, 0, 1, -20}, {1, 0, 0, -1, -20}, {0, 4, 0, 0, -25}, {0, 14, 0, 0, -25}, {1, 18, 0, 1, -20}, {0, 1, 0, -2, -23}, {1, 5, -2, -1, -24}, {0, 9, 0, 0, -28}, {1, 13, -2, 1, -24}, {0, 17, 0, 2, -23}, {1, 10, 0, 0, -23}, {1, 4, 0, 0, -23}, {1, 15, 0, 0, -23}, {0, 4, 0, -1, -23}, {1, 10, 0, 0, -30}, {2, 15, 0, 1, -23}, {0, 1, 0, -1, -23}, {1, 5, 0, 0, -30}, {1, 14, 0, 0, -30}, {2, 18, 0, 1, -23}, {0, 1, 0, -1, -23}, {0, 3, 0, 0, -27}, {1, 10, 2, 0, -33}, {2, 16, 0, 0, -27}, {2, 17, 0, 1, -23}, {1, 14, -5, 0, -23}, {2, 6, 0, 0, -23}, {2, 22, 0, 0, -23}, {2, 4, 1, 0, -23}, {1, 14, -5, 0, -30}, {2, 24, 1, 0, -23}, {2, 2, 1, 0, -23}, {1, 10, -5, 0, -30}, {1, 18, -5, 0, -30}, {2, 26, 1, 0, -23}, {2, -2, -2, 0, -23}, {1, 4, -5, 0, -30}, {1, 14, -2, 0, -30}, {1, 24, -5, 0, -30}, {2, 31, -2, 0, -23}};
+    public static final int[][] playerBulletData = new int[][]
+                    // 第二位改成飞机中心偏移值
+                    {{0, 0, -2, 0, -23},
+                    {1, -24, 0, 0, -20}, {1, 24, 0, 0, -20},
+                    {1, -24, 0, -1, -20}, {0, 0, -7, 0, -25}, {1, 24, 0, 1, -20},
+                    {1, -32, 0, -1, -20}, {0, -24, -6, 0, -25}, {0, 24, -6, 0, -25}, {1, 32, 0, 1, -20},
+                    {0, -38, 0, -2, -23}, {1, -24, -2, -1, -24}, {0, 0, 0, 0, -28}, {1, 24, -2, 1, -24}, {0, 38, 0, 2, -23},
 
-    private static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
+                    {1, 0, 0, 0, -23},
+                    {1, -26, 0, 0, -23}, {1, 26, 0, 0, -23},
+                    {0, -26, 0, -1, -23}, {1, 0, -6, 0, -30}, {26, 15, 0, 1, -23},
+                    {0, -34, 0, -1, -23}, {1, -26, 0, 0, -30}, {1, 26, 0, 0, -30}, {2, 34, 0, 1, -23},
+                    {0, -40, -2, -1, -23}, {0, -26, 0, 0, -27}, {1, 0, -4, 0, -33}, {2, 26, 0, 0, -27}, {2, 40, -2, 1, -23},
 
-    private static final int[] bulletSpeedSL = new int[]{-2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 1, 2, 2, 2, 2, 1};
+                    {1, 0, -5, 0, -23},
+                    {2, -34, 0, 0, -23}, {2, 34, 0, 0, -23},
+                    {2, -44, 1, 0, -23}, {1, 0, -5, 0, -30}, {2, 44, 1, 0, -23},
+                    {2, -50, 1, 0, -23}, {1, -20, -5, 0, -30}, {1, 20, -5, 0, -30}, {2, 50, 1, 0, -23},
+                    {2, -55, -2, 0, -23}, {1, -25, -5, 0, -30}, {1, 0, -2, 0, -30}, {1, 25, -5, 0, -30}, {2, 55, -2, 0, -23}};
 
-    private static final int[][] playerBulletFloorPower = new int[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
+    public static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
 
-    private static final int[] enemyBulletToFront = new int[]{0, 18, -4, 18, 4, 18, -4, 18, 18, 4, 18, -4, 18, 18, 4, 18, -9, 13, -4, 18, 18, 4, 18, 9, 13, -9, 13, -4, 18, 18, 4, 18, 9, 13};
+    public static final int[] bulletSpeedSL = new int[]{-2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 1, 2, 2, 2, 2, 1};
 
-    private static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
+    public static final int[][] playerBulletFloorPower = new int[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
 
-    private static final int[] bulletSpeedMissile = new int[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
+    public static final byte[] enemyBulletToFront = new byte[]{0, 4, -1, 4, 1, 4, -1, 4, 0, 4, 1, 4, -1, 4, 0, 4, 1, 4, 0, 0, -2, 3, -1, 4, 0, 4, 1, 4, 2, 3, -2, 3, -1, 4, 0, 4, 1, 4, 2, 3, 0, 0};
+
+    public static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
+
+    public static final int[] bulletSpeedMissile = new int[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
 
     private static final int[][] playerBulletFloorNum = new int[][]{{1, 2, 3, 4, 5, 0}, {1, 2, 3, 4, 5, 15}, {1, 2, 3, 4, 5, 30}};
 
@@ -206,7 +223,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void stageInit() {
         this.gGamePause = 0;
-        this.gIsMissionComplete = false;
+        this.mIsMissionComplete = false;
         this.gTempDelay = 0;
         this.gBombDelay = 0;
         this.mIsEnableEnemy = false;
@@ -227,7 +244,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gBossBulletSequenceMax = 0;
         this.gBossBulletNum = 0;
         this.gBossShootDelay = 0;
-        this.gFireDelay = 0;
+        this.mFireDelay = 0;
         this.gApearEnemyType = 1;
         this.mIsPlayerDestroyed = false;
 
@@ -328,7 +345,20 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).sourceImg)) {
                 bullets.remove(bullets.get(i));
             }
+
+
         }
+
+        for (int i = playerBullets.size() - 1; i >= 0; i--) {
+            playerBullets.get(i).x += playerBullets.get(i).speedX;
+            playerBullets.get(i).y += playerBullets.get(i).speedY;
+            if (outScreen(playerBullets.get(i).x, playerBullets.get(i).y, playerBullets.get(i).sourceImg)) {
+                playerBullets.remove(playerBullets.get(i));
+            }
+        }
+
+
+
     }
 
     private void dealEnemyState() {
@@ -354,7 +384,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         enemy.shootTime = System.currentTimeMillis();
-        Log.d("TAG", "makeEnemyBullet: " + (System.currentTimeMillis() - enemy.createTime) + "    " + delay);
+        //Log.d("TAG", "makeEnemyBullet: " + (System.currentTimeMillis() - enemy.createTime) + "    " + delay);
         int bulletNum = enemy.bulletMax;
         int rand = getRand(3);
         if (bulletNum < 3 || rand != 0) {
@@ -365,8 +395,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             Bullet bullet = makeEnemyBullet(enemy);
             if (ranVal == 0) {
                 makeBulletToPlayer(enemy, bullet, player, bulletNum);
-            } else {
-                makeBulletToFront(player, bulletNum);
+            } else if (ranVal == 1) {
+                makeBulletToFront(enemy, bulletNum);
             }
         }
     }
@@ -439,6 +469,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void bulletGoToPlayer(Bullet bullet, PlayerPlane player) {
+
         int x = bullet.x - player.x;
         int y = bullet.y - player.y;
 
@@ -490,13 +521,32 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
 
-        Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 5, bulletTypeNum, bitmap);
+        Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 10, bulletTypeNum, bitmap);
+        if (bullet.speedY == 0) {
+            bullet.speedY = -new Random().nextInt(13);
+        }
         bullets.add(bullet);
         return bullet;
     }
 
-    private void makeBulletToFront(PlayerPlane player, int bulletNum) {
+    private void makeBulletToFront(EnemyPlane enemy, int bulletNum) {
+        int offSet = 0;
 
+        for (int i = 0; i < bulletNum; ++i) {
+            offSet = (offSet + i * 2);
+        }
+
+        for (int i = 0; i < bulletNum; ++i) {
+            if (mallocBullet()) {
+                Bullet bullet = makeEnemyBullet(enemy);
+                bullet.speedX = enemyBulletToFront[offSet++];
+                bullet.speedY = enemyBulletToFront[offSet++];
+                if (bullet.speedX == 0 && bullet.speedY == 0) {
+                    continue;
+                }
+                bullets.add(bullet);
+            }
+        }
     }
 
     private void makeEnemy() {
@@ -545,192 +595,55 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     mPlayer.state = 0;
                 }
             } else {//正常状态
+                if (mIsMissionComplete) {
+                    return;
+                }
                 mPlayer.handleMove();
+                if (mFireDelay > 6) {//按60帧的帧率控制
+                    mFireDelay = 0;
+                    makePlayerBullet(mPlayer);
+                }
+                mFireDelay++;
             }
         }
     }
 
-    private void makeEnemyInit(int id) {
-        int type;
-        if (this.mMission <= 4) {
-            int ranValTemp = getRand(this.gApearEnemyType);
-            type = (stageEnemy[this.mCorrespondMission - 1][ranValTemp] - 1);
-            if (type < 6) {
-                int ranVal = getRand(5);
-                if (ranVal < 3) {
-                    type = (type * 3);
-                } else if (ranVal == 3) {
-                    type = (type * 3 + 1);
-                } else {
-                    type = (type * 3 + 2);
-                }
-            }
+    long lastTime = 0;
+
+    private void makePlayerBullet(PlayerPlane player) {
+        //playSound(this.gSelectedPlayer + 5);
+        int bulletNum;
+        if (System.currentTimeMillis() - lastTime >= 5000) {
+            player.power++;
+            player.power = player.power >= 5 ? 5 : player.power;
+            lastTime = System.currentTimeMillis();
+        }
+        if (1 == this.gGameSecretNum) {
+            bulletNum = 4;
         } else {
-            type = (18 + getRand(28));
+            bulletNum = mPlayer.power - 1;
         }
 
-        int wide = enemySize[((this.gEnemy[id]).type - 1) * 2];
-        int high = enemySize[((this.gEnemy[id]).type - 1) * 2 + 1];
-        if ((this.gEnemy[id]).x == 1) {
-            if ((this.gEnemy[id]).y == -1) {
-                (this.gEnemy[id]).y = (0 - high);
-                (this.gEnemy[id]).x = getRand(MainWindow.windowWidth - wide);
-                (this.gEnemy[id]).reward = ((this.gEnemy[id]).reward + getRand((this.gEnemy[id]).reward));
-                makeGoods(id);
-                return;
-            }
+        int bulletNumTemp = bulletNum;
 
-            (this.gEnemy[id]).speedY = ((this.gEnemy[id]).speedY + getRand(2));
-            (this.gEnemy[id]).speedX = ((this.gEnemy[id]).speedX + 2 - getRand(5));
-            (this.gEnemy[id]).y = (0 - high);
-            (this.gEnemy[id]).x = getRand(MainWindow.windowWidth - wide);
-            if ((this.gEnemy[id]).pauseDelay > 0) {
-                (this.gEnemy[id]).pauseDelay = getRand(900);
-            }
-            if (getRand(2) == 1 && (this.gEnemy[id]).aliveTime >= 0) {
-                int ranVal = getRand(4);
-                if (ranVal == 0) {
-                    this.gEnemy[id].aliveTime = 0;
-                    this.gEnemy[id].pauseDelay = 0;
-                    this.gEnemy[id].offset = 0;
-                } else if (ranVal == 1) {
-                    (this.gEnemy[id]).aliveTime = 0;
-                    (this.gEnemy[id]).pauseDelay = 0;
-                    (this.gEnemy[id]).offset = (getRand(250) + 125);
-                    if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
-                        (this.gEnemy[id]).offset = 0;
-                    }
-                } else if (ranVal == 2) {
-                    //if ((this.gEnemy[id]).aliveTime > 0) {
-                    (this.gEnemy[id]).aliveTime = (getRand(320) + 240);
-                    //}
+        int offSet = playerBulletFloorNum[playerType][5];
 
-                    (this.gEnemy[id]).pauseDelay = getRand(320);
-                    (this.gEnemy[id]).offset = (getRand(250) + 125);
-                    if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
-                        (this.gEnemy[id]).offset = 0;
-                    }
-                } else {
-                    //if ((this.gEnemy[id]).aliveTime > 0) {
-                    (this.gEnemy[id]).aliveTime = -1;
-//                    }
-                    (this.gEnemy[id]).pauseDelay = getRand(320);
-                    (this.gEnemy[id]).offset = getRand(250) + 125;
-                    if ((this.gEnemy[id]).x < 0 || (this.gEnemy[id]).x > MainWindow.windowWidth - wide) {
-                        (this.gEnemy[id]).offset = 0;
-                    }
-                }
-            }
-        } else {
-            if ((this.gEnemy[id]).speedX == 0) {
-                if (getRand(2) == 1) {
-                    (this.gEnemy[id]).speedX = -2;
-                } else {
-                    (this.gEnemy[id]).speedX = 2;
-                }
-            }
-            if ((this.gEnemy[id]).speedX > 0) {
-                (this.gEnemy[id]).x = (0 - wide);
-            } else {
-                (this.gEnemy[id]).x = MainWindow.windowWidth;
-            }
-
-            (this.gEnemy[id]).y = getRand(140);
-            if ((this.gEnemy[id]).speedY == 0) {
-                int s = getRand(3);
-                if (s == 1) {
-                    (this.gEnemy[id]).speedY = 2;
-                } else if (s == 2) {
-                    (this.gEnemy[id]).speedY = -2;
-                }
-            }
-            int ranVal = getRand(2);
-            if ((this.gEnemy[id]).offset > 300 && ranVal == 1) {
-                (this.gEnemy[id]).offset = 300;
-            }
-            if ((this.gEnemy[id]).offset > 300) {
-                int ranValTemp = ((this.gEnemy[id]).offset - 100) * Math.abs((this.gEnemy[id]).speedY);
-                if ((this.gEnemy[id]).y < ranValTemp) {
-                    (this.gEnemy[id]).y = (ranValTemp + getRand(150));
-                }
-            } else if ((this.gEnemy[id]).speedY < 0) {
-                int ranValTemp = (120 / Math.abs((this.gEnemy[id]).speedX) * Math.abs((this.gEnemy[id]).speedY));
-                if ((this.gEnemy[id]).y < ranValTemp) {
-                    (this.gEnemy[id]).y = (ranValTemp + getRand(150));
-                }
-            } else if ((this.gEnemy[id]).speedY > 0) {
-                (this.gEnemy[id]).y = getRand(360);
-            }
+        for (int i = bulletNumTemp - 1; i >= 0; i--) {
+            offSet += playerBulletFloorNum[playerType][i];
         }
-        (this.gEnemy[id]).reward = ((this.gEnemy[id]).reward + getRand((this.gEnemy[id]).reward));
-        makeGoods(id);
 
-    }
+        for (bulletNumTemp = playerBulletFloorNum[playerType][bulletNum]; bulletNumTemp > 0; bulletNumTemp--) {
+            Bullet bullet = mPlayer.makeBullet(playerBulletData[offSet]);
+            playerBullets.add(bullet);
+            ++offSet;
+        }
 
-    private void bulletGoToPlayer(int i) {
-        int x = (this.mBullets[i][2] - this.mPlayer.x + (playerSize[this.playerType * 2] >> 1));
-        int y = (this.mBullets[i][3] - this.mPlayer.y + (playerSize[this.playerType * 2 + 1] >> 1));
-
-        boolean flag_x = true;
-        boolean flag_y = true;
-        if (x < 0) {
-            x = -x;
-            flag_x = false;
-        }
-        if (y < 0) {
-            y = -y;
-            flag_y = false;
-        }
-        if (x > 10 || y > 10) {
-            if (x > y) {
-                // sy = 100  scale time
-                // sx = 100
-                // time = x / sy
-                // sy = y / time;
-                this.mBullets[i][4] = this.mBullets[i][5];
-                int scale = (x / Math.abs(this.mBullets[i][5]));
-                if (scale <= 0)
-                    scale = 1;
-                this.mBullets[i][5] = (y / scale);
-            } else {
-                int scale = (y / Math.abs(this.mBullets[i][5]));
-                if (scale <= 0)
-                    scale = 1;
-                this.mBullets[i][4] = (x / scale);
-            }
-            if (flag_x)
-                this.mBullets[i][4] = -this.mBullets[i][4];
-            if (flag_y) {
-                this.mBullets[i][5] = -this.mBullets[i][5];
-            }
-        }
-    }
-
-    private int mallocBlastPT() {
-        if (this.gExplodeCount >= 30)
-            return -1;
-        for (int i = 0; i < 30; i = i + 1) {
-            if (this.gExplode[i][ex_type] == 0) {
-                this.gExplodeCount = this.gExplodeCount + 1;
-                return i;
-            }
-        }
-        return -1;
     }
 
     private boolean mallocBullet() {
         if (bullets.size() >= 100)
             return false;
         return true;
-    }
-
-    private void makeEnemyBulletInit(int i, int type, int x, int y, int xspd, int yspd) {
-        this.mBullets[i][0] = type;
-        this.mBullets[i][2] = x;
-        this.mBullets[i][3] = y;
-        this.mBullets[i][4] = xspd;
-        this.mBullets[i][5] = yspd;
-        this.mBullets[i][1] = getRand(bulletPic[this.mBullets[i][0] - 1]);
     }
 
     /**
@@ -930,6 +843,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 drawBitmapXY(canvas, bullet.getImg(), bullet.x, bullet.y);
             }
         }
+
+        for (Bullet bullet : playerBullets) {
+            drawBitmapXY(canvas, bullet.getImg(), bullet.x, bullet.y);
+        }
     }
 
     private int getMissilePicIndex(int i) {
@@ -972,7 +889,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
         }
 
-        if (this.gIsMissionComplete) {
+        if (this.mIsMissionComplete) {
             this.gTempDelay = (this.gTempDelay + 1);
             if (this.gTempDelay > 90 && !this.gIsGameFinished) {
                 if (this.mMission >= 5) {
@@ -996,7 +913,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             this.mMission = (this.mMission + 1);
             this.gScreenMove = 0;
             this.gTempDelay = 0;
-            this.gIsMissionComplete = false;
+            this.mIsMissionComplete = false;
             stageInit();
         }
     }
@@ -1081,7 +998,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void updatePosition(double xPercent, double yPercent) {
-        if (mPlayer == null || gIsMissionComplete) {
+        if (mPlayer == null || mIsMissionComplete) {
             return;
         }
         mPlayer.handleSpeed(xPercent, yPercent);

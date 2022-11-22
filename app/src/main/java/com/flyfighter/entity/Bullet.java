@@ -1,6 +1,7 @@
 package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.flyfighter.menu.GameCanvas;
 import com.flyfighter.res.ResInit;
@@ -10,7 +11,6 @@ import java.util.Random;
 public class Bullet {
 
     public static final int[] bulletSpeedToPlayer = new int[]{0, 9, 4, 9, 4, 4, 9, 4, 9, 4, 9, 4, 9, 0, 9, -4, 9, -4, 9, -9, 4, -9, 4, -9, 0, -13, -4, -13, -4, -4, -9, -4, -9, -4, -9, -4, -9, 0, -13, 4, -9, 4, -4, 4, -4, 4, -4, 13};
-
     public int type;
     public int colors;
     public int x;
@@ -19,7 +19,6 @@ public class Bullet {
     public int speedY;
     public int imgIndex;
     public int imgNum;
-    public long createTime = System.currentTimeMillis();//对象创建时间
 
     public Bitmap sourceImg;
 
@@ -73,17 +72,7 @@ public class Bullet {
         return Math.abs(r % i);
     }
 
-
     public Bitmap getImg() {
-//        Bitmap bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / imgNum * (imgIndex % imgNum), 0, sourceImg.getWidth() / imgNum, sourceImg.getHeight());
-//        imgIndex++;
-
-        int picIndex = 0;
-        for (int j = 0; j < type; ++j) {//计算子弹图片的索引
-            picIndex += GameCanvas.bulletPic[j];
-        }
-        imgIndex++;
-        imgIndex = imgIndex / 5;
-        return ResInit.bulletImage[picIndex - 1 + imgIndex % imgNum];
+        return sourceImg;
     }
 }
