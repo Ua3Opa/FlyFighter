@@ -2,12 +2,9 @@ package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
 
-import com.flyfighter.menu.GameCanvas;
-import com.flyfighter.res.ResInit;
-
 import java.util.Random;
 
-public class Bullet {
+public class PlayerBullet {
 
     public static final int[] bulletSpeedToPlayer = new int[]{0, 9, 4, 9, 4, 4, 9, 4, 9, 4, 9, 4, 9, 0, 9, -4, 9, -4, 9, -9, 4, -9, 4, -9, 0, -13, -4, -13, -4, -4, -9, -4, -9, -4, -9, -4, -9, 0, -13, 4, -9, 4, -4, 4, -4, 4, -4, 13};
     public int type;
@@ -24,7 +21,7 @@ public class Bullet {
 
     Random random = new Random();
 
-    public Bullet() {
+    public PlayerBullet() {
         this.type = 0;
         this.colors = 0;
         this.x = 0;
@@ -34,7 +31,7 @@ public class Bullet {
     }
 
 
-    public Bullet(int type, int x, int y, int speedX, int speedY) {
+    public PlayerBullet(int type, int x, int y, int speedX, int speedY) {
         this.type = type;
         this.x = x;
         this.y = y;
@@ -48,8 +45,8 @@ public class Bullet {
      * @param type
      * @return
      */
-    public static Bullet mallocBullet(int type, int x, int y, int xspd, int yspd, int imgNum, Bitmap sourceImg) {
-        Bullet bullet = new Bullet();
+    public static PlayerBullet mallocBullet(int type, int x, int y, int xspd, int yspd, int imgNum, Bitmap sourceImg) {
+        PlayerBullet bullet = new PlayerBullet();
         bullet.type = type;
         bullet.speedX = xspd;
         bullet.speedY = yspd;
@@ -71,19 +68,7 @@ public class Bullet {
         return Math.abs(r % i);
     }
 
-
     public Bitmap getImg() {
-//        Bitmap bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / imgNum * (imgIndex % imgNum), 0, sourceImg.getWidth() / imgNum, sourceImg.getHeight());
-//        imgIndex++;
-
-        int picIndex = 0;
-        for (int j = 0; j < type; ++j) {//计算子弹图片的索引
-            picIndex += GameCanvas.bulletPic[j];
-        }
-
-        imgIndex++;
-        int index = imgIndex / 8;
-        //Log.d("TAG", "getImg: "+this.hashCode()+"   " +(picIndex - 1 + index % imgNum));
-        return ResInit.bulletImage[picIndex + index % imgNum];
+        return sourceImg;
     }
 }

@@ -103,59 +103,6 @@ public class PlayerPlane {
         this.power = power;
     }
 
-
-    public Bullet makeBullet(int bulletNum, int index) {
-        int picIndex = 0;
-        for (int j = 0; j < type; ++j) {//计算子弹图片的索引
-            picIndex += GameCanvas.bulletPic[j];
-        }
-        Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
-        //bulletType, x,y,speedx,speedy
-        //{0, 9, -2, 0, -23}
-        int offset = 0;
-        int posX = 0;
-        int posY = 0;
-        int speedX = 0;
-        int speedY = -20;
-
-        switch (bulletNum) {
-            case 1://火力为1个的时候
-                posX = x + width / 2 + bitmap.getWidth() / 2;
-                posY = y - bitmap.getHeight() / 2;
-                break;
-            case 2://火力为2个的时候 index 为0 和1
-                posX = (int) (x + width / 2 + bitmap.getWidth() / 2 + (index - 0.5) * 50);
-                posY = y - bitmap.getHeight() / 2;
-                break;
-            case 3://火力为2个的时候 index 为0 和1
-                posX = (x + width / 2 + bitmap.getWidth() / 2 + (index - 1) * 30);
-                posY = y - bitmap.getHeight() / 2 + Math.abs(index - 1) * 10;
-                speedX = (index - 1) * 1;
-                speedY = speedY + Math.abs(index - 1);
-                break;
-            case 4:
-                posX = (int) (x + width / 2 + bitmap.getWidth() / 2 + (index - 1.5) * 40);
-                if (index == 0 || index == 3) {
-                    posY = y - bitmap.getHeight() / 2 + Math.abs(index - 1) * 10;
-                    int reverse = index == 0 ? -1 : 1;
-                    speedX = reverse * 1;
-                    speedY = speedY + 1;
-                } else {
-                    posY = y - bitmap.getHeight() / 2;
-                }
-                break;
-            case 5:
-                posX = (x + width / 2 + bitmap.getWidth() / 2 + (index - 2) * 30);
-                posY = y - bitmap.getHeight() / 2 + Math.abs(index - 2) * 10;
-                speedX = speedX + (index - 2) * 1;
-                speedY = speedY + Math.abs(index - 2) * 1;
-                break;
-        }
-
-        Bullet bullet = Bullet.mallocBullet(type, posX, posY, speedX, speedY, 1, bitmap);
-        return bullet;
-    }
-
     public void handleSpeed(double xPercent, double yPercent) {
         speedX = (int) (speed * xPercent);
         speedY = (int) (speed * yPercent);
@@ -178,13 +125,13 @@ public class PlayerPlane {
         }
     }
 
-    public Bullet makeBullet(int[] data) {
+    public PlayerBullet makeBullet(int[] data) {
         int picIndex = 0;
         for (int j = 0; j < type; ++j) {//计算子弹图片的索引
             picIndex += GameCanvas.bulletPic[j];
         }
         Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
-        Bullet bullet = Bullet.mallocBullet(type, x + width / 2 + bitmap.getWidth() / 2 + data[1], y + data[2], data[3], data[4], 1, bitmap);
+        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + bitmap.getWidth() / 2 + data[1], y + data[2], data[3], data[4], 1, bitmap);
         return bullet;
     }
 }

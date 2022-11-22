@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 
 import com.flyfighter.entity.Bullet;
 import com.flyfighter.entity.EnemyPlane;
+import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
 import com.flyfighter.entity.RectArea;
 import com.flyfighter.interf.Controller;
@@ -96,7 +97,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private static final int[] backGroundHeight = new int[5];
 
     public List<Bullet> bullets = new ArrayList<>();
-    public List<Bullet> playerBullets = new ArrayList<>();
+    public List<PlayerBullet> playerBullets = new ArrayList<>();
 
     public static final int[][] stageEnemy = new int[][]{
             {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
@@ -135,8 +136,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     {3, 5, 19, 20}, {12, 6, 17, 25}}};
 
     public static final int[][] playerBulletData = new int[][]
-                    // 第二位改成飞机中心偏移值
-                    {{0, 0, -2, 0, -23},
+            // 第二位改成飞机中心偏移值
+            {{0, 0, -2, 0, -23},
                     {1, -24, 0, 0, -20}, {1, 24, 0, 0, -20},
                     {1, -24, 0, -1, -20}, {0, 0, -7, 0, -25}, {1, 24, 0, 1, -20},
                     {1, -32, 0, -1, -20}, {0, -24, -6, 0, -25}, {0, 24, -6, 0, -25}, {1, 32, 0, 1, -20},
@@ -344,9 +345,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             bullets.get(i).y += bullets.get(i).speedY;
             if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).sourceImg)) {
                 bullets.remove(bullets.get(i));
+            } else if (checkHitPlayer(bullets.get(i))) {
+
             }
-
-
         }
 
         for (int i = playerBullets.size() - 1; i >= 0; i--) {
@@ -354,11 +355,26 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             playerBullets.get(i).y += playerBullets.get(i).speedY;
             if (outScreen(playerBullets.get(i).x, playerBullets.get(i).y, playerBullets.get(i).sourceImg)) {
                 playerBullets.remove(playerBullets.get(i));
+            } else if (checkHitEnemy(playerBullets.get(i))) {
+                playerBullets.remove(playerBullets.get(i));
             }
         }
+    }
 
+    private boolean checkHitEnemy(PlayerBullet bullet) {
+        for (EnemyPlane enemy : enemys) {
+            if (checkIfHit(bullet.x, bullet.y, bullet.getImg().getWidth(), bullet.getImg().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
+                return true;
+            }
 
+        }
+        return false;
+    }
 
+    //@TODO 先保持无敌状态
+    private boolean checkHitPlayer(Bullet bullets) {
+
+        return false;
     }
 
     private void dealEnemyState() {
@@ -512,14 +528,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private Bullet makeEnemyBullet(EnemyPlane enemy) {
         int shootX = enemy.x + enemy.sourceImg.getWidth() / 2;
         int shootY = enemy.y + enemy.sourceImg.getHeight() - 5;
-        int bulletTypeNum = GameCanvas.bulletPic[enemy.bulletType - 1];
+        int bulletTypeNum = GameCanvas.bulletPic[enemy.bulletType];
 
         int picIndex = 0;
         for (int j = 0; j < enemy.bulletType; ++j) {//计算子弹图片的索引
             picIndex += GameCanvas.bulletPic[j];
         }
 
-        Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
+        Bitmap bitmap = ResInit.bulletImage[picIndex];
 
         Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 10, bulletTypeNum, bitmap);
         if (bullet.speedY == 0) {
@@ -633,7 +649,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
 
         for (bulletNumTemp = playerBulletFloorNum[playerType][bulletNum]; bulletNumTemp > 0; bulletNumTemp--) {
-            Bullet bullet = mPlayer.makeBullet(playerBulletData[offSet]);
+            PlayerBullet bullet = mPlayer.makeBullet(playerBulletData[offSet]);
             playerBullets.add(bullet);
             ++offSet;
         }
@@ -844,7 +860,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
         }
 
-        for (Bullet bullet : playerBullets) {
+        for (PlayerBullet bullet : playerBullets) {
             drawBitmapXY(canvas, bullet.getImg(), bullet.x, bullet.y);
         }
     }
