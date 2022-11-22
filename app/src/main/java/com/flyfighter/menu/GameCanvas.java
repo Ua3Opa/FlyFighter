@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 
 import com.flyfighter.entity.Bullet;
 import com.flyfighter.entity.EnemyPlane;
+import com.flyfighter.entity.Explode;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
 import com.flyfighter.entity.RectArea;
@@ -98,6 +99,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     public List<Bullet> bullets = new ArrayList<>();
     public List<PlayerBullet> playerBullets = new ArrayList<>();
+    public List<Explode> explodes = new ArrayList<>();
 
     public static final int[][] stageEnemy = new int[][]{
             {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
@@ -335,8 +337,17 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         dealPlayerState();
 
         dealBullet();
+        dealExplodes();
         //dealItems();
         //dealBomb();
+    }
+
+    private void dealExplodes() {
+        for (int i = explodes.size() - 1; i >= 0; i--) {
+            if (explodes.get(i).picIndex >= explodes.get(i).picNum) {
+                explodes.remove(explodes.get(i));
+            }
+        }
     }
 
     private void dealBullet() {
@@ -356,6 +367,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (outScreen(playerBullets.get(i).x, playerBullets.get(i).y, playerBullets.get(i).sourceImg)) {
                 playerBullets.remove(playerBullets.get(i));
             } else if (checkHitEnemy(playerBullets.get(i))) {
+
+                explodes.add(Explode.dealExplodeState(playerBullets.get(i),getRand(4)+3));
                 playerBullets.remove(playerBullets.get(i));
             }
         }
@@ -366,7 +379,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (checkIfHit(bullet.x, bullet.y, bullet.getImg().getWidth(), bullet.getImg().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
                 return true;
             }
-
         }
         return false;
     }
@@ -691,14 +703,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private boolean checkIfHit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
         int mw = 0, mh = 0;
-        sw = (sw - sw / 6);
-        sh = (sh - sh / 6);
-        dw = (dw - dw / 6);
-        dh = (dh - dh / 6);
+        sw = (sw - sw / 3);
+        sh = (sh - sh / 3);
+        dw = (dw - dw / 3);
+        dh = (dh - dh / 3);
         if (dw > sw) {
-            dx = (dx + dw / 10);
+            dx = (dx + dw / 5);
         } else {
-            sx = (sx + sw / 10);
+            sx = (sx + sw / 5);
         }
         int cx = (sx - dx);
         int cy = (sy - dy);
@@ -843,12 +855,18 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         showPlayer(canvas);
         //showItems(canvas);
         showBullet(canvas);
-        //showExplode(canvas);
+        showExplode(canvas);
         showActiveLife(canvas);
         showActiveBomb(canvas);
         showActiveScore(canvas);
         showMissionInfo(canvas);
         showGameOver(canvas);
+    }
+
+    private void showExplode(Canvas canvas) {
+        for (Explode explode : explodes) {
+            drawBitmapXY(canvas, explode.getImg(), explode.x, explode.y);
+        }
     }
 
     private void showBullet(Canvas canvas) {
