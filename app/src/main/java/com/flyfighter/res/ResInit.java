@@ -171,7 +171,7 @@ public class ResInit {
             for (int i = 4; i < 7; i++) {
                 bombImage[i] = BitmapFactory.decodeStream(context.getAssets().open("Bomb/fly_bomb3" + (i - 3) + ".png"));
             }
-            bombImage[3] = BitmapFactory.decodeStream(context.getAssets().open("Bomb/fly_bomb4.png"));
+            bombImage[7] = BitmapFactory.decodeStream(context.getAssets().open("Bomb/fly_bomb4.png"));
 
 
             bombIcon = new Bitmap[3];

@@ -7,14 +7,17 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
+import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
+import com.flyfighter.entity.Bomb;
 import com.flyfighter.entity.Bullet;
 import com.flyfighter.entity.EnemyPlane;
 import com.flyfighter.entity.Explode;
+import com.flyfighter.entity.Item;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
 import com.flyfighter.entity.RectArea;
@@ -42,25 +45,28 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private Random random;
 
     private final int maxEnemy = 5;
-    private boolean isThreadAlive = false;
+    private final int maxItem = 6;
+    public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
     private boolean gIsSaved;
     private int gContinueNum;
     private boolean gIsGameFinished;
     private boolean gIsPlayerFire = true;
     private int mMission;
-    private int gGameScore;
-    private int gMissileType;
-    private int gCurrentMissileMax;
+    private int mGameScore;
+    private int mMissileType;
+    private int mMissileMax;
     private int gOtherTypeBomb;
     private int gGameSecretNum;
     private int gGamePause;
+    //无敌时间为5秒
+    private long shieldMaxMills = 5 * 1000;
     private boolean mIsMissionComplete;
     private int gTempDelay;
     private int gBombDelay;
     private boolean mIsEnableEnemy;
     private boolean gIsGameOver;
-    private boolean gIsBombing;
+    private boolean mIsBombing;
     private boolean gIsBossAppear;
     private boolean gBossInitDirect;
     private int gBossIndex;
@@ -100,7 +106,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public List<Bullet> bullets = new ArrayList<>();
     public List<PlayerBullet> playerBullets = new ArrayList<>();
     public List<Explode> explodes = new ArrayList<>();
-
+    public List<Item> items = new ArrayList<>();
+    public List<Bomb> bombs = new ArrayList<>();
     public static final int[][] stageEnemy = new int[][]{
             {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
             {5, 2, 4, 24, 29, 27, 46, 21, 23, 39, 45, 30, 28, 33, 35},
@@ -111,8 +118,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private static final int[] enemySize = new int[]{126, 103, 108, 126, 108, 126, 135, 117, 117, 135, 117, 135, 171, 126, 126, 171, 126, 171, 189, 126, 126, 189, 126, 189, 153, 94, 99, 153, 99, 153, 144, 121, 153, 162, 153, 162, 171, 198, 171, 198, 333, 139, 261, 180, 261, 180, 252, 139, 423, 130, 333, 162, 405, 157, 369, 144, 243, 175, 423, 126, 378, 144, 279, 189, 279, 189, 315, 162, 189, 265, 189, 265, 333, 153, 279, 144, 252, 139, 378, 157, 315, 180, 306, 202, 243, 126, 207, 108, 171, 135, 171, 238, 576, 288, 504, 360, 927, 270, 684, 279, 765, 238};
 
-    private static final int[] gGetItemsList = new int[]
-            {5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11};
+    private static final byte[] gGetItemsList = new byte[]{5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11};
 
     public static final int[] bulletPic = new int[]{2, 3, 3, 1, 4, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2};
 
@@ -217,9 +223,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gIsGameFinished = false;
         this.gIsPlayerFire = false;
         this.mMission = 1;
-        this.gGameScore = 0;
-        this.gMissileType = 0;
-        this.gCurrentMissileMax = 0;
+        this.mGameScore = 0;
+        this.mMissileType = 0;
+        this.mMissileMax = 0;
         this.gOtherTypeBomb = 0;
         this.gGameSecretNum = -1;
     }
@@ -231,7 +237,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gBombDelay = 0;
         this.mIsEnableEnemy = false;
         this.gIsGameOver = false;
-        this.gIsBombing = false;
+        this.mIsBombing = false;
         this.gIsBossAppear = false;
         this.gBossInitDirect = true;
         this.gBossIndex = -1;
@@ -338,9 +344,47 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         dealBullet();
         dealExplodes();
-        //dealItems();
+        dealItems();
+        dealShield();
         //dealBomb();
     }
+
+    private void dealShield() {
+        if (bombs.size() == 0) {
+            return;
+        }
+        for (int i = 0; i < bombs.size(); i++) {
+            Bomb bomb = bombs.get(i);
+            if (bomb.type == 4) {
+                if (System.currentTimeMillis() - bomb.boomTimeMills >= shieldMaxMills) {
+                    bombs.remove(bomb);
+                    return;
+                } else {
+                    Size imgSize = bomb.getImgSize();
+                    bomb.x = mPlayer.x + mPlayer.width / 2 - imgSize.getWidth() / 2;
+                    bomb.y = mPlayer.y + mPlayer.height / 2 - imgSize.getHeight() / 2;
+                }
+            }
+        }
+    }
+
+    private void dealItems() {
+        for (int i = items.size() - 1; i >= 0; i--) {
+            Item item = items.get(i);
+            item.x += item.speedX;
+            item.y += item.speedY;
+            if (item.x < 0 || item.x > (MainWindow.windowWidth - item.sourceImg.getWidth() / 2)) {
+                item.speedX = -item.speedX;
+            }
+            if (checkHitPlayer(item)) {
+                handleGetItems(item);
+                items.remove(item);
+            } else if (outScreen(item.x, item.y, item.getImg0())) {
+                items.remove(item);
+            }
+        }
+    }
+
 
     private void dealExplodes() {
         for (int i = explodes.size() - 1; i >= 0; i--) {
@@ -367,8 +411,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (outScreen(playerBullets.get(i).x, playerBullets.get(i).y, playerBullets.get(i).sourceImg)) {
                 playerBullets.remove(playerBullets.get(i));
             } else if (checkHitEnemy(playerBullets.get(i))) {
-
-                explodes.add(Explode.dealExplodeState(playerBullets.get(i),getRand(4)+3));
+                explodes.add(Explode.dealExplodeState(playerBullets.get(i), getRand(2)));
+                mGameScore += 28;
                 playerBullets.remove(playerBullets.get(i));
             }
         }
@@ -377,8 +421,17 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean checkHitEnemy(PlayerBullet bullet) {
         for (EnemyPlane enemy : enemys) {
             if (checkIfHit(bullet.x, bullet.y, bullet.getImg().getWidth(), bullet.getImg().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
+                //{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}
+                enemy.health -= playerBulletFloorPower[playerType][mPlayer.power - 1] - 1;
                 return true;
             }
+        }
+        return false;
+    }
+
+    private boolean checkHitPlayer(Item item) {
+        if (checkIfHit(item.x, item.y, item.getImg0().getWidth(), item.getImg0().getHeight(), mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
+            return true;
         }
         return false;
     }
@@ -392,6 +445,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void dealEnemyState() {
         for (int i = enemys.size() - 1; i >= 0; i--) {
             if (enemys.get(i).health <= 0) {
+                //3,4,5,6,7
+                explodes.add(Explode.dealExplodeState(enemys.get(i), getRand(4) + 2));
+                makeGoods(enemys.get(i));
+                mGameScore += enemys.get(i).reward;
+                enemys.remove(i);
             } else {
                 enemys.get(i).dealMoveState();
 
@@ -426,6 +484,74 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             } else if (ranVal == 1) {
                 makeBulletToFront(enemy, bulletNum);
             }
+        }
+    }
+
+
+    private void handleGetItems(Item item) {
+        //this.playSound(4);
+        switch (item.type) {
+            case 1://boom类型
+            case 2:
+            case 3:
+                handleGetBomb(item);
+                break;
+            case 4://炸弹类型4 圆环效果
+                bombs.add(Bomb.makeBomb(4, mPlayer));
+                break;
+            case 5:
+                mGameScore += 555;
+                break;
+            case 6:
+                mGameScore += 999;
+                break;
+            case 7:
+                if (mPlayer.power < 5) {
+                    mPlayer.power++;
+                }
+            case 8:
+                mPlayer.power = 5;
+                break;
+            case 9:
+                if (mMissileType != 2) {
+                    mMissileType = 2;
+                    mMissileMax = 0;
+                }
+                if (mMissileMax + 2 <= 4) {
+                    mMissileMax = mMissileMax + 2;
+                }
+                break;
+            case 10:
+                if (mMissileType != 1) {
+                    mMissileType = 1;
+                    mMissileMax = 0;
+                }
+                if (mMissileMax < 2) {
+                    mMissileMax++;
+                }
+                break;
+            case 11:
+                bullets.clear();
+                break;
+            case 12:
+            case 13:
+            case 14:
+                if (mPlayer.life < 6) {
+                    mPlayer.life++;
+                }
+                break;
+            default:
+                break;
+
+        }
+    }
+
+    private void handleGetBomb(Item item) {
+        if (mPlayer.bomb < 6) {
+            mPlayer.bombTypes.add(item.type - 1);
+            mPlayer.bomb++;
+        } else {
+            mGameScore += 888;
         }
     }
 
@@ -676,29 +802,32 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     /**
      * 生成奖励
-     *
-     * @param i
      */
-    private void makeGoods(int i) {
-        if ((this.gEnemy[i]).type <= 18) {
+    private void makeGoods(EnemyPlane enemy) {
+        if (items.size() >= maxItem) {
+            return;
+        }
+        int itemType = 0;
+        if (enemy.type <= 18) {
             if (getRand(10) == 0) {
-                (this.gEnemy[i]).item = 5;
+                itemType = 5;
             } else if (this.mPlayer.power == 1 && getRand(10) == 1) {
-                (this.gEnemy[i]).item = 7;
+                itemType = 7;
             }
         } else {
             if (this.mPlayer.power < 3 && getRand(4) == 0) {
-                (this.gEnemy[i]).item = 7;
+                itemType = 7;
                 return;
             }
             if (getRand(6) == 0) {
-                (this.gEnemy[i]).item = gGetItemsList[getRand(20)];
-                if (12 == (this.gEnemy[i]).item) {
-                    (this.gEnemy[i]).item = (this.gEnemy[i]).item + this.playerType;
+                itemType = gGetItemsList[getRand(20)];
+                if (12 == itemType) {
+                    itemType += playerType;
                 }
             }
         }
-
+        Item item = new Item(itemType, enemy.x, enemy.y);
+        items.add(item);
     }
 
     private boolean checkIfHit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
@@ -820,6 +949,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+        this.isThreadAlive = false;
     }
 
     @Override
@@ -851,9 +981,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         showBackScreen(canvas);
         //showBoss(canvas);
         showEnemy(canvas);
+        showBombs(canvas);
         //showBomb(canvas);
         showPlayer(canvas);
-        //showItems(canvas);
+        showItems(canvas);
         showBullet(canvas);
         showExplode(canvas);
         showActiveLife(canvas);
@@ -861,6 +992,18 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         showActiveScore(canvas);
         showMissionInfo(canvas);
         showGameOver(canvas);
+    }
+
+    private void showBombs(Canvas canvas) {
+        for (Bomb bomb : bombs) {
+            drawBitmapXY(canvas, bomb.getImgWithType(), bomb.x, bomb.y);
+        }
+    }
+
+    private void showItems(Canvas canvas) {
+        for (Item item : items) {
+            drawBitmapXY(canvas, item.getImg(), item.x, item.y);
+        }
     }
 
     private void showExplode(Canvas canvas) {
@@ -956,8 +1099,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int textSize = UiUtils.dp2px(context, 20);
         mPaint.setTextSize(textSize);
         mPaint.setColor(Color.BLUE);
-        float textWidth = mPaint.measureText(int2string(this.gGameScore));
-        canvas.drawText(int2string(this.gGameScore), MainWindow.windowWidth - textWidth, textSize + 30, mPaint);
+        float textWidth = mPaint.measureText(int2string(this.mGameScore));
+        canvas.drawText(int2string(this.mGameScore), MainWindow.windowWidth - textWidth, textSize + 30, mPaint);
     }
 
     private void showActiveBomb(Canvas canvas) {
@@ -966,7 +1109,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         for (int i = 0; i < mPlayer.bomb; i = (i + 1)) {
             int x = (27 + i * 45);
-            drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes[i]], x, 120);
+            drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes.get(i)], x, 120);
         }
     }
 

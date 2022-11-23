@@ -6,6 +6,9 @@ import com.flyfighter.menu.GameCanvas;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PlayerPlane {
 
     public static final int[][] playerData = new int[][]{{1, 106, 320, 20, 3, 3, 0, 1}, {2, 105, 320, 16, 3, 3, 0, 1}, {3, 105, 320, 24, 3, 3, 0, 1}};
@@ -31,7 +34,7 @@ public class PlayerPlane {
 
     public int bombType;
     //类型
-    public int[] bombTypes = new int[6];
+    public List<Integer> bombTypes = new ArrayList<>();
 
     public PlayerPlane() {
     }
@@ -64,8 +67,8 @@ public class PlayerPlane {
         player.life = 6;
         player.bomb = 6;
         player.bombType = playerType;
-        for (int i = 0; i < player.bombType; i++) {
-            player.bombTypes[i] = playerType;
+        for (int i = 0; i < player.bomb; i++) {
+            player.bombTypes.add(playerType);
         }
         return player;
     }

@@ -4,8 +4,6 @@ import android.graphics.Bitmap;
 
 import com.flyfighter.res.ResInit;
 
-import java.util.Random;
-
 public class Explode {
 
     public static final byte[] explodePic = new byte[]{4, 4, 6, 5, 6, 6, 6, 6};
@@ -28,27 +26,34 @@ public class Explode {
         this.sourceImg = sourceImg;
     }
 
-    public static Explode dealExplodeState(PlayerBullet bullet,int type) {
+    public static Explode dealExplodeState(PlayerBullet bullet, int type) {
+        Explode explode = dealExplodeState(bullet.x, bullet.y, type);
+        return explode;
+    }
+
+    public static Explode dealExplodeState(EnemyPlane enemy, int type) {
+        Explode explode = dealExplodeState(enemy.x, enemy.y, type);
+        return explode;
+    }
+
+    public static Explode dealExplodeState(int x, int y, int type) {
         Explode explode = new Explode();
-        explode.x = bullet.x;
-        explode.y = bullet.y;
-        if (explode.type < 2) {
-            explode.picIndex = 1;
-        } else {
-            explode.picIndex = 0;
-        }
+        explode.x = x;
+        explode.y = y;
+        explode.type = type;
         explode.picNum = explodePic[explode.type];
         return explode;
     }
 
     public Bitmap getImg() {
-        picIndex++;
+        Bitmap bitmap;
         if (type < 2) {
-            return ResInit.explodeImage[picIndex % picNum];
+            bitmap = ResInit.explodeImage[picIndex % picNum];
         } else {
             Bitmap source = ResInit.explodeImage[type + 8 - 2];
-            Bitmap bitmap = Bitmap.createBitmap(source, source.getWidth() / picNum * (picIndex % picNum), 0, source.getWidth() / picNum, source.getHeight());
-            return bitmap;
+            bitmap = Bitmap.createBitmap(source, source.getWidth() / picNum * (picIndex % picNum), 0, source.getWidth() / picNum, source.getHeight());
         }
+        picIndex++;
+        return bitmap;
     }
 }
