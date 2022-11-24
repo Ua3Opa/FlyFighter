@@ -99,14 +99,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int mGameDifficulty;
     private int gBossMoveAction;
     private int gBackgroundHeight;
-    private static int it_type = 0;
-    private static int it_x = 1;
-    private static int it_y = 2;
-    private static int it_picid = 3;
-    private static int it_speedx = 4;
-    private static int it_speedy = 5;
-
-    private static final int[] backGroundHeight = new int[5];
 
     public List<Bullet> bullets = new ArrayList<>();
     public List<PlayerBullet> playerBullets = new ArrayList<>();
@@ -123,18 +115,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             {46, 44, 43, 22, 20, 39, 23, 31, 45, 34, 38, 46, 37, 32, 41}
     };
 
-    private static final int[] enemySize = new int[]{126, 103, 108, 126, 108, 126, 135, 117, 117, 135, 117, 135, 171, 126, 126, 171, 126, 171, 189, 126, 126, 189, 126, 189, 153, 94, 99, 153, 99, 153, 144, 121, 153, 162, 153, 162, 171, 198, 171, 198, 333, 139, 261, 180, 261, 180, 252, 139, 423, 130, 333, 162, 405, 157, 369, 144, 243, 175, 423, 126, 378, 144, 279, 189, 279, 189, 315, 162, 189, 265, 189, 265, 333, 153, 279, 144, 252, 139, 378, 157, 315, 180, 306, 202, 243, 126, 207, 108, 171, 135, 171, 238, 576, 288, 504, 360, 927, 270, 684, 279, 765, 238};
 
     private static final byte[] gGetItemsList = new byte[]{5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11};
 
     public static final int[] bulletPic = new int[]{2, 3, 3, 1, 4, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2};
-
-    private static final int[] explodePic = new int[]{4, 4, 6, 5, 6, 6, 6, 6};
-    private static final int[] explodeSize = new int[]{14, 12, 14, 12, 40, 40, 50, 40, 42, 32, 42, 32, 42, 42, 42, 42};
-    private static final int[] enemyPic = new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12, 6, 3, 3, 3, 3, 3};
-
-    private boolean[] gKey_State = new boolean[]{false, false, false, false, true, true, true};
 
     private static final int[][][] bossBullet = new int[][][]{
             {{13, 3, 17, 35}, {3, 2, 11, 35}, {13, 4, 20, 45},
@@ -488,7 +472,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void dealExplodes() {
         for (int i = explodes.size() - 1; i >= 0; i--) {
-            if (explodes.get(i).picIndex >= explodes.get(i).picNum) {
+            if (explodes.get(i).frameIndex >= explodes.get(i).picNum) {
                 explodes.remove(explodes.get(i));
             }
         }
@@ -572,7 +556,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (mallocBullet()) {//
                     makeEnemyBullet(enemys.get(i), mPlayer);
                 }
-                if (outScreen(enemys.get(i).x, enemys.get(i).y, enemys.get(i).sourceImg)) {
+                if (outScreen(enemys.get(i).x, enemys.get(i).y, enemys.get(i).firstFrame())) {
                     enemys.remove(enemys.get(i));
                 }
             }
@@ -779,8 +763,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private Bullet makeEnemyBullet(EnemyPlane enemy) {
-        int shootX = enemy.x + enemy.sourceImg.getWidth() / 2;
-        int shootY = enemy.y + enemy.sourceImg.getHeight() - 5;
+        int shootX = enemy.x + enemy.width / 2;
+        int shootY = enemy.y + enemy.height - 5;
         int bulletTypeNum = GameCanvas.bulletPic[enemy.bulletType];
 
         int picIndex = 0;
@@ -1155,7 +1139,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void showExplode(Canvas canvas) {
         for (Explode explode : explodes) {
-            drawBitmapXY(canvas, explode.getImg(), explode.x, explode.y);
+            drawBitmapXY(canvas, explode.getFrame(), explode.x, explode.y);
         }
     }
 
@@ -1173,23 +1157,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
     }
 
-    private int getMissilePicIndex(int i) {
-        int misBulletDirection = 0;
-        int xspd = this.gMissile[i][4];
-        int yspd = this.gMissile[i][5];
-
-        for (int temp = 0; temp < 16; ++temp) {
-            if (xspd == bulletSpeedMissile[temp * 2] && yspd == bulletSpeedMissile[temp * 2 + 1]) {
-                misBulletDirection = temp;
-                break;
-            }
-        }
-        return misBulletDirection;
-    }
-
     private void showEnemy(Canvas canvas) {
         for (EnemyPlane enemy : enemys) {
-            drawBitmapXY(canvas, enemy.sourceImg, enemy.x, enemy.y);
+            drawBitmapXY(canvas, enemy.getFrame(), enemy.x, enemy.y);
         }
     }
 
@@ -1303,12 +1273,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     public int getPlayerCenterX() {
-
         return mPlayer.x + mPlayer.width / 2;
-    }
-
-    public int getPlayerCenterY() {
-        return mPlayer.y + mPlayer.height / 2;
     }
 
     private void drawLoading(Canvas lockCanvas) throws Exception {

@@ -7,7 +7,7 @@ import com.flyfighter.view.MainWindow;
 
 import java.util.Random;
 
-public class EnemyPlane {
+public class EnemyPlane extends Spirit {
     //随机数以100为作为行为变更的分割线,
     public static final int offsetMaxRange = 100;
 
@@ -15,12 +15,7 @@ public class EnemyPlane {
     public static final int[] enemyPic = new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12, 6, 3, 3, 3, 3, 3};
 
-    public int type;
     public int colors;
-    public int x;
-    public int y;
-    public int speedX;
-    public int speedY;
     public int offset;
     public int health;
     public int aliveTime;
@@ -33,59 +28,16 @@ public class EnemyPlane {
     public int bulletType;
     public int explode;
 
-    public int width;
-    public int height;
-
     public int patrolY;//最大的巡逻Y范围
     public int patrolX;//最大的巡逻X范围
     public long patrolTime;//开始巡逻的时间
 
-    public long createTime = System.currentTimeMillis();//对象创建时间
     public long shootTime;//对象创建时间
 
-    public Bitmap sourceImg;
 
     Random random = new Random();
 
     public EnemyPlane() {
-        this.type = 0;
-        this.colors = 0;
-        this.x = 0;
-        this.y = 0;
-        this.speedX = 0;
-        this.speedY = 0;
-        this.offset = 0;
-        this.health = 0;
-        this.aliveTime = 0;
-        this.pauseDelay = 0;
-        this.picId = 0;
-        this.item = 0;
-        this.reward = 0;
-        this.fireDelay = 0;
-        this.bulletMax = 0;
-        this.bulletType = 0;
-        this.explode = 0;
-    }
-
-
-    public EnemyPlane(int type, int colors, int x, int y, int speedX, int speedY, int offset, int health, int aliveTime, int pauseDelay, int picId, int item, int reward, int fireDelay, int bulletMax, int bulletType, int explode) {
-        this.type = type;
-        this.colors = colors;
-        this.x = x;
-        this.y = y;
-        this.speedX = speedX;
-        this.speedY = speedY;
-        this.offset = offset;
-        this.health = health;
-        this.aliveTime = aliveTime;
-        this.pauseDelay = pauseDelay;
-        this.picId = picId;
-        this.item = item;
-        this.reward = reward;
-        this.fireDelay = fireDelay;
-        this.bulletMax = bulletMax;
-        this.bulletType = bulletType;
-        this.explode = explode;
     }
 
     /**
@@ -102,11 +54,12 @@ public class EnemyPlane {
                 enemyData[type][8], enemyData[type][9], enemyData[type][10],
                 enemyData[type][11], enemyData[type][12], enemyData[type][13],
                 enemyData[type][14], enemyData[type][15], enemyData[type][16]);
-        calculateEnemySize(enemy);
-        makeRandomAction(enemy);//这里是通过初始化的默认enemyData进行初始化行为
-        makeRandomColors(enemy);//这里是通过初始化的默认enemyData进行初始化行为
 
-        makeRandomSpeedAndPosition(enemy, enemyData[type][2]);
+        enemy.initSpiritBitmap();
+        enemy.makeRandomAction();//这里是通过初始化的默认enemyData进行初始化行为
+        enemy.makeRandomColors();//这里是通过初始化的默认enemyData进行初始化行为
+
+        enemy.makeRandomSpeedAndPosition();
 
         if (1 == gameDifficulty) {//hard模式
             enemy.health = enemy.health + enemy.health >> 2;
@@ -118,76 +71,77 @@ public class EnemyPlane {
         return enemy;
     }
 
-    private static void makeRandomColors(EnemyPlane enemy) {
-        enemy.colors = enemy.getRand(enemyData[enemy.type - 1][1]);
+    private void makeRandomColors() {
+        colors = getRand(enemyData[type - 1][1]);
     }
 
-    private static void makeRandomSpeedAndPosition(EnemyPlane enemy, int i) {
-        enemy.patrolX = enemy.getRand(MainWindow.windowWidth / 2);
-        enemy.patrolY = enemy.getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
+    private void makeRandomSpeedAndPosition() {
+        patrolX = getRand(MainWindow.windowWidth / 2);
+        patrolY = getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
     }
 
-    private static void calculateEnemySize(EnemyPlane enemy) {
-        Bitmap source = ResInit.enemyImage[enemy.type - 1][enemy.colors - 1];
-        //Log.d("TAG", "calculateEnemySize: " + (source == null) + "    " + enemy.type + "  " + enemy.colors);
-        enemy.sourceImg = Bitmap.createBitmap(source, source.getWidth() / enemyPic[enemy.type - 1] * enemy.picId, 0, source.getWidth() / enemyPic[enemy.type - 1], source.getHeight());
-        enemy.width = enemy.sourceImg.getWidth();
-        enemy.height = enemy.sourceImg.getHeight();
+    @Override
+    protected void initSpiritBitmap() {
+        Bitmap source = ResInit.enemyImage[type - 1][colors - 1];
+        //Log.d("TAG", "calculateEnemySize: " + (source == null) + "    " + type + "  " + colors);
+        this.source.add(Bitmap.createBitmap(source, source.getWidth() / enemyPic[type - 1] * picId, 0, source.getWidth() / enemyPic[type - 1], source.getHeight()));
+        width = this.source.get(0).getWidth();
+        height = this.source.get(0).getHeight();
     }
 
-    private static void makeRandomAction(EnemyPlane enemy) {
-        if (enemy.x == 1) {//初始化的x
-            if (enemy.y == -1) {
-                enemy.y = enemy.getRand(0 - enemy.height);
-                enemy.x = enemy.getRand(MainWindow.windowWidth - enemy.width);
-                enemy.reward += enemy.getRand(enemy.reward);
+    private void makeRandomAction() {
+        if (x == 1) {//初始化的x
+            if (y == -1) {
+                y = getRand(0 - height);
+                x = getRand(MainWindow.windowWidth - width);
+                reward += getRand(reward);
                 return;
             }
-            enemy.speedY = enemy.speedY + enemy.getRand(2);
-            enemy.speedX = enemy.speedX + (2 - enemy.getRand(5));
+            speedY = speedY + getRand(2);
+            speedX = speedX + (2 - getRand(5));
 
-            enemy.y = 0 - enemy.height;
-            enemy.x = new Random().nextInt(MainWindow.windowWidth - enemy.width);
-            if (enemy.getRand(2) == 1) {
-                switch (enemy.getRand(4)) {
+            y = 0 - height;
+            x = new Random().nextInt(MainWindow.windowWidth - width);
+            if (getRand(2) == 1) {
+                switch (getRand(4)) {
                     case 0:
                     case 1:
-                        enemy.pauseDelay = 0;
+                        pauseDelay = 0;
                         break;
                     case 2://过了巡逻时间 ,自动出场
-                        enemy.pauseDelay = (enemy.getRand(10) + 5) * 1000;
+                        pauseDelay = (getRand(10) + 5) * 1000;
                         break;
                     default://不停巡逻的这种
-                        enemy.pauseDelay = (1000 * 1000);
+                        pauseDelay = (1000 * 1000);
                         break;
                 }
             }
         } else {
-            if (enemy.speedX == 0) {
-                enemy.speedX = enemy.getRand(2) == 1 ? 2 : -2;
+            if (speedX == 0) {
+                speedX = getRand(2) == 1 ? 2 : -2;
             }
-            if (enemy.speedX > 0) {
-                enemy.x = (0 - enemy.width);
+            if (speedX > 0) {
+                x = (0 - width);
             } else {
-                enemy.x = MainWindow.windowWidth;
+                x = MainWindow.windowWidth;
             }
 
-            enemy.y = enemy.getRand(140);
-            if (enemy.speedY == 0) {
-                int rand = enemy.getRand(3);
+            y = getRand(140);
+            if (speedY == 0) {
+                int rand = getRand(3);
                 if (rand == 1) {
-                    enemy.speedY = 1;
+                    speedY = 1;
                 } else if (rand == 2) {
-                    enemy.speedY = -1;
+                    speedY = -1;
                 }
             }
-            if (enemy.speedY < 0) {
-                int disY = (MainWindow.windowWidth / 2 / Math.abs(enemy.speedX) * Math.abs(enemy.speedY));
-                if (enemy.y < disY) {
-                    enemy.y = disY + enemy.getRand(50);
+            if (speedY < 0) {
+                int disY = (MainWindow.windowWidth / 2 / Math.abs(speedX) * Math.abs(speedY));
+                if (y < disY) {
+                    y = disY + getRand(50);
                 }
-            } else if (enemy.speedY > 0) {
-                enemy.y = enemy.getRand(270);
+            } else if (speedY > 0) {
+                y = getRand(270);
             }
         }
 
@@ -244,6 +198,7 @@ public class EnemyPlane {
         return Math.abs(r % i);
     }
 
+    @Override
     public void dealMoveState() {
         if (pauseDelay == 0) {
             x = (x + speedX);
@@ -258,13 +213,18 @@ public class EnemyPlane {
                 } else if (System.currentTimeMillis() - patrolTime > pauseDelay) {
                     y = y + speedY;
                 }
-                if (x <= 0 || x >= MainWindow.windowWidth - sourceImg.getWidth()) {
+                if (x <= 0 || x >= MainWindow.windowWidth - width) {
                     speedX = -speedX;
                 } else if (Math.abs(x - patrolX) <= 10) {
                     speedX = -speedX;
                 }
             }
         }
+    }
+
+    @Override
+    public Bitmap getFrame() {
+        return firstFrame();
     }
 
 }

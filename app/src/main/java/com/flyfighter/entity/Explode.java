@@ -4,27 +4,11 @@ import android.graphics.Bitmap;
 
 import com.flyfighter.res.ResInit;
 
-public class Explode {
+import java.util.List;
+
+public class Explode extends Spirit {
 
     public static final byte[] explodePic = new byte[]{4, 4, 6, 5, 6, 6, 6, 6};
-
-    public int type;
-    public int x;
-    public int y;
-
-    public Bitmap sourceImg;
-    public int picIndex;
-    public int picNum;
-
-    public Explode() {
-    }
-
-    public Explode(int type, int x, int y, Bitmap sourceImg) {
-        this.type = type;
-        this.x = x;
-        this.y = y;
-        this.sourceImg = sourceImg;
-    }
 
     public static Explode dealExplodeState(PlayerBullet bullet, int type) {
         Explode explode = dealExplodeState(bullet.x, bullet.y, type);
@@ -42,18 +26,29 @@ public class Explode {
         explode.y = y;
         explode.type = type;
         explode.picNum = explodePic[explode.type];
+        explode.initSpiritBitmap();
         return explode;
     }
 
-    public Bitmap getImg() {
-        Bitmap bitmap;
+    public Bitmap getFrame() {
+        super.getFrame();
+        return source.get(frameIndex % picNum);
+    }
+
+    @Override
+    protected void initSpiritBitmap() {
         if (type < 2) {
-            bitmap = ResInit.explodeImage[picIndex % picNum];
+            for (int i = 0; i < picNum; i++) {
+                source.add(ResInit.explodeImage[type * picNum + i]);
+            }
         } else {
-            Bitmap source = ResInit.explodeImage[type + 8 - 2];
-            bitmap = Bitmap.createBitmap(source, source.getWidth() / picNum * (picIndex % picNum), 0, source.getWidth() / picNum, source.getHeight());
+            List<Bitmap> splitBitmap = splitBitmap(ResInit.explodeImage[type + 8 - 2], picNum);
+            source.addAll(splitBitmap);
         }
-        picIndex++;
-        return bitmap;
+    }
+
+    @Override
+    public void dealMoveState() {
+
     }
 }
