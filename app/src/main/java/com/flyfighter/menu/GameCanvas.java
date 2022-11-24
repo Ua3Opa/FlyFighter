@@ -65,6 +65,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gGamePause;
     //无敌时间为5秒
     private long shieldMaxMills = 5 * 1000;
+    private long bombMaxMills = 4 * 1000;
     private boolean mIsMissionComplete;
     private int gTempDelay;
     private int gBombDelay;
@@ -357,7 +358,53 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void dealBomb() {
         for (int i = 0; i < bombs.size(); i++) {
             Bomb bomb = bombs.get(i);
+            bomb.dealMoveState(mPlayer);
+            if (BombOutScreen(bomb)) {
+                bombs.remove(bomb);
+            } else if (BombHitEnemy(bomb)) {
+
+            } else if (BombHitBullets(bomb)) {
+            }
         }
+    }
+
+    private boolean BombHitBullets(Bomb bomb) {
+        for (int i = bullets.size() - 1; i >= 0; i--) {
+            Bullet bullet = bullets.get(i);
+            if (checkIfHit(bullet.x, bullet.y, bullet.width, bullet.height, bomb.x, bomb.y, bomb.source.get(0).getWidth(), bomb.source.get(0).getHeight())) {
+                bullets.remove(bullet);
+            }
+        }
+        return false;
+    }
+
+    private boolean BombOutScreen(Bomb bomb) {
+        //5秒
+        if (bomb.type == 1 && (System.currentTimeMillis() - bomb.boomTimeMills > bombMaxMills)) {
+            return true;
+        }
+        if (bomb.type == 2 && (bomb.y + bomb.source.get(0).getHeight()) < 0) {
+            return true;
+        }
+        if (bomb.type == 3) {
+            if (bomb.direction == -1 && (bomb.x + bomb.source.get(0).getWidth()) < 0) {
+                return true;
+            } else if (bomb.direction == 1 && bomb.x > MainWindow.windowWidth) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean BombHitEnemy(Bomb bomb) {
+        for (int i = enemys.size() - 1; i >= 0; i--) {
+            EnemyPlane enemy = enemys.get(i);
+            if (checkIfHit(enemy.x, enemy.y, enemy.width, enemy.height, bomb.x, bomb.y, bomb.source.get(0).getWidth(), bomb.source.get(0).getHeight())) {
+                enemy.health -= bomb.power;
+                mGameScore += 88;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1209,7 +1256,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         for (int i = 0; i < mPlayer.bombTypes.size(); i++) {
             int x = (27 + i * 45);
-            drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes.get(i)], x, 120);
+            drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes.get(i) - 1], x, 120);
         }
     }
 
@@ -1292,7 +1339,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void playBomb() {
-        if (mPlayer == null || mPlayer.state != 0 || !mIsGameFinished) {
+        if (mPlayer == null || mPlayer.state != 0 || mIsGameFinished) {
             return;
         }
         //
@@ -1302,7 +1349,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         //当前没有炸弹,或者是有无敌护盾的时候也可释放
         if (bombs.size() == 0 || (bombs.size() == 1 && bombs.get(0).type == 4)) {
             int lastBombType = mPlayer.bombTypes.get(mPlayer.bombTypes.size() - 1);
-            bombs.add(Bomb.makeBomb(lastBombType, mPlayer));
+            if (lastBombType == 3) {
+                Bomb[] b = Bomb.makeBomb3(3, mPlayer);
+                bombs.add(b[0]);
+                bombs.add(b[1]);
+            } else {
+                bombs.add(Bomb.makeBomb(lastBombType, mPlayer));
+            }
             mPlayer.bombTypes.remove(mPlayer.bombTypes.size() - 1);
         }
     }

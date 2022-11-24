@@ -18,7 +18,8 @@ public class Bullet {
     public int speedY;
     public int imgIndex;
     public int imgNum;
-
+    public int width;
+    public int height;
     public Bitmap sourceImg;
 
 
@@ -84,6 +85,9 @@ public class Bullet {
         imgIndex++;
         int index = imgIndex / 8;
         //Log.d("TAG", "getImg: "+this.hashCode()+"   " +(picIndex - 1 + index % imgNum));
-        return ResInit.bulletImage[picIndex + index % imgNum];
+        Bitmap bitmap = ResInit.bulletImage[picIndex + index % imgNum];
+        width = bitmap.getWidth();
+        height = bitmap.getHeight();
+        return bitmap;
     }
 }

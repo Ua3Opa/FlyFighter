@@ -67,9 +67,15 @@ public class PlayerPlane {
         player.life = 6;
         player.bomb = 6;
         player.bombType = playerType;
-        for (int i = 0; i < player.bomb; i++) {
-            player.bombTypes.add(playerType);
-        }
+//        for (int i = 0; i < player.bomb; i++) {
+//            player.bombTypes.add(playerType + 1);
+//        }
+        player.bombTypes.add(3);
+        player.bombTypes.add(2);
+        player.bombTypes.add(1);
+        player.bombTypes.add(3);
+        player.bombTypes.add(2);
+        player.bombTypes.add(1);
         return player;
     }
 
