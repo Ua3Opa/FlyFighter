@@ -6,7 +6,8 @@ import android.util.Size;
 import com.flyfighter.res.ResInit;
 
 public class Missile {
-    private static final byte[] bulletSpeedMissile = new byte[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
+
+    private static final byte[] bulletSpeedMissile = new byte[]{0, -10, -4, -10, -7, -7, -10, -4, -10, 0, -10, 4, -7, 7, -4, 10, 0, 10, 4, 10, 7, 7, 10, 4, 10, 0, 10, -4, 7, -7, 4, -10};
     public static int[][] missileOffset = new int[][]{{-42, -5}, {42, -5}, {-40, -5}, {40, -5}};
 
     public int type;
@@ -17,6 +18,7 @@ public class Missile {
     public int speedY;
 
     public int power;//伤害
+    public int missileDirection = 0;//导弹方向,对于追踪弹
 
     public int picNum;
 
@@ -48,6 +50,9 @@ public class Missile {
             missile.sourceImg = ResInit.bulletImage[58];
             missile.picNum = 16;
             missile.power = 10;
+            missile.missileDirection = 0;//默认向上
+            missile.speedX = bulletSpeedMissile[missile.missileDirection * 2];
+            missile.speedY = bulletSpeedMissile[missile.missileDirection * 2 + 1];
         }
         Size imgSize = missile.getImgSize();
         missile.x = x + offset[0] - imgSize.getWidth() / 2;
@@ -64,6 +69,7 @@ public class Missile {
                 bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / picNum * (index % picNum), 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
                 break;
             case 2:
+                bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / picNum * missileDirection, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
                 break;
             default:
                 break;
@@ -78,9 +84,8 @@ public class Missile {
         Bitmap bitmap = null;
         switch (type) {
             case 1:
-                bitmap = Bitmap.createBitmap(sourceImg, 0, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
-                break;
             case 2:
+                bitmap = Bitmap.createBitmap(sourceImg, 0, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
                 break;
             default:
                 break;
@@ -93,10 +98,9 @@ public class Missile {
         Size size = null;
         switch (type) {
             case 1:
+            case 2:
                 Bitmap bitmap = Bitmap.createBitmap(sourceImg, 0, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
                 size = new Size(bitmap.getWidth(), bitmap.getHeight());
-                break;
-            case 2:
                 break;
             default:
                 break;
@@ -104,12 +108,84 @@ public class Missile {
         return size;
     }
 
-    public void dealMoveState() {
+    /**
+     * 随机一个敌人的位置
+     *
+     * @param enemy
+     */
+
+    public void dealMoveState(EnemyPlane enemy) {
         if (type == 1) {
             y += speedY;
-            speedY--;
-        } else {
+            speedY++;
+        } else {//追踪弹
+            x += speedX;
+            y += speedY;
 
+            if (enemy == null) {
+                return;
+            }
+            missileDirection = getMissileDirection(enemy);
+            speedX = bulletSpeedMissile[missileDirection * 2];
+            speedY = bulletSpeedMissile[missileDirection * 2 + 1];
         }
+    }
+
+    private int getMissileDirection(EnemyPlane enemy) {
+        missileDirection = 0;
+
+        int temp;
+        for (temp = 0; temp < 16; temp++) {
+            if (speedX == bulletSpeedMissile[temp * 2] && speedY == bulletSpeedMissile[temp * 2 + 1]) {
+                missileDirection = temp;
+                break;
+            }
+        }
+        missileDirection = temp >= 16 ? 0 : missileDirection;
+
+        //原始位置
+        int nextX = x + bulletSpeedMissile[missileDirection * 2];
+        int nextY = y + bulletSpeedMissile[missileDirection * 2 + 1];
+
+        int distance1 = (int) Math.sqrt(Math.pow(nextX - enemy.x, 2) + Math.pow(nextY - enemy.y, 2));
+        if (missileDirection + 1 >= 16) {
+            temp = 0;
+        } else {
+            temp = missileDirection + 1;
+        }
+
+        int next2X = x + bulletSpeedMissile[temp * 2];
+        int next2Y = y + bulletSpeedMissile[temp * 2 + 1];
+
+        int distance2 = (int) Math.sqrt(Math.pow(next2X - enemy.x, 2) + Math.pow(next2Y - enemy.y, 2));
+
+        if (missileDirection - 1 < 0) {
+            temp = 15;
+        } else {
+            temp = missileDirection - 1;
+        }
+
+        int next3X = x + bulletSpeedMissile[temp * 2];
+        int next3Y = y + bulletSpeedMissile[temp * 2 + 1];
+
+        int distance3 = (int) Math.sqrt(Math.pow(next3X - enemy.x, 2) + Math.pow(next3Y - enemy.y, 2));
+        temp = missileDirection;
+
+
+        if (distance1 > distance2) {
+            distance1 = distance2;
+            temp = missileDirection + 1;
+            if (temp > 15) {
+                temp = 0;
+            }
+        }
+
+        if (distance1 > distance3) {
+            temp = missileDirection - 1;
+            if (temp < 0) {
+                temp = 15;
+            }
+        }
+        return temp;
     }
 }

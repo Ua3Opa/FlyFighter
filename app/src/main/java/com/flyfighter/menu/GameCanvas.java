@@ -359,15 +359,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
      * 为了保证y轴的位置相同 必须使用 List<Missile[]> 结构的数据
      */
     private void dealMissile() {
-        mMissileType = 1;
+        mMissileType = 2;
         mMissileMax = 2;
         for (int i = 0; i < missiles.size(); i++) {
             Missile[] ms = missiles.get(i);
             if (ms[0] != null) {
-                ms[0].dealMoveState();
+                ms[0].dealMoveState(getNearestEnemy(ms[0]));
             }
             if (ms[1] != null) {
-                ms[1].dealMoveState();
+                ms[1].dealMoveState(getNearestEnemy(ms[1]));
             }
             checkMissileOutScreen(ms);
             if (ms[0] == null && ms[1] == null) {
@@ -380,7 +380,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         //限制发射频率
-        if (System.currentTimeMillis() - mMissileShootTime <= 300) {
+        if (System.currentTimeMillis() - mMissileShootTime <= 400) {
             return;
         }
         mMissileShootTime = System.currentTimeMillis();
@@ -854,6 +854,26 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             ++offSet;
         }
 
+    }
+
+    private EnemyPlane getNearestEnemy(Missile missile) {
+        if (enemys.isEmpty()) {
+            return null;
+        }
+        EnemyPlane nearest = null;
+        for (EnemyPlane enemy : enemys) {
+            if (nearest == null) {
+                nearest = enemy;
+                continue;
+            }
+            int disE = (int) (Math.pow(enemy.x - missile.x, 2) + Math.pow(enemy.y - missile.y, 2));
+            int disN = (int) (Math.pow(nearest.x - missile.x, 2) + Math.pow(nearest.y - missile.y, 2));
+
+            if (disE < disN) {
+                nearest = enemy;
+            }
+        }
+        return nearest;
     }
 
     private boolean mallocBullet() {
