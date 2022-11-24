@@ -51,7 +51,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean gIsLoadGame = true;
     private boolean gIsSaved;
     private int gContinueNum;
-    private boolean gIsGameFinished;
+    private boolean mIsGameFinished;
     private boolean gIsPlayerFire = true;
     private int mMission;
     private int mGameScore;
@@ -224,7 +224,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         this.gIsSaved = false;
         this.gContinueNum = 3;
-        this.gIsGameFinished = false;
+        this.mIsGameFinished = false;
         this.gIsPlayerFire = false;
         this.mMission = 1;
         this.mGameScore = 0;
@@ -351,7 +351,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         dealExplodes();
         dealItems();
         dealShield();
-        //dealBomb();
+        dealBomb();
+    }
+
+    private void dealBomb() {
+        for (int i = 0; i < bombs.size(); i++) {
+            Bomb bomb = bombs.get(i);
+        }
     }
 
     /**
@@ -1141,7 +1147,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showGameOver(Canvas canvas) {
-        if (this.gIsGameFinished) {
+        if (this.mIsGameFinished) {
             this.isThreadAlive = false;
             ((MainWindow) (getParent())).showRanking();
         }
@@ -1162,7 +1168,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         if (this.mIsMissionComplete) {
             this.gTempDelay = (this.gTempDelay + 1);
-            if (this.gTempDelay > 90 && !this.gIsGameFinished) {
+            if (this.gTempDelay > 90 && !this.mIsGameFinished) {
                 if (this.mMission >= 5) {
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[5], ResInit.otherImage[3], 50);
                 } else {
@@ -1176,7 +1182,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (this.mMission >= 5) {
                 drawBitmapCenter(canvas, ResInit.otherImage[0]);
                 if (this.gTempDelay > 800) {
-                    this.gIsGameFinished = true;
+                    this.mIsGameFinished = true;
                 }
                 return;
             }
@@ -1201,7 +1207,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (this.gIsGameOver) {
             return;
         }
-        for (int i = 0; i < mPlayer.bomb; i = (i + 1)) {
+        for (int i = 0; i < mPlayer.bombTypes.size(); i++) {
             int x = (27 + i * 45);
             drawBitmapXY(canvas, ResInit.bombIcon[mPlayer.bombTypes.get(i)], x, 120);
         }
@@ -1284,6 +1290,22 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         mPlayer.handleSpeed(xPercent, yPercent);
     }
 
+    @Override
+    public void playBomb() {
+        if (mPlayer == null || mPlayer.state != 0 || !mIsGameFinished) {
+            return;
+        }
+        //
+        if (mPlayer.bombTypes.size() == 0 || bombs.size() > 2) {
+            return;
+        }
+        //当前没有炸弹,或者是有无敌护盾的时候也可释放
+        if (bombs.size() == 0 || (bombs.size() == 1 && bombs.get(0).type == 4)) {
+            int lastBombType = mPlayer.bombTypes.get(mPlayer.bombTypes.size() - 1);
+            bombs.add(Bomb.makeBomb(lastBombType, mPlayer));
+            mPlayer.bombTypes.remove(mPlayer.bombTypes.size() - 1);
+        }
+    }
 
     public boolean inScreen(int posX, int posY, Bitmap source) {
         if ((posX >= 0 && posX <= MainWindow.windowWidth - source.getWidth()) && posY >= 0 && posY <= MainWindow.windowHeight - source.getHeight()) {

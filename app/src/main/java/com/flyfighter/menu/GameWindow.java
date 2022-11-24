@@ -1,11 +1,15 @@
 package com.flyfighter.menu;
 
 import android.content.Context;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.flyfighter.interf.Controller;
+import com.flyfighter.utils.UiUtils;
 
 public class GameWindow extends FrameLayout {
+
     public GameWindow(Context context, int playerType) {
         super(context);
         init(context, playerType);
@@ -16,4 +20,5 @@ public class GameWindow extends FrameLayout {
         addView(gameCanvas);
         addView(new GameController(context,gameCanvas));
     }
+
 }
