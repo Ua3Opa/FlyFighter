@@ -9,7 +9,7 @@ import com.flyfighter.view.MainWindow;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayerPlane {
+public class PlayerPlane extends Spirit {
 
     public static final int[][] playerData = new int[][]{{1, 106, 320, 20, 3, 3, 0, 1}, {2, 105, 320, 16, 3, 3, 0, 1}, {3, 105, 320, 24, 3, 3, 0, 1}};
     //-1 : 初始化完成,需要进场
@@ -79,39 +79,6 @@ public class PlayerPlane {
         return player;
     }
 
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-
-    public void setLife(int life) {
-        this.life = life;
-    }
-
-    public void setBomb(int bomb) {
-        this.bomb = bomb;
-    }
-
-    public void setPicId(int picId) {
-        this.picId = picId;
-    }
-
-    public void setPower(int power) {
-        this.power = power;
-    }
-
     public void handleSpeed(double xPercent, double yPercent) {
         speedX = (int) (speed * xPercent);
         speedY = (int) (speed * yPercent);
@@ -140,7 +107,12 @@ public class PlayerPlane {
             picIndex += GameCanvas.bulletPic[j];
         }
         Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
-        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + bitmap.getWidth() / 2 + data[1], y + data[2], data[3], data[4], 1, bitmap);
+        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + bitmap.getWidth() / 2 + data[1], y + data[2], data[3], data[4], 1);
         return bullet;
+    }
+
+    @Override
+    protected void initSpiritBitmap() {
+
     }
 }

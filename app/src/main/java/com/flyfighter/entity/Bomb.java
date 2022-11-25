@@ -11,18 +11,7 @@ import com.flyfighter.view.MainWindow;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Bomb {
-
-    public int type;
-    public int x;
-    public int y;
-
-    public int picNum;
-    public int imgIndex;
-
-    public long boomTimeMills = System.currentTimeMillis();
-
-    public List<Bitmap> source = new ArrayList<>();
+public class Bomb extends Spirit {
 
     public int direction;//左右还是上下适用于type ==3
     public int power = 4;
@@ -34,7 +23,6 @@ public class Bomb {
     public static Bomb makeBomb(int type, PlayerPlane player) {
         Bomb bomb = new Bomb();
         bomb.type = type;
-
         if (type == 4) {
             bomb.source.addAll(createBomb4());
         } else if (type == 1) {
@@ -42,6 +30,7 @@ public class Bomb {
         } else if (type == 2) {
             bomb.source.addAll(createBomb2());
         }
+        bomb.initSpiritSize();
         bomb.initPosition(player);
         return bomb;
     }
@@ -49,7 +38,7 @@ public class Bomb {
     private void initPosition(PlayerPlane player) {
         switch (type) {
             case 1:
-                int index = imgIndex / 8;
+                int index = frameIndex / 8;
                 Bitmap bitmap;
                 if (index <= 3) {
                     bitmap = source.get(index);
@@ -157,7 +146,7 @@ public class Bomb {
             Bitmap bottomIndex = Bitmap.createBitmap(sBottom, sBottom.getWidth() / picNum * i, 0, sBottom.getWidth() / picNum, sBottom.getHeight());
             Bitmap topIndex = Bitmap.createBitmap(sTop, sTop.getWidth() / picNum * i, 0, sTop.getWidth() / picNum, sTop.getHeight());
 
-            int posY = MainWindow.windowHeight - sBottom.getHeight()+offset;
+            int posY = MainWindow.windowHeight - sBottom.getHeight() + offset;
             canvas.drawBitmap(bottomIndex, 0, posY, paint);
             //相对于飞机的下移量为120
             while (posY > -(120 + playerHeight + sBottom.getHeight())) {
@@ -169,13 +158,13 @@ public class Bomb {
         return bitmaps;
     }
 
-    public Bitmap getImgWithType() {
-        //int index = (int) (System.currentTimeMillis() / 200) % 4;
+    public Bitmap getFrame() {
+        super.getFrame();//frameIndex++
         Bitmap bitmap = null;
-        int index = 0;
+        int index;
         switch (type) {
             case 1:
-                index = imgIndex / 8;
+                index = frameIndex / 8;
                 if (source.size() == 3 && index == 0) {
                     bitmap = source.get(0);
                 } else if (source.size() == 3) {
@@ -189,16 +178,14 @@ public class Bomb {
                 bitmap = source.get(0);
                 break;
             case 3:
-                index = imgIndex < 2 ? imgIndex : 2;
+                index = frameIndex < 2 ? frameIndex : 2;
                 bitmap = source.get(index);
                 break;
             case 4://护盾
-                index = imgIndex / 8;
+                index = frameIndex / 8;
                 bitmap = source.get(index % 4);
                 break;
-
         }
-        imgIndex++;
         return bitmap;
     }
 
@@ -242,5 +229,15 @@ public class Bomb {
                 y = mPlayer.y + mPlayer.height / 2 - source.get(0).getHeight() / 2;
                 break;
         }
+    }
+
+    @Override
+    protected void initSpiritBitmap() {
+
+    }
+
+    @Override
+    public void dealMoveState() {
+
     }
 }

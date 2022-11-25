@@ -7,31 +7,13 @@ import com.flyfighter.res.ResInit;
 
 import java.util.Random;
 
-public class Bullet {
+public class Bullet extends Spirit {
 
     public static final int[] bulletSpeedToPlayer = new int[]{0, 9, 4, 9, 4, 4, 9, 4, 9, 4, 9, 4, 9, 0, 9, -4, 9, -4, 9, -9, 4, -9, 4, -9, 0, -13, -4, -13, -4, -4, -9, -4, -9, -4, -9, -4, -9, 0, -13, 4, -9, 4, -4, 4, -4, 4, -4, 13};
-    public int type;
-    public int colors;
-    public int x;
-    public int y;
-    public int speedX;
-    public int speedY;
-    public int imgIndex;
-    public int imgNum;
-    public int width;
-    public int height;
-    public Bitmap sourceImg;
-
 
     Random random = new Random();
 
     public Bullet() {
-        this.type = 0;
-        this.colors = 0;
-        this.x = 0;
-        this.y = 0;
-        this.speedX = 0;
-        this.speedY = 0;
     }
 
 
@@ -49,17 +31,16 @@ public class Bullet {
      * @param type
      * @return
      */
-    public static Bullet mallocBullet(int type, int x, int y, int xspd, int yspd, int imgNum, Bitmap sourceImg) {
+    public static Bullet mallocBullet(int type, int x, int y, int xspd, int yspd, int picNum, Bitmap sourceImg) {
         Bullet bullet = new Bullet();
         bullet.type = type;
+        bullet.picNum = picNum;
+        bullet.initSpiritBitmap();
+        bullet.initSpiritSize();
         bullet.speedX = xspd;
         bullet.speedY = yspd;
-        bullet.imgNum = imgNum;
-        bullet.sourceImg = sourceImg;
-
-        bullet.x = x - sourceImg.getWidth() / imgNum;
+        bullet.x = x - bullet.width;
         bullet.y = y;
-
         return bullet;
     }
 
@@ -73,21 +54,25 @@ public class Bullet {
     }
 
 
-    public Bitmap getImg() {
-//        Bitmap bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / imgNum * (imgIndex % imgNum), 0, sourceImg.getWidth() / imgNum, sourceImg.getHeight());
-//        imgIndex++;
+    public Bitmap getFrame() {
+        super.getFrame();
+        return source.get(frameIndex);
+    }
 
+    @Override
+    protected void initSpiritBitmap() {
         int picIndex = 0;
         for (int j = 0; j < type; ++j) {//计算子弹图片的索引
             picIndex += GameCanvas.bulletPic[j];
         }
+        for (int i = 0; i < GameCanvas.bulletPic[type]; i++) {
+            Bitmap bitmap = ResInit.bulletImage[picIndex + i];
+            source.add(bitmap);
+        }
+    }
 
-        imgIndex++;
-        int index = imgIndex / 8;
-        //Log.d("TAG", "getImg: "+this.hashCode()+"   " +(picIndex - 1 + index % imgNum));
-        Bitmap bitmap = ResInit.bulletImage[picIndex + index % imgNum];
-        width = bitmap.getWidth();
-        height = bitmap.getHeight();
-        return bitmap;
+    @Override
+    public void dealMoveState() {
+
     }
 }

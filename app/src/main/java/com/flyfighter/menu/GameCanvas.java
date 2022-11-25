@@ -21,7 +21,6 @@ import com.flyfighter.entity.Item;
 import com.flyfighter.entity.Missile;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
-import com.flyfighter.entity.RectArea;
 import com.flyfighter.interf.Controller;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
@@ -42,7 +41,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int difficulty;
     private PlayerPlane mPlayer;
     private List<EnemyPlane> enemys = new ArrayList<>();
-    private RectArea gSrcRect;
     private Random random;
 
     private final int maxEnemy = 5;
@@ -135,7 +133,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     public static final int[][] playerBulletData = new int[][]
             // 第二位改成飞机中心偏移值
-            {{0, 0, -2, 0, -23},
+                    {{0, 0, -2, 0, -23},
                     {1, -24, 0, 0, -20}, {1, 24, 0, 0, -20},
                     {1, -24, 0, -1, -20}, {0, 0, -7, 0, -25}, {1, 24, 0, 1, -20},
                     {1, -32, 0, -1, -20}, {0, -24, -6, 0, -25}, {0, 24, -6, 0, -25}, {1, 32, 0, 1, -20},
@@ -194,7 +192,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.playerType = playerType;
         this.difficulty = RMS.difficulty;
 
-        this.gSrcRect = new RectArea();
         this.random = new Random();
 
         gameInit();
@@ -364,7 +361,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private boolean BombOutScreen(Bomb bomb) {
         //5秒
-        if (bomb.type == 1 && (System.currentTimeMillis() - bomb.boomTimeMills > bombMaxMills)) {
+        if (bomb.type == 1 && (System.currentTimeMillis() - bomb.createTime > bombMaxMills)) {
             return true;
         }
         if (bomb.type == 2 && (bomb.y + bomb.source.get(0).getHeight()) < 0) {
@@ -425,10 +422,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void checkMissileOutScreen(Missile[] ms) {
-        if (ms[0] != null && outScreen(ms[0].x, ms[0].y, ms[0].getImgBitmap())) {
+        if (ms[0] != null && outScreen(ms[0].x, ms[0].y, ms[0].firstFrame())) {
             ms[0] = null;
         }
-        if (ms[1] != null && outScreen(ms[1].x, ms[1].y, ms[1].getImgBitmap())) {
+        if (ms[1] != null && outScreen(ms[1].x, ms[1].y, ms[1].firstFrame())) {
             ms[1] = null;
         }
     }
@@ -440,7 +437,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (int i = 0; i < bombs.size(); i++) {
             Bomb bomb = bombs.get(i);
             if (bomb.type == 4) {
-                if (System.currentTimeMillis() - bomb.boomTimeMills >= shieldMaxMills) {
+                if (System.currentTimeMillis() - bomb.createTime >= shieldMaxMills) {
                     bombs.remove(bomb);
                     return;
                 } else {
@@ -455,15 +452,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void dealItems() {
         for (int i = items.size() - 1; i >= 0; i--) {
             Item item = items.get(i);
-            item.x += item.speedX;
-            item.y += item.speedY;
-            if (item.x < 0 || item.x > (MainWindow.windowWidth - item.sourceImg.getWidth() / 2)) {
-                item.speedX = -item.speedX;
-            }
+            item.dealMoveState();
             if (checkHitPlayer(item)) {
                 handleGetItems(item);
                 items.remove(item);
-            } else if (outScreen(item.x, item.y, item.getImg0())) {
+            } else if (outScreen(item.x, item.y, item.firstFrame())) {
                 items.remove(item);
             }
         }
@@ -482,7 +475,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (int i = bullets.size() - 1; i >= 0; i--) {
             bullets.get(i).x += bullets.get(i).speedX;
             bullets.get(i).y += bullets.get(i).speedY;
-            if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).sourceImg)) {
+            if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).firstFrame())) {
                 bullets.remove(bullets.get(i));
             } else if (checkHitPlayer(bullets.get(i))) {
 
@@ -490,26 +483,27 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
 
         for (int i = playerBullets.size() - 1; i >= 0; i--) {
-            playerBullets.get(i).x += playerBullets.get(i).speedX;
-            playerBullets.get(i).y += playerBullets.get(i).speedY;
-            if (outScreen(playerBullets.get(i).x, playerBullets.get(i).y, playerBullets.get(i).sourceImg)) {
-                playerBullets.remove(playerBullets.get(i));
-            } else if (checkMissileHitEnemy(playerBullets.get(i))) {
-                explodes.add(Explode.dealExplodeState(playerBullets.get(i), getRand(2)));
+            PlayerBullet playerBullet = playerBullets.get(i);
+            playerBullet.dealMoveState();
+
+            if (outScreen(playerBullet.x, playerBullet.y, playerBullet.firstFrame())) {
+                playerBullets.remove(playerBullet);
+            } else if (checkMissileHitEnemy(playerBullet) ){
+                explodes.add(Explode.dealExplodeState(playerBullet, getRand(2)));
                 mGameScore += 28;
-                playerBullets.remove(playerBullets.get(i));
+                playerBullets.remove(playerBullet);
             }
         }
     }
 
     private boolean checkMissileHitEnemy(Missile[] ms) {
         for (EnemyPlane enemy : enemys) {
-            if (ms[0] != null && checkIfHit(ms[0].x, ms[0].y, ms[0].getImgBitmap().getWidth(), ms[0].getImgBitmap().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
+            if (ms[0] != null && checkIfHit(ms[0].x, ms[0].y, ms[0].width, ms[0].height, enemy.x, enemy.y, enemy.width, enemy.height)) {
                 enemy.health -= ms[0].power;
                 mGameScore += 28;
                 ms[0] = null;
             }
-            if (ms[1] != null && checkIfHit(ms[1].x, ms[1].y, ms[1].getImgBitmap().getWidth(), ms[1].getImgBitmap().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
+            if (ms[1] != null && checkIfHit(ms[1].x, ms[1].y, ms[1].width, ms[1].height, enemy.x, enemy.y, enemy.width, enemy.height)) {
                 enemy.health -= ms[1].power;
                 mGameScore += 28;
                 ms[1] = null;
@@ -520,7 +514,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private boolean checkMissileHitEnemy(PlayerBullet bullet) {
         for (EnemyPlane enemy : enemys) {
-            if (checkIfHit(bullet.x, bullet.y, bullet.getImg().getWidth(), bullet.getImg().getHeight(), enemy.x, enemy.y, enemy.width, enemy.height)) {
+            if (checkIfHit(bullet.x, bullet.y, bullet.width, bullet.height, enemy.x, enemy.y, enemy.width, enemy.height)) {
                 //{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}
                 enemy.health -= playerBulletFloorPower[playerType][mPlayer.power - 1] - 1;
                 return true;
@@ -530,7 +524,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private boolean checkHitPlayer(Item item) {
-        if (checkIfHit(item.x, item.y, item.getImg0().getWidth(), item.getImg0().getHeight(), mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
+        if (checkIfHit(item.x, item.y, item.width, item.height, mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
             return true;
         }
         return false;
@@ -1117,23 +1111,23 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showMissile(Canvas canvas) {
         for (Missile[] missile : missiles) {
             if (missile[0] != null) {
-                drawBitmapXY(canvas, missile[0].getImg(), missile[0].x, missile[0].y);
+                drawBitmapXY(canvas, missile[0].getFrame(), missile[0].x, missile[0].y);
             }
             if (missile[1] != null) {
-                drawBitmapXY(canvas, missile[1].getImg(), missile[1].x, missile[1].y);
+                drawBitmapXY(canvas, missile[1].getFrame(), missile[1].x, missile[1].y);
             }
         }
     }
 
     private void showBombs(Canvas canvas) {
         for (Bomb bomb : bombs) {
-            drawBitmapXY(canvas, bomb.getImgWithType(), bomb.x, bomb.y);
+            drawBitmapXY(canvas, bomb.getFrame(), bomb.x, bomb.y);
         }
     }
 
     private void showItems(Canvas canvas) {
         for (Item item : items) {
-            drawBitmapXY(canvas, item.getImg(), item.x, item.y);
+            drawBitmapXY(canvas, item.getFrame(), item.x, item.y);
         }
     }
 
@@ -1148,12 +1142,12 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (bullet.type >= 21) {
                 drawBitmapXY(canvas, ResInit.bulletImage[59], bullet.x, bullet.y);
             } else {
-                drawBitmapXY(canvas, bullet.getImg(), bullet.x, bullet.y);
+                drawBitmapXY(canvas, bullet.getFrame(), bullet.x, bullet.y);
             }
         }
 
         for (PlayerBullet bullet : playerBullets) {
-            drawBitmapXY(canvas, bullet.getImg(), bullet.x, bullet.y);
+            drawBitmapXY(canvas, bullet.getFrame(), bullet.x, bullet.y);
         }
     }
 
@@ -1254,15 +1248,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showBackScreen(Canvas canvas) {
-        this.gSrcRect.x = 0;
-        this.gSrcRect.w = MainWindow.windowWidth;
-        int Rect_y = -(this.gBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
-        if (Rect_y >= 0) {
-            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, -(this.gBackgroundHeight - Rect_y));
+        int offsetY = -(this.gBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
+        if (offsetY >= 0) {
+            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, -(this.gBackgroundHeight - offsetY));
         }
-        drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, Rect_y);
+        drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, offsetY);
 
-        if (Rect_y >= MainWindow.windowHeight) {
+        if (offsetY >= MainWindow.windowHeight) {
             this.gBackgroundOffset = 0;
         }
         if (this.gIsBossAppear) {

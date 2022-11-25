@@ -5,26 +5,13 @@ import android.util.Size;
 
 import com.flyfighter.res.ResInit;
 
-public class Missile {
+public class Missile extends Spirit {
 
     private static final byte[] bulletSpeedMissile = new byte[]{0, -10, -4, -10, -7, -7, -10, -4, -10, 0, -10, 4, -7, 7, -4, 10, 0, 10, 4, 10, 7, 7, 10, 4, 10, 0, 10, -4, 7, -7, 4, -10};
     public static int[][] missileOffset = new int[][]{{-42, -5}, {42, -5}, {-40, -5}, {40, -5}};
 
-    public int type;
-    public int x;
-    public int y;
-
-    public int speedX;
-    public int speedY;
-
     public int power;//伤害
     public int missileDirection = 0;//导弹方向,对于追踪弹
-
-    public int picNum;
-
-    public int imgIndex;
-
-    public Bitmap sourceImg;
 
     //无敌时间为5秒
     public Missile() {
@@ -43,74 +30,42 @@ public class Missile {
         if (type == 1) {//双导弹
             missile.speedX = 0;
             missile.speedY = 15;
-            missile.sourceImg = ResInit.bulletImage[57];
             missile.picNum = 2;
+
             missile.power = 18;
         } else {//追踪弹
-            missile.sourceImg = ResInit.bulletImage[58];
             missile.picNum = 16;
             missile.power = 10;
             missile.missileDirection = 0;//默认向上
             missile.speedX = bulletSpeedMissile[missile.missileDirection * 2];
             missile.speedY = bulletSpeedMissile[missile.missileDirection * 2 + 1];
         }
-        Size imgSize = missile.getImgSize();
-        missile.x = x + offset[0] - imgSize.getWidth() / 2;
-        missile.y = y - imgSize.getHeight() / 2;
+        missile.initSpiritBitmap();
+        missile.initSpiritSize();
+        missile.x = x + offset[0] - missile.width / 2;
+        missile.y = y - missile.height / 2;
         return missile;
     }
 
-    public Bitmap getImg() {
+    public Bitmap getFrame() {
+        super.getFrame();
         //int index = (int) (System.currentTimeMillis() / 200) % 4;
         Bitmap bitmap = null;
         switch (type) {
             case 1:
-                int index = imgIndex / 8;
-                bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / picNum * (index % picNum), 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
+                bitmap = source.get(frameIndex);
                 break;
             case 2:
-                bitmap = Bitmap.createBitmap(sourceImg, sourceImg.getWidth() / picNum * missileDirection, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
+                bitmap = source.get(missileDirection);
                 break;
             default:
                 break;
         }
-        imgIndex++;
         return bitmap;
-    }
-
-
-    public Bitmap getImgBitmap() {
-        //int index = (int) (System.currentTimeMillis() / 200) % 4;
-        Bitmap bitmap = null;
-        switch (type) {
-            case 1:
-            case 2:
-                bitmap = Bitmap.createBitmap(sourceImg, 0, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
-                break;
-            default:
-                break;
-        }
-        imgIndex++;
-        return bitmap;
-    }
-
-    public Size getImgSize() {
-        Size size = null;
-        switch (type) {
-            case 1:
-            case 2:
-                Bitmap bitmap = Bitmap.createBitmap(sourceImg, 0, 0, sourceImg.getWidth() / picNum, sourceImg.getHeight());
-                size = new Size(bitmap.getWidth(), bitmap.getHeight());
-                break;
-            default:
-                break;
-        }
-        return size;
     }
 
     /**
-     * 随机一个敌人的位置
-     *
+     * 最近的一个敌人的位置
      * @param enemy
      */
 
@@ -187,5 +142,19 @@ public class Missile {
             }
         }
         return temp;
+    }
+
+    @Override
+    protected void initSpiritBitmap() {
+        if (type == 1) {//双导弹
+            source.addAll(splitBitmap(ResInit.bulletImage[57], picNum));
+        } else {//追踪弹
+            source.addAll(splitBitmap(ResInit.bulletImage[58], picNum));
+        }
+    }
+
+    @Override
+    public void dealMoveState() {
+
     }
 }

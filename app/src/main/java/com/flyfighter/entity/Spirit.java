@@ -19,15 +19,24 @@ public abstract class Spirit {
 
     public int picNum;
 
-    public int direction;
     public long createTime = System.currentTimeMillis();
     public long lastFrameTime;
-    public int frameIndex;
+    public int frameIndex;//第几帧
 
     public List<Bitmap> source = new ArrayList<>();
 
+    //初始化bitmap
     protected abstract void initSpiritBitmap();
-    public abstract void dealMoveState();
+
+    //初始化bitmap的大小
+    protected void initSpiritSize() {
+        width = source.get(0).getWidth();
+        height = source.get(0).getHeight();
+    }
+    //处理移动逻辑
+    public void dealMoveState() {
+
+    }
 
 
     public Bitmap getFrame() {
@@ -35,11 +44,6 @@ public abstract class Spirit {
             frameIndex++;
         }
         return null;
-    }
-
-    protected void initSpiritSize(){
-        width = source.get(0).getWidth();
-        height = source.get(0).getHeight();
     }
 
     public static List<Bitmap> splitBitmap(Bitmap source, int picNum) {
