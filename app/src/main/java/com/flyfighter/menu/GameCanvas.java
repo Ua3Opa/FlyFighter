@@ -132,24 +132,24 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     {3, 5, 19, 20}, {12, 6, 17, 25}}};
 
     public static final int[][] playerBulletData = new int[][]
-            // 第二位改成飞机中心偏移值
-                    {{0, 0, -2, 0, -23},
-                    {1, -24, 0, 0, -20}, {1, 24, 0, 0, -20},
-                    {1, -24, 0, -1, -20}, {0, 0, -7, 0, -25}, {1, 24, 0, 1, -20},
-                    {1, -32, 0, -1, -20}, {0, -24, -6, 0, -25}, {0, 24, -6, 0, -25}, {1, 32, 0, 1, -20},
-                    {0, -38, 0, -2, -23}, {1, -24, -2, -1, -24}, {0, 0, 0, 0, -28}, {1, 24, -2, 1, -24}, {0, 38, 0, 2, -23},
+            // 第二位改成飞机中心偏移值,新增第六位图片的index
+            {{0, 0, -2, 0, -23, 0},
+                    {1, -24, 0, 0, -20, 0}, {1, 24, 0, 0, -20, 0},
+                    {1, -24, 0, -1, -20, 1}, {0, 0, -7, 0, -25, 0}, {1, 24, 0, 1, -20, 1},
+                    {1, -32, 0, -1, -20, 1}, {0, -24, -6, 0, -25, 0}, {0, 24, -6, 0, -25, 0}, {1, 32, 0, 1, -20, 1},
+                    {0, -38, 0, -2, -23, 0}, {1, -24, -2, -1, -24, 1}, {0, 0, 0, 0, -28, 0}, {1, 24, -2, 1, -24, 1}, {0, 38, 0, 2, -23, 0},
 
-                    {1, 0, 0, 0, -23},
-                    {1, -26, 0, 0, -23}, {1, 26, 0, 0, -23},
-                    {0, -26, 0, -1, -23}, {1, 0, -6, 0, -30}, {26, 15, 0, 1, -23},
-                    {0, -34, 0, -1, -23}, {1, -26, 0, 0, -30}, {1, 26, 0, 0, -30}, {2, 34, 0, 1, -23},
-                    {0, -40, -2, -1, -23}, {0, -26, 0, 0, -27}, {1, 0, -4, 0, -33}, {2, 26, 0, 0, -27}, {2, 40, -2, 1, -23},
+                    {1, 0, 0, 0, -23, 1},
+                    {1, -26, 0, 0, -23, 1}, {1, 26, 0, 0, -23, 1},
+                    {0, -26, 0, -1, -23, 0}, {1, 0, -6, 0, -30, 1}, {26, 15, 0, 1, -23, 2},
+                    {0, -34, 0, -1, -23, 0}, {1, -26, 0, 0, -30, 1}, {1, 26, 0, 0, -30, 1}, {2, 34, 0, 1, -23, 2},
+                    {0, -40, -2, -1, -23, 0}, {0, -26, 0, 0, -27, 0}, {1, 0, -4, 0, -33, 1}, {2, 26, 0, 0, -27, 2}, {2, 40, -2, 1, -23, 2},
 
-                    {1, 0, -5, 0, -23},
-                    {2, -34, 0, 0, -23}, {2, 34, 0, 0, -23},
-                    {2, -44, 1, 0, -23}, {1, 0, -5, 0, -30}, {2, 44, 1, 0, -23},
-                    {2, -50, 1, 0, -23}, {1, -20, -5, 0, -30}, {1, 20, -5, 0, -30}, {2, 50, 1, 0, -23},
-                    {2, -55, -2, 0, -23}, {1, -25, -5, 0, -30}, {1, 0, -2, 0, -30}, {1, 25, -5, 0, -30}, {2, 55, -2, 0, -23}};
+                    {1, 0, -5, 0, -23, 1},
+                    {2, -34, 0, 0, -23, 0}, {2, 34, 0, 0, -23, 0},
+                    {2, -44, 1, 0, -23, 1}, {1, 0, -5, 0, -30, 0}, {2, 44, 1, 0, -23, 1},
+                    {2, -50, 1, 0, -23, 1}, {1, -20, -5, 0, -30, 0}, {1, 20, -5, 0, -30, 0}, {2, 50, 1, 0, -23, 1},
+                    {2, -55, -2, 0, -23, 1}, {1, -25, -5, 0, -30, 2}, {1, 0, -2, 0, -30, 0}, {1, 25, -5, 0, -30, 2}, {2, 55, -2, 0, -23, 1}};
 
     public static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
 
@@ -488,7 +488,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
             if (outScreen(playerBullet.x, playerBullet.y, playerBullet.firstFrame())) {
                 playerBullets.remove(playerBullet);
-            } else if (checkMissileHitEnemy(playerBullet) ){
+            } else if (checkMissileHitEnemy(playerBullet)) {
                 explodes.add(Explode.dealExplodeState(playerBullet, getRand(2)));
                 mGameScore += 28;
                 playerBullets.remove(playerBullet);
@@ -860,11 +860,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void makePlayerBullet(PlayerPlane player) {
         //playSound(this.gSelectedPlayer + 5);
         int bulletNum;
-//        if (System.currentTimeMillis() - lastTime >= 5000) {
-//            player.power++;
-//            player.power = player.power >= 5 ? 5 : player.power;
-//            lastTime = System.currentTimeMillis();
-//        }
+        if (lastTime !=0 && System.currentTimeMillis() - lastTime >= 5000) {
+            player.power++;
+            player.power = player.power >= 5 ? 5 : player.power;
+            lastTime = System.currentTimeMillis();
+        }
+        if(lastTime==0){
+            lastTime = System.currentTimeMillis();
+        }
         if (1 == this.gGameSecretNum) {
             bulletNum = 4;
         } else {

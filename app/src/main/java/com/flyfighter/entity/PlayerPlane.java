@@ -102,12 +102,7 @@ public class PlayerPlane extends Spirit {
     }
 
     public PlayerBullet makeBullet(int[] data) {
-        int picIndex = 0;
-        for (int j = 0; j < type; ++j) {//计算子弹图片的索引
-            picIndex += GameCanvas.bulletPic[j];
-        }
-        Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
-        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + bitmap.getWidth() / 2 + data[1], y + data[2], data[3], data[4], 1);
+        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + data[1], y + data[2], data[3], data[4],data[5]);
         return bullet;
     }
 

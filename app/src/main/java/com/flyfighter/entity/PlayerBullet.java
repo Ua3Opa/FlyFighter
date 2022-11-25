@@ -7,6 +7,8 @@ import com.flyfighter.res.ResInit;
 
 public class PlayerBullet extends Spirit {
 
+    int index;
+
     public PlayerBullet() {
     }
 
@@ -16,33 +18,31 @@ public class PlayerBullet extends Spirit {
      * @param type
      * @return
      */
-    public static PlayerBullet mallocBullet(int type, int x, int y, int xspd, int yspd, int imgNum) {
+    public static PlayerBullet mallocBullet(int type, int x, int y, int xspd, int yspd, int index) {
         PlayerBullet bullet = new PlayerBullet();
         bullet.type = type;
-        bullet.picNum = imgNum;
+        bullet.index = index;
         bullet.initSpiritBitmap();
         bullet.initSpiritSize();
         bullet.speedX = xspd;
         bullet.speedY = yspd;
-        bullet.x = x - bullet.width;
+        bullet.x = x - bullet.width / 2;
         bullet.y = y;
         return bullet;
     }
 
     @Override
     public Bitmap getFrame() {
-        super.getFrame();
-        return source.get(frameIndex);
+        return source.get(0);
     }
 
     @Override
     protected void initSpiritBitmap() {
         int picIndex = 0;
-        for (int j = 0; j < type; ++j) {//计算子弹图片的索引
+        for (int j = 0; j < type - 1; ++j) {//计算子弹图片的索引
             picIndex += GameCanvas.bulletPic[j];
         }
-        Bitmap bitmap = ResInit.bulletImage[picIndex - 1];
-        source.addAll(splitBitmap(bitmap, picNum));
+        source.add(ResInit.bulletImage[picIndex + index]);
     }
 
     @Override

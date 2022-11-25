@@ -44,19 +44,9 @@ public class Bullet extends Spirit {
         return bullet;
     }
 
-    private int getRand(int i) {
-        if (i == 0) {
-            return 0;
-        }
-        int r = this.random.nextInt();
-        r = (r >> 24) + (r >> 16) + (r >> 8) + r & 0xFF;
-        return Math.abs(r % i);
-    }
-
-
     public Bitmap getFrame() {
         super.getFrame();
-        return source.get(frameIndex);
+        return source.get(frameIndex % picNum);
     }
 
     @Override

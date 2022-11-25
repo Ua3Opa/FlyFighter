@@ -24,7 +24,7 @@ public class Item extends Spirit {
     @Override
     public Bitmap getFrame() {
         super.getFrame();
-        return source.get(frameIndex);
+        return source.get(frameIndex % picNum);
     }
 
     @Override
