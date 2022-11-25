@@ -1,7 +1,6 @@
 package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
-import android.util.Size;
 
 import com.flyfighter.res.ResInit;
 
@@ -53,7 +52,7 @@ public class Missile extends Spirit {
         Bitmap bitmap = null;
         switch (type) {
             case 1:
-                bitmap = source.get(frameIndex);
+                bitmap = source.get(frameIndex % 2);
                 break;
             case 2:
                 bitmap = source.get(missileDirection);
@@ -66,13 +65,14 @@ public class Missile extends Spirit {
 
     /**
      * 最近的一个敌人的位置
+     *
      * @param enemy
      */
 
     public void dealMoveState(EnemyPlane enemy) {
         if (type == 1) {
             y += speedY;
-            speedY++;
+            speedY--;
         } else {//追踪弹
             x += speedX;
             y += speedY;

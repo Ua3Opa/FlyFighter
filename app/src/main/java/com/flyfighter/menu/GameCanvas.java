@@ -157,7 +157,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     public static final int[][] playerBulletFloorPower = new int[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
 
-    public static final byte[] enemyBulletToFront = new byte[]{0, 4, -1, 4, 1, 4, -1, 4, 0, 4, 1, 4, -1, 4, 0, 4, 1, 4, 0, 0, -2, 3, -1, 4, 0, 4, 1, 4, 2, 3, -2, 3, -1, 4, 0, 4, 1, 4, 2, 3, 0, 0};
+    public static final byte[] enemyBulletToFront = new byte[]{0, 12, -2, 12, 2, 12, -2, 12, 0, 12, 2, 12, -4, 9, -2, 12, 2, 12, 4, 9, -4, 9, -2, 12, 0, 12, 2, 12, 4, 9, -4, 9, -2, 12, 0, 12, 2, 12, 4, 9, 0, 18};
 
     public static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
 
@@ -343,7 +343,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (BombOutScreen(bomb)) {
                 bombs.remove(bomb);
             } else if (BombHitEnemy(bomb)) {
-
             } else if (BombHitBullets(bomb)) {
             }
         }
@@ -393,8 +392,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
      * 为了保证y轴的位置相同 必须使用 List<Missile[]> 结构的数据
      */
     private void dealMissile() {
-        mMissileType = 2;
-        mMissileMax = 2;
         for (int i = 0; i < missiles.size(); i++) {
             Missile[] ms = missiles.get(i);
             if (ms[0] != null) {
@@ -559,23 +556,23 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     public void makeEnemyBullet(EnemyPlane enemy, PlayerPlane player) {
+
         int delay = (int) (enemy.fireDelay * 1.0f / 25 * 1000);//按原来数据的25帧,换算成时间 ms
         if (System.currentTimeMillis() - enemy.shootTime <= delay) {
             return;
         }
         enemy.shootTime = System.currentTimeMillis();
-        //Log.d("TAG", "makeEnemyBullet: " + (System.currentTimeMillis() - enemy.createTime) + "    " + delay);
         int bulletNum = enemy.bulletMax;
         int rand = getRand(3);
-        if (bulletNum < 3 || rand != 0) {
-            if (this.getRand(8 - mMission - mGameDifficulty) > 0) {
+        if (bulletNum < 3 || rand == 0) {
+            if (this.getRand(4 - mMission - mGameDifficulty) < 0) {
                 bulletNum = (1 + this.getRand(enemy.bulletMax));
             }
             int ranVal = this.getRand(4 - mGameDifficulty);
             Bullet bullet = makeEnemyBullet(enemy);
-            if (ranVal == 0) {
+            if (bulletNum <= 3 && ranVal == 0) {
                 makeBulletToPlayer(enemy, bullet, player, bulletNum);
-            } else if (ranVal == 1) {
+            } else if (ranVal >= 0) {
                 makeBulletToFront(enemy, bulletNum);
             }
         }
@@ -649,7 +646,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void makeBulletToPlayer(EnemyPlane enemy, Bullet bullet, PlayerPlane player, int bulletNum) {
-        this.bulletGoToPlayer(bullet, player);//初始化子弹xy轴速度
+        bullet.speedX = 0;
+        bullet.speedY = 15;
+        bulletGoToPlayer(bullet, player);//初始化子弹xy轴速度
         if (bulletNum > 1) {
             int direction;
             //↑ ↓ ← → ↖ ↗ ↘ ↙ ↕
@@ -674,7 +673,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             } else {
                 direction = 4;//    ↑  ↑
             }
-
             if (bulletNum >= 2) {
                 bullet.speedX = Bullet.bulletSpeedToPlayer[direction * 6];
                 bullet.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 1];
@@ -682,6 +680,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 Bullet nb = makeEnemyBullet(enemy);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 + 2];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 3];
+                bullets.add(nb);
             }
             if (bulletNum >= 3) {
                 if (direction == 0) {
@@ -690,6 +689,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 Bullet nb = makeEnemyBullet(enemy);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 - 2];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 - 1];
+                bullets.add(nb);
             }
             if (bulletNum >= 4) {
                 if (direction == 8) {
@@ -698,6 +698,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 Bullet nb = makeEnemyBullet(enemy);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 + 4];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 5];
+                bullets.add(nb);
             }
             if (bulletNum >= 5) {
                 if (direction == 0) {
@@ -706,12 +707,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 Bullet nb = makeEnemyBullet(enemy);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 - 4];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 - 3];
+                bullets.add(nb);
             }
 
             if (bulletNum >= 6) {
                 Bullet nb = makeEnemyBullet(enemy);
                 this.bulletGoToPlayer(nb, player);
             }
+
         }
     }
 
@@ -731,7 +734,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             y = -y;
             flag_y = false;
         }
-        if (x > 10 || y > 10) {
+        if (x > 50 || y > 50) {
             if (x > y) {
                 // sy = 100  scale time
                 // sx = 100
@@ -741,12 +744,12 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 int scale = (x / Math.abs(bullet.speedY));
                 if (scale <= 0)
                     scale = 1;
-                bullet.speedY = (y / scale);
+                bullet.speedY = (y / scale) * 4;
             } else {
                 int scale = (y / Math.abs(bullet.speedY));
                 if (scale <= 0)
                     scale = 1;
-                bullet.speedX = (x / scale);
+                bullet.speedX = (x / scale) * 4;
             }
             if (flag_x)
                 bullet.speedX = -bullet.speedX;
@@ -768,11 +771,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         Bitmap bitmap = ResInit.bulletImage[picIndex];
 
-        Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 10, bulletTypeNum, bitmap);
-        if (bullet.speedY == 0) {
-            bullet.speedY = -new Random().nextInt(13);
-        }
-        bullets.add(bullet);
+        Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 0, bulletTypeNum, bitmap);
         return bullet;
     }
 
@@ -838,7 +837,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             if (mPlayer.state == -1) {//进场
                 mPlayer.y -= 5;
-                if (mPlayer.y <= MainWindow.windowHeight - 300) {
+                if (mPlayer.y <= MainWindow.windowHeight - 350) {
                     mPlayer.state = 0;
                 }
             } else {//正常状态
@@ -846,28 +845,33 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     return;
                 }
                 mPlayer.handleMove();
-                if (mFireDelay > 6) {//按60帧的帧率控制
-                    mFireDelay = 0;
-                    makePlayerBullet(mPlayer);
+
+                if (playerBullets.size() == 0) {
+                    makePlayerBullet();
+                } else {
+                    PlayerBullet lastBullet = playerBullets.get(playerBullets.size() - 1);
+                    if (System.currentTimeMillis() - lastBullet.createTime <= 100) {
+                        return;
+                    }
+                    makePlayerBullet();
                 }
-                mFireDelay++;
             }
         }
     }
 
-    long lastTime = 0;
+    long lastTime;
 
-    private void makePlayerBullet(PlayerPlane player) {
+    private void makePlayerBullet() {
         //playSound(this.gSelectedPlayer + 5);
         int bulletNum;
-        if (lastTime !=0 && System.currentTimeMillis() - lastTime >= 5000) {
-            player.power++;
-            player.power = player.power >= 5 ? 5 : player.power;
-            lastTime = System.currentTimeMillis();
-        }
-        if(lastTime==0){
-            lastTime = System.currentTimeMillis();
-        }
+//        if (lastTime !=0 && System.currentTimeMillis() - lastTime >= 5000) {
+//            player.power++;
+//            player.power = player.power >= 5 ? 5 : player.power;
+//            lastTime = System.currentTimeMillis();
+//        }
+//        if(lastTime==0){
+//            lastTime = System.currentTimeMillis();
+//        }
         if (1 == this.gGameSecretNum) {
             bulletNum = 4;
         } else {
@@ -1238,15 +1242,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (this.gIsGameOver) {
             return;
         }
-        if (mPlayer.state == -1 && (this.gScreenMove & 3) != 0) {
-            drawBitmapXY(canvas, mPlayer.stateImg[5], mPlayer.x, mPlayer.y);
-        } else {
-            drawBitmapXY(canvas, mPlayer.stateImg[0], mPlayer.x, mPlayer.y);
-        }
+        drawBitmapXY(canvas, mPlayer.getFrame(), mPlayer.x, mPlayer.y);
+        //if (mPlayer.state == -1 && (this.gScreenMove & 3) != 0) {
+        //    drawBitmapXY(canvas, mPlayer.stateImg[5], mPlayer.x, mPlayer.y);
+        //} else {
+        //    drawBitmapXY(canvas, mPlayer.stateImg[0], mPlayer.x, mPlayer.y);
+        //}
 
-        if (this.gIsPlayerFire && (this.gScreenMove & 5) != 0) {
-            gIsPlayerFire = false;
-            drawBitmapXY(canvas, mPlayer.stateImg[4], mPlayer.x, mPlayer.y);
+        if (mPlayer.onFire && mPlayer.getFireFrame() != null) {
+            drawBitmapXY(canvas, mPlayer.getFireFrame(), mPlayer.x, mPlayer.y);
         }
     }
 

@@ -9,20 +9,12 @@ import java.util.Random;
 
 public class Bullet extends Spirit {
 
-    public static final int[] bulletSpeedToPlayer = new int[]{0, 9, 4, 9, 4, 4, 9, 4, 9, 4, 9, 4, 9, 0, 9, -4, 9, -4, 9, -9, 4, -9, 4, -9, 0, -13, -4, -13, -4, -4, -9, -4, -9, -4, -9, -4, -9, 0, -13, 4, -9, 4, -4, 4, -4, 4, -4, 13};
+    public static final int[] bulletSpeedToPlayer = new int[]
+            {0,8,4,8,4,4,8,4,8,4,8,4,8,0,8,-4,8,-4,8,-8,4,-8,4,-8,0,-12,-4,-12,-4,-4,-8,-4,-8,-4,-8,-4,-8,0,-12,4,-8,4,-4,4,-4,4,-4,12};
 
     Random random = new Random();
 
     public Bullet() {
-    }
-
-
-    public Bullet(int type, int x, int y, int speedX, int speedY) {
-        this.type = type;
-        this.x = x;
-        this.y = y;
-        this.speedX = speedX;
-        this.speedY = speedY;
     }
 
     /**
@@ -39,7 +31,7 @@ public class Bullet extends Spirit {
         bullet.initSpiritSize();
         bullet.speedX = xspd;
         bullet.speedY = yspd;
-        bullet.x = x - bullet.width;
+        bullet.x = x - bullet.width / 2;
         bullet.y = y;
         return bullet;
     }

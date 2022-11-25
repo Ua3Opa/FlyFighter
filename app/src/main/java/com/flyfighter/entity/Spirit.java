@@ -21,7 +21,7 @@ public abstract class Spirit {
 
     public long createTime = System.currentTimeMillis();
     public long lastFrameTime;
-    public int frameIndex;//第几帧
+    public int frameIndex = -1;//第几帧
 
     public List<Bitmap> source = new ArrayList<>();
 
@@ -33,6 +33,7 @@ public abstract class Spirit {
         width = source.get(0).getWidth();
         height = source.get(0).getHeight();
     }
+
     //处理移动逻辑
     public void dealMoveState() {
 
