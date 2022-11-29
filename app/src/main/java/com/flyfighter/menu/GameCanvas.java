@@ -255,7 +255,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             explode1.y = boss.y;
             explodes.add(explode1);
 
-            Explode explode2 = Explode.dealExplodeState(boss, getRand(6) + 3);
+            Explode explode2 = Explode.dealExplodeState(boss, getRand(5) + 3);
             explode2.x = boss.x;
             explode2.y = boss.y + boss.height - explode2.height;
             explodes.add(explode2);
@@ -1146,18 +1146,38 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private boolean checkIfHit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
-        int centerX = sx + sw / 2;
-        int centerY = sy + sh / 2;
-
-        int offX = dw / 12;
-        int offY = dy / 8;
-
-        if ((centerX >= dx + offX / 2 && centerX <= dx + dw - offX / 2) &&
-//                (centerY >= dy + offY / 2 && centerY <= dy + dh - offY / 2)) {
-                (centerY >= dy && centerY <= dy + dh - offY / 2)) {
-            return true;
+        int mw = 0;
+        int mh = 0;
+        sw = (sw - sw / 6);
+        sh = (sh - sh / 6);
+        dw = (dw - dw / 6);
+        dh = (dh - dh / 6);
+        if (dw > sw) {
+            dx = (dx + dw / 10);
+        } else {
+            sx = (sx + sw / 10);
         }
-        return false;
+
+        int cx = (sx - dx);
+        int cy = (sy - dy);
+        if (cx == 0 && cy == 0) {
+            return true;
+        } else {
+            if (cx >= 0 && cy >= 0) {
+                mw = dw;
+                mh = dh;
+            } else if (cx >= 0 && cy <= 0) {
+                mw = dw;
+                mh = sh;
+            } else if (cx <= 0 && cy >= 0) {
+                mw = sw;
+                mh = dh;
+            } else if (cx <= 0 && cy <= 0) {
+                mw = sw;
+                mh = sh;
+            }
+        }
+        return Math.abs(cx) < mw && Math.abs(cy) < mh;
     }
 
     /**
@@ -1402,7 +1422,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showActiveScore(Canvas canvas) {
         int textSize = UiUtils.dp2px(context, 20);
         mPaint.setTextSize(textSize);
-        mPaint.setColor(Color.BLUE);
+        mPaint.setColor(Color.WHITE);
         float textWidth = mPaint.measureText(int2string(this.mGameScore));
         canvas.drawText(int2string(this.mGameScore), MainWindow.windowWidth - textWidth, textSize + 30, mPaint);
     }
