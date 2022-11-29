@@ -25,5 +25,4 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
     }
-
 }

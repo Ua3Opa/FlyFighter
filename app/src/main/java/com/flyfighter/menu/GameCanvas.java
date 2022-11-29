@@ -52,15 +52,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean gIsSaved;
     private int gContinueNum;
     private boolean mIsGameFinished;
-    private boolean gIsPlayerFire = true;
     private int mMission;
+    private int mStage;
     private int mGameScore;
 
     private int mMissileType;
     private int mMissileMax;
     private long mMissileShootTime;
 
-    private int gOtherTypeBomb;
     private int gGameSecretNum;
     private int gGamePause;
     //无敌时间为5秒
@@ -74,11 +73,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gScreenMove;
     private int gBackgroundOffset;
     private int gEnemyCount;
+    private int mDestroyCount;
     private int gApearEnemyType;
     private boolean mIsPlayerDestroyed;
-    private int mGameDifficulty;
-    private int gBossMoveAction;
-    private int gBackgroundHeight;
+    private int mDifficulty;
+    private int mBackgroundHeight;
 
     public List<Bullet> bullets = new ArrayList<>();
     public List<Laser> lasers = new ArrayList<>();
@@ -177,12 +176,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gIsSaved = false;
         this.gContinueNum = 3;
         this.mIsGameFinished = false;
-        this.gIsPlayerFire = false;
         this.mGameScore = 0;
         this.mMissileType = 0;
         this.mMissileMax = 0;
-        this.gOtherTypeBomb = 0;
         this.gGameSecretNum = -1;
+        this.mMission = 1;
     }
 
     private void stageInit() {
@@ -191,13 +189,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gTempDelay = 0;
         this.mIsEnableEnemy = false;
         this.gIsGameOver = false;
-        this.mIsBossAppear = true;
+        this.mIsBossAppear = false;
         this.gScreenMove = 1;
         this.gBackgroundOffset = 0;
         this.gEnemyCount = 0;
         this.gApearEnemyType = 1;
         this.mIsPlayerDestroyed = false;
-
+        this.mStage = 1;
         if (this.mMission == 1) {
             this.mMission = playerType + 1;
         } else if (this.mMission == 2) {
@@ -219,18 +217,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 this.mMission = 2;
             }
         } else {
-            this.mMission = this.mMission;
         }
 
-        this.mMission = 5;
-
-        if (this.mMission > 1) {
-            this.gIsLoadGame = true;
-            ResInit.loadStagePic(context, this.mMission - 1);
-        }
-        ResInit.loadStagePic(context, this.mMission);
-
-        this.gBackgroundHeight = ResInit.BackgroundImage[this.mMission - 1].getHeight();
+        ResInit.loadStagePic(context, mStage);
+        this.mBackgroundHeight = ResInit.BackgroundImage[mStage - 1].getHeight();
     }
 
     private void driveObjects() {
@@ -440,7 +430,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
      */
     private void makeBossBullet_SG(int bossType, int direction, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
-        boss.bulletType = bb[2]-2;
+        boss.bulletType = bb[2] - 2;
         shootPoint[1] += boss.height;
         Bullet bullet = makeEnemyBullet(boss, shootPoint);
         bullet.speedX = bulletSpeedSG[direction * 2];
@@ -450,7 +440,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void makeBossBullet_SL(int bossType, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
-        boss.bulletType = bb[2]-2;
+        boss.bulletType = bb[2] - 2;
         shootPoint[1] += boss.height;
         Bullet bullet = makeEnemyBullet(boss, shootPoint);
 
@@ -468,7 +458,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
      */
     private void makeBossBullet_S(int bossType, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
-        boss.bulletType = bb[2]-2;
+        boss.bulletType = bb[2] - 2;
         shootPoint[1] += boss.height;
         makeBulletToFront(boss, shootPoint, bb[1]);
     }
@@ -494,7 +484,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 enemy.pauseDelay = 0;
             }
         } else if (boss == null) {
-            boss = Boss.makeBossByMission(mMission, mGameDifficulty);
+            boss = Boss.makeBossByMission(mStage, mDifficulty);
         }
     }
 
@@ -711,6 +701,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 makeGoods(enemys.get(i));
                 mGameScore += enemys.get(i).reward;
                 enemys.remove(i);
+                mDestroyCount++;
             } else {
                 enemys.get(i).dealMoveState();
 
@@ -726,7 +717,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     public void makeEnemyBullet(EnemyPlane enemy, PlayerPlane player) {
 
-        int delay = (int) (enemy.fireDelay * 1.0f / 25 * 1000);//按原来数据的25帧,换算成时间 ms
+        int delay = (int) (enemy.fireDelay * 1.0f / 30 * 1000);//按原来数据的25帧,换算成时间 ms
         if (System.currentTimeMillis() - enemy.shootTime <= delay) {
             return;
         }
@@ -734,10 +725,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int bulletNum = enemy.bulletMax;
         int rand = getRand(3);
         if (bulletNum < 3 || rand == 0) {
-            if (this.getRand(4 - mMission - mGameDifficulty) < 0) {
+            if (this.getRand(4 - mMission - mDifficulty) < 0) {
                 bulletNum = (1 + this.getRand(enemy.bulletMax));
             }
-            int ranVal = this.getRand(4 - mGameDifficulty);
+            int ranVal = this.getRand(4 - mDifficulty);
             Bullet bullet = makeEnemyBullet(enemy);
             //makeBulletToPlayer(enemy, bullet, bulletNum);
             if (bulletNum <= 3 && ranVal == 0) {
@@ -1007,7 +998,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int type;
         int ranVal;
         if (this.mMission <= 4) {
-            randomType = this.getRand(this.gApearEnemyType);
+            randomType = this.getRand(gApearEnemyType % stageEnemy[this.mMission - 1].length);
             type = stageEnemy[this.mMission - 1][randomType] - 1;
             if (type < 6) {
                 ranVal = this.getRand(5);
@@ -1022,13 +1013,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             type = (18 + this.getRand(28));
         }
-        enemys.add(EnemyPlane.mallocEnemy(mMission, type, mGameDifficulty));
-        if ((this.gApearEnemyType < 15 && this.mMission != 3) || (this.gApearEnemyType < 10 && this.mMission == 3)) {
-            this.gApearEnemyType = this.gApearEnemyType + 1;
-        } else {
+        enemys.add(EnemyPlane.mallocEnemy(mMission, type, mDifficulty));
+        gEnemyCount++;
+        gApearEnemyType++;
+        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
             //playSound(3);
             this.mIsBossAppear = true;
-            //this.gIsEnableEnemy = false;
+            this.mIsEnableEnemy = false;
         }
     }
 
@@ -1159,10 +1150,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int centerY = sy + sh / 2;
 
         int offX = dw / 12;
-        int offY = dy / 4;
+        int offY = dy / 8;
 
         if ((centerX >= dx + offX / 2 && centerX <= dx + dw - offX / 2) &&
-                (centerY >= dy + offY / 2 && centerY <= dy + dh - offY / 2)) {
+//                (centerY >= dy + offY / 2 && centerY <= dy + dh - offY / 2)) {
+                (centerY >= dy && centerY <= dy + dh - offY / 2)) {
             return true;
         }
         return false;
@@ -1371,7 +1363,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (this.mMission == 5) {
                     drawBitmapCenter(canvas, ResInit.otherImage[10]);
                 } else {
-                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][this.mMission], 100);
+                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][mStage], 100);
                 }
             } else {
                 this.mIsEnableEnemy = true;
@@ -1449,9 +1441,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showBackScreen(Canvas canvas) {
-        int offsetY = -(this.gBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
+        int offsetY = -(this.mBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
         if (offsetY >= 0) {
-            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, -(this.gBackgroundHeight - offsetY));
+            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, -(this.mBackgroundHeight - offsetY));
         }
         drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, offsetY);
 

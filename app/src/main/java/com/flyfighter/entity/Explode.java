@@ -33,7 +33,7 @@ public class Explode extends Spirit {
 
     public Bitmap getFrame() {
         super.getFrame();
-        return source.get(frameIndex / 8 % picNum);
+        return source.get(frameIndex % picNum);
     }
 
     @Override
