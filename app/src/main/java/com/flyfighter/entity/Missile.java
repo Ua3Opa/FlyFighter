@@ -1,6 +1,7 @@
 package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 
 import com.flyfighter.res.ResInit;
 
@@ -11,6 +12,7 @@ public class Missile extends Spirit {
 
     public int power;//伤害
     public int missileDirection = 0;//导弹方向,对于追踪弹
+    public int from;//0: player 1 :boss
 
     //无敌时间为5秒
     public Missile() {
@@ -18,19 +20,26 @@ public class Missile extends Spirit {
 
     public static Missile[] makeMissiles(int type, int x, int y) {
         Missile[] missiles = new Missile[2];
-        missiles[0] = makeMissile(type, x, y, missileOffset[(type - 1) * 2]);
-        missiles[1] = makeMissile(type, x, y, missileOffset[(type - 1) * 2 + 1]);
+        missiles[0] = makeMissile(type, x, y, missileOffset[(type - 1) * 2], 0);
+        missiles[1] = makeMissile(type, x, y, missileOffset[(type - 1) * 2 + 1], 0);
         return missiles;
     }
 
-    public static Missile makeMissile(int type, int x, int y, int[] offset) {
+    public static Missile[] makeMissiles(int type, int x, int y, int[][] missileOffset, int from) {
+        Missile[] missiles = new Missile[2];
+        missiles[0] = makeMissile(type, x, y, missileOffset[0], from);
+        missiles[1] = makeMissile(type, x, y, missileOffset[1], from);
+        return missiles;
+    }
+
+    public static Missile makeMissile(int type, int x, int y, int[] offset, int from) {
         Missile missile = new Missile();
         missile.type = type;
+        missile.from = from;
         if (type == 1) {//双导弹
             missile.speedX = 0;
-            missile.speedY = 15;
+            missile.speedY = from == 1 ? 8 : 15;
             missile.picNum = 2;
-
             missile.power = 18;
         } else {//追踪弹
             missile.picNum = 16;
@@ -70,19 +79,24 @@ public class Missile extends Spirit {
      */
 
     public void dealMoveState(EnemyPlane enemy) {
-        if (type == 1) {
+        if (from == 1) {//速度翻转
             y += speedY;
-            speedY--;
-        } else {//追踪弹
-            x += speedX;
-            y += speedY;
+            speedY++;
+        } else {
+            if (type == 1) {
+                y += speedY;
+                speedY--;
+            } else {//追踪弹
+                x += speedX;
+                y += speedY;
 
-            if (enemy == null) {
-                return;
+                if (enemy == null) {
+                    return;
+                }
+                missileDirection = getMissileDirection(enemy);
+                speedX = bulletSpeedMissile[missileDirection * 2];
+                speedY = bulletSpeedMissile[missileDirection * 2 + 1];
             }
-            missileDirection = getMissileDirection(enemy);
-            speedX = bulletSpeedMissile[missileDirection * 2];
-            speedY = bulletSpeedMissile[missileDirection * 2 + 1];
         }
     }
 
@@ -146,10 +160,19 @@ public class Missile extends Spirit {
 
     @Override
     protected void initSpiritBitmap() {
-        if (type == 1) {//双导弹
-            source.addAll(splitBitmap(ResInit.bulletImage[57], picNum));
-        } else {//追踪弹
-            source.addAll(splitBitmap(ResInit.bulletImage[58], picNum));
+        if (from == 1) {
+            Bitmap bm = ResInit.bulletImage[57];
+            Matrix matrix = new Matrix();
+            matrix.setRotate(180);
+
+            Bitmap newBm = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, false);
+            source.addAll(splitBitmap(newBm, picNum));
+        } else {
+            if (type == 1) {//双导弹
+                source.addAll(splitBitmap(ResInit.bulletImage[57], picNum));
+            } else {//追踪弹
+                source.addAll(splitBitmap(ResInit.bulletImage[58], picNum));
+            }
         }
     }
 

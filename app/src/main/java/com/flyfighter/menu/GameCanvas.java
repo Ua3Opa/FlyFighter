@@ -14,10 +14,12 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import com.flyfighter.entity.Bomb;
+import com.flyfighter.entity.Boss;
 import com.flyfighter.entity.Bullet;
 import com.flyfighter.entity.EnemyPlane;
 import com.flyfighter.entity.Explode;
 import com.flyfighter.entity.Item;
+import com.flyfighter.entity.Laser;
 import com.flyfighter.entity.Missile;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
@@ -66,45 +68,26 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private long bombMaxMills = 4 * 1000;
     private boolean mIsMissionComplete;
     private int gTempDelay;
-    private int gBombDelay;
     private boolean mIsEnableEnemy;
     private boolean gIsGameOver;
-    private boolean mIsBombing;
-    private boolean gIsBossAppear;
-    private boolean gBossInitDirect;
-    private int gBossIndex;
-    private int gPlayerInit;
+    private boolean mIsBossAppear;
     private int gScreenMove;
     private int gBackgroundOffset;
     private int gEnemyCount;
-    private int gBulletCount;
-    private int gExplodeCount;
-    private int gItemCount;
-    private int gAppearEnemyCount;
-    private int gMissileCount;
-    private int gBossBulletSequenceMax;
-    private int gBossBulletNum;
-    private int gBossShootDelay;
-    private int mFireDelay;
     private int gApearEnemyType;
     private boolean mIsPlayerDestroyed;
-    private int gBossBulletDirect1;
-    private int gBossBulletDirect2;
-    private int gBossBulletDirect3;
-    private int mCorrespondMission;
-    private int gBossMoveDownRange;
-    private int gBossMoveUpRange;
     private int mGameDifficulty;
     private int gBossMoveAction;
     private int gBackgroundHeight;
 
     public List<Bullet> bullets = new ArrayList<>();
+    public List<Laser> lasers = new ArrayList<>();
     public List<PlayerBullet> playerBullets = new ArrayList<>();
     public List<Explode> explodes = new ArrayList<>();
     public List<Item> items = new ArrayList<>();
     public List<Bomb> bombs = new ArrayList<>();
     public List<Missile[]> missiles = new ArrayList<>();
-
+    public Boss boss;
     public static final int[][] stageEnemy = new int[][]{
             {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
             {5, 2, 4, 24, 29, 27, 46, 21, 23, 39, 45, 30, 28, 33, 35},
@@ -119,17 +102,19 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public static final int[] bulletPic = new int[]{2, 3, 3, 1, 4, 2, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 2};
 
     private static final int[][][] bossBullet = new int[][][]{
-            {{13, 3, 17, 35}, {3, 2, 11, 35}, {13, 4, 20, 45},
-                    {21, 6, 21, 33}, {2, 4, 10, 28}, {13, 6, 6, 36},
-                    {3, 3, 19, 44}, {16, 6, 16, 28}},
-            {{3, 2, 18, 36}, {22, 6, 21, 25}, {13, 4, 17, 34}, {2, 4, 20, 46},
-                    {16, 6, 12, 38}, {21, 6, 21, 28}, {3, 3, 19, 44}, {12, 5, 17, 26}},
-            {{13, 3, 19, 37}, {3, 2, 13, 33}, {16, 6, 10, 45}, {22, 6, 21, 28},
-                    {3, 3, 16, 48}, {13, 4, 20, 34}, {16, 6, 9, 46}, {3, 2, 13, 28}},
-            {{3, 2, 16, 30}, {13, 3, 20, 30}, {3, 3, 11, 40}, {22, 6, 21, 20}, {16, 6, 10, 35}, {13, 4, 6, 30},
-                    {3, 3, 19, 45}, {12, 5, 17, 20}},
-            {{3, 4, 16, 20}, {13, 6, 20, 25}, {3, 4, 11, 30}, {23, 6, 21, 20}, {16, 6, 10, 35}, {13, 5, 6, 25},
-                    {3, 5, 19, 20}, {12, 6, 17, 25}}};
+            {{13, 3, 17, 35}, {3, 2, 11, 35}, {13, 4, 20, 45}, {21, 6, 21, 33}, {2, 4, 10, 28}, {13, 6, 6, 36}, {3, 3, 19, 44}, {16, 6, 16, 28}},
+            {{3, 2, 18, 36}, {22, 6, 21, 25}, {13, 4, 17, 34}, {2, 4, 20, 46}, {16, 6, 12, 38}, {21, 6, 21, 28}, {3, 3, 19, 44}, {12, 5, 17, 26}},
+            {{13, 3, 19, 37}, {3, 2, 13, 33}, {16, 6, 10, 45}, {22, 6, 21, 28}, {3, 3, 16, 48}, {13, 4, 20, 34}, {16, 6, 9, 46}, {3, 2, 13, 28}},
+            {{3, 2, 16, 30}, {13, 3, 20, 30}, {3, 3, 11, 40}, {22, 6, 21, 20}, {16, 6, 10, 35}, {13, 4, 6, 30}, {3, 3, 19, 45}, {12, 5, 17, 20}},
+            {{3, 4, 16, 20}, {13, 6, 20, 25}, {3, 4, 11, 30}, {23, 6, 21, 20}, {16, 6, 10, 35}, {13, 5, 6, 25}, {22, 5, 19, 20}, {12, 6, 17, 25}}};
+
+
+    private static final int[][][] bossShootPoint = new int[][][]
+            {{{-180, -20}, {0, 0}, {180, -20}, {-90, -20}, {0, 0}, {90, -20}},
+                    {{-190, -80}, {0, -15}, {190, -80}, {-110, -80}, {0, -15}, {110, -80}},
+                    {{-228, -60}, {0, 0}, {228, -60}, {-133, -60}, {0, 0}, {133, -60}},
+                    {{-210, -60}, {0, -20}, {210, -60}, {-88, -60}, {0, -20}, {88, -60}},
+                    {{-230, -32}, {0, -12}, {230, -32}, {-144, -32}, {90, -12}, {144, -32}}};
 
     public static final int[][] playerBulletData = new int[][]
             // 第二位改成飞机中心偏移值,新增第六位图片的index
@@ -153,31 +138,17 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     public static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
 
-    public static final int[] bulletSpeedSL = new int[]{-2, 1, -2, 2, -1, 2, -1, 3, 0, 3, 1, 3, 1, 2, 2, 2, 2, 1};
+    public static final int[] bulletSpeedSL = new int[]{-2, 4, -2, 8, -1, 8, -1, 12, 0, 12, 1, 12, 1, 8, 2, 8, 2, 4};
+
+    private static final byte[] bulletSpeedSG = new byte[]{-1, 12, 0, 12, 1, 12};
 
     public static final int[][] playerBulletFloorPower = new int[][]{{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}};
 
     public static final byte[] enemyBulletToFront = new byte[]{0, 12, -2, 12, 2, 12, -2, 12, 0, 12, 2, 12, -4, 9, -2, 12, 2, 12, 4, 9, -4, 9, -2, 12, 0, 12, 2, 12, 4, 9, -4, 9, -2, 12, 0, 12, 2, 12, 4, 9, 0, 18};
 
-    public static final int[] playerSize = new int[]{26, 32, 30, 28, 30, 28};
-
-    public static final int[] bulletSpeedMissile = new int[]{0, -7, -3, -7, -5, -5, -7, -3, -7, 0, -7, 3, -5, 5, -3, 7, 0, 7, 3, 7, 5, 5, 7, 3, 7, 0, 7, -3, 5, -5, 3, -7};
-
     private static final int[][] playerBulletFloorNum = new int[][]{{1, 2, 3, 4, 5, 0}, {1, 2, 3, 4, 5, 15}, {1, 2, 3, 4, 5, 30}};
 
     private EnemyPlane[] gEnemy = new EnemyPlane[5];
-
-    private int[][] mBullets = new int[100][6];
-
-    private int[][] gMissile = new int[4][7];
-
-    private int[][] gExplode = new int[30][4];
-
-    private int[][] gItem = new int[6][6];
-
-    private boolean[] gShoot_SL = new boolean[5];
-    private int[] gShootNum_SL = new int[5];
-    private static byte ex_type = 0;
     private Paint mPaint = new Paint();
     private final SurfaceHolder surfaceHolder;
 
@@ -203,12 +174,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         SoundHelper.loadGameSounds(context, mediaPlayers);
 
         this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
-
         this.gIsSaved = false;
         this.gContinueNum = 3;
         this.mIsGameFinished = false;
         this.gIsPlayerFire = false;
-        this.mMission = 1;
         this.mGameScore = 0;
         this.mMissileType = 0;
         this.mMissileMax = 0;
@@ -220,112 +189,57 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         this.gGamePause = 0;
         this.mIsMissionComplete = false;
         this.gTempDelay = 0;
-        this.gBombDelay = 0;
         this.mIsEnableEnemy = false;
         this.gIsGameOver = false;
-        this.mIsBombing = false;
-        this.gIsBossAppear = false;
-        this.gBossInitDirect = true;
-        this.gBossIndex = -1;
-        this.gPlayerInit = 1;
+        this.mIsBossAppear = true;
         this.gScreenMove = 1;
         this.gBackgroundOffset = 0;
         this.gEnemyCount = 0;
-        this.gBulletCount = 0;
-        this.gExplodeCount = 0;
-        this.gItemCount = 0;
-        this.gAppearEnemyCount = 0;
-        this.gMissileCount = 0;
-        this.gBossBulletSequenceMax = 0;
-        this.gBossBulletNum = 0;
-        this.gBossShootDelay = 0;
-        this.mFireDelay = 0;
         this.gApearEnemyType = 1;
         this.mIsPlayerDestroyed = false;
 
-        this.gBossBulletDirect1 = getRand(3);
-        this.gBossBulletDirect2 = getRand(3);
-        this.gBossBulletDirect3 = getRand(3);
-
         if (this.mMission == 1) {
-            this.mCorrespondMission = playerType + 1;
+            this.mMission = playerType + 1;
         } else if (this.mMission == 2) {
             if (this.playerType == 0) {
-                this.mCorrespondMission = 2;
+                this.mMission = 2;
             } else if (this.playerType == 1) {
-                this.mCorrespondMission = 3;
+                this.mMission = 3;
             } else {
-                this.mCorrespondMission = 1;
+                this.mMission = 1;
             }
         } else if (this.mMission == 3) {
-            this.mCorrespondMission = 4;
+            this.mMission = 4;
         } else if (this.mMission == 4) {
             if (this.playerType == 0) {
-                this.mCorrespondMission = 3;
+                this.mMission = 3;
             } else if (this.playerType == 1) {
-                this.mCorrespondMission = 1;
+                this.mMission = 1;
             } else {
-                this.mCorrespondMission = 2;
+                this.mMission = 2;
             }
         } else {
-            this.mCorrespondMission = this.mMission;
+            this.mMission = this.mMission;
         }
+
+        this.mMission = 5;
 
         if (this.mMission > 1) {
             this.gIsLoadGame = true;
-            ResInit.loadStagePic(context, this.mCorrespondMission - 1);
+            ResInit.loadStagePic(context, this.mMission - 1);
         }
-        ResInit.loadStagePic(context, this.mCorrespondMission);
+        ResInit.loadStagePic(context, this.mMission);
 
-        this.gBackgroundHeight = ResInit.BackgroundImage[this.mCorrespondMission - 1].getHeight();
-
-        this.gBossMoveDownRange = 180;
-        this.gBossMoveUpRange = 90;
-
-        for (int i = 0; i < 5; i++) {
-            EnemyPlane enemyPlane = new EnemyPlane();
-            enemyPlane.setValue(0);
-            this.gEnemy[i] = enemyPlane;
-        }
-
-        for (int jj = 0; jj < 100; jj++) {
-            for (int j = 0; j < 6; j++) {
-                this.mBullets[jj][j] = 0;
-            }
-        }
-
-        for (int jj = 0; jj < 4; jj++) {
-            for (int j = 0; j < 7; j++) {
-                this.gMissile[jj][j] = 0;
-            }
-        }
-
-        for (int jj = 0; jj < 30; jj++) {
-            for (int j = 0; j < 4; j++) {
-                this.gExplode[jj][j] = 0;
-            }
-        }
-
-        for (int jj = 0; jj < 6; jj++) {
-            for (int j = 0; j < 6; j++) {
-                this.gItem[jj][j] = 0;
-            }
-        }
-        for (int ii = 0; ii < 5; ii++) {
-            this.gShoot_SL[ii] = false;
-        }
-        for (int ii = 0; ii < 5; ii++) {
-            this.gShootNum_SL[ii] = 0;
-        }
+        this.gBackgroundHeight = ResInit.BackgroundImage[this.mMission - 1].getHeight();
     }
 
     private void driveObjects() {
         gScreenMove++;
         makeEnemy();
-        //makeBoss();
+        makeBoss();
         dealEnemyState();
 
-        //dealBossState();
+        dealBossState();
         dealPlayerState();
 
         dealBullet();
@@ -334,6 +248,254 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         dealItems();
         dealShield();
         dealBomb();
+    }
+
+    private void dealBossState() {
+        if (boss == null) {
+            return;
+        }
+        if (boss.health <= 0) {
+            Explode explode0 = Explode.dealExplodeState(boss, getRand(5) + 3);
+            explode0.x = boss.x - boss.width / 2 + explode0.width;
+            explode0.y = boss.y - boss.height / 2 - explode0.height;
+            explodes.add(explode0);
+
+            Explode explode1 = Explode.dealExplodeState(boss, getRand(5) + 3);
+            explode1.x = boss.x;
+            explode1.y = boss.y;
+            explodes.add(explode1);
+
+            Explode explode2 = Explode.dealExplodeState(boss, getRand(6) + 3);
+            explode2.x = boss.x;
+            explode2.y = boss.y + boss.height - explode2.height;
+            explodes.add(explode2);
+
+
+            Explode explode3 = Explode.dealExplodeState(boss, getRand(5) + 3);
+            explode3.x = boss.x + boss.width - explode3.width;
+            explode3.y = boss.y;
+            explodes.add(explode3);
+
+            Explode explode4 = Explode.dealExplodeState(boss, getRand(5) + 3);
+            explode4.x = boss.x + boss.width - explode4.width;
+            explode4.y = boss.y + boss.height - explode4.height;
+            explodes.add(explode4);
+            mGameScore += boss.reward;
+
+            mIsBossAppear = false;
+            mIsMissionComplete = true;
+            mPlayer.onFire = false;
+            bullets.clear();
+            boss = null;
+        } else {
+            boss.dealMoveState();
+            checkHitBoss(boss);
+            makeBossBullet();
+        }
+    }
+
+    private void makeBossBullet() {
+        int bossType = EnemyPlane.enemyData[boss.type][0] - 200 - 1;
+        if (boss.bulletSequence >= 8) {
+            boss.bulletSequence = 0;
+        }
+
+        if (System.currentTimeMillis() - boss.lastShootTime <= (bossBullet[bossType][boss.bulletSequence][3] * 1.0f / 25 * 1000 * 2)) {
+            return;
+        }
+        int[][] shootPoint = new int[3][2];
+
+        if (bossBullet[bossType][boss.bulletSequence][0] < 20) {
+            for (int j = 0; j < 3; ++j) {
+                for (int i = 0; i < 2; ++i) {
+                    shootPoint[j][i] = bossShootPoint[bossType][j][i];
+                }
+            }
+        } else {
+            for (int j = 0; j < 3; ++j) {
+                for (int i = 0; i < 2; ++i) {
+                    shootPoint[j][i] = bossShootPoint[bossType][j + 3][i];
+                }
+            }
+        }
+        int[] bb = bossBullet[bossType][boss.bulletSequence];
+        int shootType = bb[0];
+        switch (shootType) {
+            case 1:
+            case 2:
+            case 3:
+                //多发散射,每个射击点射出多发
+                if (shootType == 1) {
+                    this.makeBossBullet_S(bossType, shootPoint[1]);
+                } else if (shootType == 2) {
+                    this.makeBossBullet_S(bossType, shootPoint[0]);
+                    this.makeBossBullet_S(bossType, shootPoint[2]);
+                } else {
+                    this.makeBossBullet_S(bossType, shootPoint[0]);
+                    this.makeBossBullet_S(bossType, shootPoint[1]);
+                    this.makeBossBullet_S(bossType, shootPoint[2]);
+                }
+                boss.bulletSequence++;
+                boss.lastShootTime = System.currentTimeMillis();
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 17:
+            case 18:
+            case 19:
+            case 11:
+            case 12:
+            case 13://bulletSpeedSL内部随机方向,并且多次发射
+                if (boss.bulletNum < bb[1]) {
+                    if ((System.currentTimeMillis() - boss.shootDuration) >= 200) {
+                        if (shootType == 11) {
+                            this.makeBossBullet_SL(bossType, shootPoint[1]);
+                        } else if (shootType == 12) {
+                            this.makeBossBullet_SL(bossType, shootPoint[0]);
+                            this.makeBossBullet_SL(bossType, shootPoint[2]);
+                        } else {
+                            this.makeBossBullet_SL(bossType, shootPoint[0]);
+                            this.makeBossBullet_SL(bossType, shootPoint[1]);
+                            this.makeBossBullet_SL(bossType, shootPoint[2]);
+                        }
+                        ++boss.bulletNum;
+                        boss.shootDuration = System.currentTimeMillis();
+                    }
+                } else {
+                    boss.bulletNum = 0;
+                    boss.bulletSequence++;
+                    boss.lastShootTime = System.currentTimeMillis();
+                }
+                break;
+            case 14:
+            case 15:
+            case 16://三发齐射 左中右
+                if (boss.bulletNum < bb[1]) {
+                    if ((System.currentTimeMillis() - boss.shootDuration) >= 200) {
+                        if (shootType == 14) {
+                            makeBossBullet_SG(bossType, boss.bulletDirect1, shootPoint[2]);
+                        } else if (shootType == 15) {
+                            makeBossBullet_SG(bossType, boss.bulletDirect1, shootPoint[0]);
+                            makeBossBullet_SG(bossType, boss.bulletDirect2, shootPoint[1]);
+                        } else {
+                            makeBossBullet_SG(bossType, boss.bulletDirect1, shootPoint[0]);
+                            makeBossBullet_SG(bossType, boss.bulletDirect2, shootPoint[1]);
+                            makeBossBullet_SG(bossType, boss.bulletDirect3, shootPoint[2]);
+                        }
+                        boss.bulletNum++;
+                        boss.shootDuration = System.currentTimeMillis();
+                    }
+                } else {
+                    boss.bulletDirect1 = this.getRand(3);
+                    if (shootType >= 15) {
+                        boss.bulletDirect2 = this.getRand(3);
+                    }
+                    if (shootType >= 16) {
+                        boss.bulletDirect3 = this.getRand(3);
+                    }
+                    boss.bulletNum = 0;
+                    ++boss.bulletSequence;
+                    boss.lastShootTime = System.currentTimeMillis();
+                }
+                break;
+            case 21://激光
+            case 22:
+                if (!lasers.isEmpty()) {
+                    return;
+                }
+                if (shootType == 21) {
+                    makeBulletLaser(bossType, shootPoint[1]);
+                } else {
+                    makeBulletLaser(bossType, shootPoint[0]);
+                    makeBulletLaser(bossType, shootPoint[2]);
+                }
+                ++boss.bulletSequence;
+                break;
+            case 23:
+            default:
+                makeBossMissile(bossType);
+                ++boss.bulletSequence;
+                break;
+        }
+    }
+
+    private void makeBossMissile(int bossType) {
+        int[][] sp = new int[2][2];
+        sp[0] = bossShootPoint[bossType][3];
+        sp[1] = bossShootPoint[bossType][5];//boss只会有导弹
+        missiles.add(Missile.makeMissiles(1, boss.x + boss.width / 2, boss.y + boss.height, sp, 1));
+    }
+
+    private void makeBulletLaser(int bossType, int[] shootPoint) {
+        Laser laser = Laser.mallocLaser(bossType, boss.x + boss.width / 2, boss.y + boss.height, shootPoint);
+        lasers.add(laser);
+    }
+
+    /**
+     * 三发齐射 左中右
+     */
+    private void makeBossBullet_SG(int bossType, int direction, int[] shootPoint) {
+        int[] bb = bossBullet[bossType][boss.bulletSequence];
+        boss.bulletType = bb[2]-2;
+        shootPoint[1] += boss.height;
+        Bullet bullet = makeEnemyBullet(boss, shootPoint);
+        bullet.speedX = bulletSpeedSG[direction * 2];
+        bullet.speedY = bulletSpeedSG[direction * 2 + 1];
+        bullets.add(bullet);
+    }
+
+    private void makeBossBullet_SL(int bossType, int[] shootPoint) {
+        int[] bb = bossBullet[bossType][boss.bulletSequence];
+        boss.bulletType = bb[2]-2;
+        shootPoint[1] += boss.height;
+        Bullet bullet = makeEnemyBullet(boss, shootPoint);
+
+        int rand = getRand(9);
+        bullet.speedX = bulletSpeedSL[rand * 2];
+        bullet.speedY = bulletSpeedSL[rand * 2 + 1];
+        bullets.add(bullet);
+    }
+
+    /**
+     * 多发散射,每个射击点射出多发
+     *
+     * @param bossType
+     * @param shootPoint
+     */
+    private void makeBossBullet_S(int bossType, int[] shootPoint) {
+        int[] bb = bossBullet[bossType][boss.bulletSequence];
+        boss.bulletType = bb[2]-2;
+        shootPoint[1] += boss.height;
+        makeBulletToFront(boss, shootPoint, bb[1]);
+    }
+
+    private void checkHitBoss(Boss boss) {
+        for (int i = playerBullets.size() - 1; i >= 0; i--) {
+            PlayerBullet bullet = playerBullets.get(i);
+            if (checkIfHit(bullet.x, bullet.y, bullet.width, bullet.height, boss.x, boss.y, boss.width, boss.height)) {
+                playerBullets.remove(bullet);
+                boss.health -= playerBulletFloorPower[playerType][mPlayer.power - 1] - 1;
+                explodes.add(Explode.dealExplodeState(bullet, getRand(2)));
+                mGameScore += boss.reward;
+            }
+        }
+    }
+
+    private void makeBoss() {
+        if (!mIsBossAppear) {
+            return;
+        }
+        if (!enemys.isEmpty()) {
+            for (EnemyPlane enemy : enemys) {
+                enemy.pauseDelay = 0;
+            }
+        } else if (boss == null) {
+            boss = Boss.makeBossByMission(mMission, mGameDifficulty);
+        }
     }
 
     private void dealBomb() {
@@ -403,7 +565,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             checkMissileOutScreen(ms);
             if (ms[0] == null && ms[1] == null) {
                 missiles.remove(ms);
-            } else if (checkMissileHitEnemy(ms)) {
+            } else if (checkBulletHitEnemy(ms)) {
                 //在checkMissileHitEnemy处理逻辑
             }
         }
@@ -485,15 +647,24 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
             if (outScreen(playerBullet.x, playerBullet.y, playerBullet.firstFrame())) {
                 playerBullets.remove(playerBullet);
-            } else if (checkMissileHitEnemy(playerBullet)) {
+            } else if (checkBulletHitEnemy(playerBullet)) {
                 explodes.add(Explode.dealExplodeState(playerBullet, getRand(2)));
                 mGameScore += 28;
                 playerBullets.remove(playerBullet);
             }
         }
+
+        for (int i = lasers.size() - 1; i >= 0; i--) {
+            Laser laser = lasers.get(i);
+            laser.dealMoveState(boss);
+
+            if (System.currentTimeMillis() - laser.createTime >= 1000) {
+                lasers.remove(laser);
+            }
+        }
     }
 
-    private boolean checkMissileHitEnemy(Missile[] ms) {
+    private boolean checkBulletHitEnemy(Missile[] ms) {
         for (EnemyPlane enemy : enemys) {
             if (ms[0] != null && checkIfHit(ms[0].x, ms[0].y, ms[0].width, ms[0].height, enemy.x, enemy.y, enemy.width, enemy.height)) {
                 enemy.health -= ms[0].power;
@@ -509,7 +680,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return false;
     }
 
-    private boolean checkMissileHitEnemy(PlayerBullet bullet) {
+    private boolean checkBulletHitEnemy(PlayerBullet bullet) {
         for (EnemyPlane enemy : enemys) {
             if (checkIfHit(bullet.x, bullet.y, bullet.width, bullet.height, enemy.x, enemy.y, enemy.width, enemy.height)) {
                 //{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}
@@ -529,7 +700,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     //@TODO 先保持无敌状态
     private boolean checkHitPlayer(Bullet bullets) {
-
         return false;
     }
 
@@ -552,7 +722,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 }
             }
         }
-
     }
 
     public void makeEnemyBullet(EnemyPlane enemy, PlayerPlane player) {
@@ -570,8 +739,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
             int ranVal = this.getRand(4 - mGameDifficulty);
             Bullet bullet = makeEnemyBullet(enemy);
+            //makeBulletToPlayer(enemy, bullet, bulletNum);
             if (bulletNum <= 3 && ranVal == 0) {
-                makeBulletToPlayer(enemy, bullet, player, bulletNum);
+                makeBulletToPlayer(enemy, bullet, bulletNum);
             } else if (ranVal >= 0) {
                 makeBulletToFront(enemy, bulletNum);
             }
@@ -645,10 +815,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
     }
 
-    private void makeBulletToPlayer(EnemyPlane enemy, Bullet bullet, PlayerPlane player, int bulletNum) {
+    private void makeBulletToPlayer(EnemyPlane enemy, Bullet bullet, int bulletNum) {
+        makeBulletToPlayer(enemy, bullet, new int[]{0, 0}, bulletNum);
+    }
+
+    private void makeBulletToPlayer(EnemyPlane enemy, Bullet bullet, int[] shootPoint, int bulletNum) {
         bullet.speedX = 0;
         bullet.speedY = 15;
-        bulletGoToPlayer(bullet, player);//初始化子弹xy轴速度
+        bulletGoToPlayer(bullet, mPlayer);//初始化子弹xy轴速度
         if (bulletNum > 1) {
             int direction;
             //↑ ↓ ← → ↖ ↗ ↘ ↙ ↕
@@ -673,11 +847,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             } else {
                 direction = 4;//    ↑  ↑
             }
+
+            bullets.add(bullet);
+
             if (bulletNum >= 2) {
                 bullet.speedX = Bullet.bulletSpeedToPlayer[direction * 6];
                 bullet.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 1];
 
-                Bullet nb = makeEnemyBullet(enemy);
+                Bullet nb = makeEnemyBullet(enemy, shootPoint);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 + 2];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 3];
                 bullets.add(nb);
@@ -686,7 +863,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (direction == 0) {
                     direction = 8;
                 }
-                Bullet nb = makeEnemyBullet(enemy);
+                Bullet nb = makeEnemyBullet(enemy, shootPoint);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 - 2];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 - 1];
                 bullets.add(nb);
@@ -695,7 +872,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (direction == 8) {
                     direction = 0;
                 }
-                Bullet nb = makeEnemyBullet(enemy);
+                Bullet nb = makeEnemyBullet(enemy, shootPoint);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 + 4];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 + 5];
                 bullets.add(nb);
@@ -704,17 +881,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (direction == 0) {
                     direction = 8;
                 }
-                Bullet nb = makeEnemyBullet(enemy);
+                Bullet nb = makeEnemyBullet(enemy, shootPoint);
                 nb.speedX = Bullet.bulletSpeedToPlayer[direction * 6 - 4];
                 nb.speedY = Bullet.bulletSpeedToPlayer[direction * 6 - 3];
                 bullets.add(nb);
             }
 
             if (bulletNum >= 6) {
-                Bullet nb = makeEnemyBullet(enemy);
-                this.bulletGoToPlayer(nb, player);
+                Bullet nb = makeEnemyBullet(enemy, shootPoint);
+                this.bulletGoToPlayer(nb, mPlayer);
             }
-
         }
     }
 
@@ -762,6 +938,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private Bullet makeEnemyBullet(EnemyPlane enemy) {
         int shootX = enemy.x + enemy.width / 2;
         int shootY = enemy.y + enemy.height - 5;
+        int[] shootPoint = new int[2];
+        shootPoint[0] = shootX;
+        shootPoint[1] = shootY;
+        return makeEnemyBullet(enemy, shootPoint);
+    }
+
+    private Bullet makeEnemyBullet(EnemyPlane enemy, int[] shootPoint) {
+        int shootX = enemy.x + enemy.width / 2 + shootPoint[0];
+        int shootY = enemy.y - 5 + shootPoint[1];
         int bulletTypeNum = GameCanvas.bulletPic[enemy.bulletType];
 
         int picIndex = 0;
@@ -774,6 +959,25 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         Bullet bullet = Bullet.mallocBullet(enemy.bulletType, shootX, shootY, 0, 0, bulletTypeNum, bitmap);
         return bullet;
     }
+
+    private void makeBulletToFront(EnemyPlane enemy, int[] shootPoint, int bulletNum) {
+        int offSet = 0;
+        for (int i = 0; i < bulletNum; ++i) {
+            offSet = (offSet + i * 2);
+        }
+        for (int i = 0; i < bulletNum; ++i) {
+            if (mallocBullet()) {
+                Bullet bullet = makeEnemyBullet(enemy, shootPoint);
+                bullet.speedX = enemyBulletToFront[offSet++];
+                bullet.speedY = enemyBulletToFront[offSet++];
+                if (bullet.speedX == 0 && bullet.speedY == 0) {
+                    continue;
+                }
+                bullets.add(bullet);
+            }
+        }
+    }
+
 
     private void makeBulletToFront(EnemyPlane enemy, int bulletNum) {
         int offSet = 0;
@@ -796,7 +1000,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void makeEnemy() {
-        if (enemys.size() >= maxEnemy || !mIsEnableEnemy) {
+        if (enemys.size() >= maxEnemy || !mIsEnableEnemy || mIsBossAppear) {
             return;
         }
         int randomType;
@@ -804,7 +1008,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         int ranVal;
         if (this.mMission <= 4) {
             randomType = this.getRand(this.gApearEnemyType);
-            type = stageEnemy[this.mCorrespondMission - 1][randomType] - 1;
+            type = stageEnemy[this.mMission - 1][randomType] - 1;
             if (type < 6) {
                 ranVal = this.getRand(5);
                 if (ranVal < 3) {
@@ -823,7 +1027,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             this.gApearEnemyType = this.gApearEnemyType + 1;
         } else {
             //playSound(3);
-            this.gIsBossAppear = true;
+            this.mIsBossAppear = true;
             //this.gIsEnableEnemy = false;
         }
     }
@@ -951,36 +1155,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private boolean checkIfHit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh) {
-        int mw = 0, mh = 0;
-        sw = (sw - sw / 3);
-        sh = (sh - sh / 3);
-        dw = (dw - dw / 3);
-        dh = (dh - dh / 3);
-        if (dw > sw) {
-            dx = (dx + dw / 5);
-        } else {
-            sx = (sx + sw / 5);
-        }
-        int cx = (sx - dx);
-        int cy = (sy - dy);
-        if (cx == 0 && cy == 0)
-            return true;
-        if (cx >= 0 && cy >= 0) {
-            mw = dw;
-            mh = dh;
-        } else if (cx >= 0 && cy <= 0) {
-            mw = dw;
-            mh = sh;
-        } else if (cx <= 0 && cy >= 0) {
-            mw = sw;
-            mh = dh;
-        } else if (cx <= 0 && cy <= 0) {
-            mw = sw;
-            mh = sh;
-        }
+        int centerX = sx + sw / 2;
+        int centerY = sy + sh / 2;
 
-        if (Math.abs(cx) < mw && Math.abs(cy) < mh)
+        int offX = dw / 12;
+        int offY = dy / 4;
+
+        if ((centerX >= dx + offX / 2 && centerX <= dx + dw - offX / 2) &&
+                (centerY >= dy + offY / 2 && centerY <= dy + dh - offY / 2)) {
             return true;
+        }
         return false;
     }
 
@@ -1099,10 +1283,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void drawObjects(Canvas canvas) throws Exception {
         showBackScreen(canvas);
-        //showBoss(canvas);
+        showBoss(canvas);
         showEnemy(canvas);
         showBombs(canvas);
-        //showBomb(canvas);
         showPlayer(canvas);
         showItems(canvas);
         showBullet(canvas);
@@ -1113,6 +1296,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         showActiveScore(canvas);
         showMissionInfo(canvas);
         showGameOver(canvas);
+    }
+
+    private void showBoss(Canvas canvas) {
+        if (boss == null) {
+            return;
+        }
+        drawBitmapXY(canvas, boss.getFrame(), boss.x, boss.y);
     }
 
     private void showMissile(Canvas canvas) {
@@ -1156,6 +1346,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (PlayerBullet bullet : playerBullets) {
             drawBitmapXY(canvas, bullet.getFrame(), bullet.x, bullet.y);
         }
+
+        for (Laser laser : lasers) {
+            drawBitmapXY(canvas, laser.getFrame(), laser.x, laser.y);
+        }
     }
 
     private void showEnemy(Canvas canvas) {
@@ -1177,7 +1371,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (this.mMission == 5) {
                     drawBitmapCenter(canvas, ResInit.otherImage[10]);
                 } else {
-                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][this.mCorrespondMission], 100);
+                    drawBitmapCenterHorizontal(canvas, ResInit.otherImage[9], ResInit.numberImageValue[0][this.mMission], 100);
                 }
             } else {
                 this.mIsEnableEnemy = true;
@@ -1257,14 +1451,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showBackScreen(Canvas canvas) {
         int offsetY = -(this.gBackgroundHeight - MainWindow.windowHeight - this.gBackgroundOffset);
         if (offsetY >= 0) {
-            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, -(this.gBackgroundHeight - offsetY));
+            drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, -(this.gBackgroundHeight - offsetY));
         }
-        drawBitmapXY(canvas, ResInit.BackgroundImage[this.mCorrespondMission - 1], 0, offsetY);
+        drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, offsetY);
 
         if (offsetY >= MainWindow.windowHeight) {
             this.gBackgroundOffset = 0;
         }
-        if (this.gIsBossAppear) {
+        if (this.mIsBossAppear) {
             this.gBackgroundOffset = (this.gBackgroundOffset + 5);
         } else {
             this.gBackgroundOffset = (this.gBackgroundOffset + 3);
@@ -1303,7 +1497,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void playBomb() {
-        if (mPlayer == null || mPlayer.state != 0 || mIsGameFinished) {
+        if (mPlayer == null || mPlayer.state != 0 || mIsGameFinished || mIsMissionComplete) {
             return;
         }
         //

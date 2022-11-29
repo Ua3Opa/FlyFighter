@@ -27,12 +27,13 @@ public class Explode extends Spirit {
         explode.type = type;
         explode.picNum = explodePic[explode.type];
         explode.initSpiritBitmap();
+        explode.initSpiritSize();
         return explode;
     }
 
     public Bitmap getFrame() {
         super.getFrame();
-        return source.get(frameIndex % picNum);
+        return source.get(frameIndex / 8 % picNum);
     }
 
     @Override
