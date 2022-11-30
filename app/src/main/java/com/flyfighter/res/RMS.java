@@ -14,7 +14,7 @@ public class RMS {
     public static float volume;
     public static int difficulty;
     public static byte lastScoreIndex;
-    private static List<PlayRecord> playRecords = new ArrayList<>();
+    public static List<PlayRecord> playRecords = new ArrayList<>();
     private static int aint;
 
 
@@ -38,4 +38,9 @@ public class RMS {
             e.printStackTrace();
         }
     }
+
+
+
+
+
 }

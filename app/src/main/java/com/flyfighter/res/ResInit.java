@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 
 import com.flyfighter.entity.EnemyPlane;
 import com.flyfighter.menu.GameCanvas;
+import com.flyfighter.utils.BitmapUtil;
 
 import java.io.IOException;
 
@@ -56,10 +56,11 @@ public class ResInit {
 
     }
 
-    private static void initStrNumber(AssetManager assets) throws Exception {
+    public static void initStrNumber(AssetManager assets) throws Exception {
 
         otherImage = new Bitmap[12];
         otherImage[1] = BitmapFactory.decodeStream(assets.open("Resource/fly_missionback.png"));
+        otherImage[1] = BitmapUtil.fitCenter(otherImage[1]);
         otherImage[2] = BitmapFactory.decodeStream(assets.open("Resource/fly_missionload.png"));
 
         numberImage = new Bitmap[3];
@@ -144,6 +145,7 @@ public class ResInit {
     public static void gamePicInit(AssetManager assets) throws Exception {
 
         otherImage[0] = BitmapFactory.decodeStream(assets.open("Resource/fly_gamecomplete.png"));
+        otherImage[0] = BitmapUtil.fitCenter(otherImage[0]);
         otherImage[3] = BitmapFactory.decodeStream(assets.open("Resource/fly_strcomplete.png"));
         otherImage[4] = BitmapFactory.decodeStream(assets.open("Resource/fly_strcontinue.png"));
 

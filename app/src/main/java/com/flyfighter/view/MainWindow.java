@@ -10,7 +10,6 @@ import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
-import com.flyfighter.menu.GameCanvas;
 import com.flyfighter.menu.GameWindow;
 import com.flyfighter.menu.MainMenu;
 import com.flyfighter.menu.MainMenuBackground;
@@ -26,6 +25,7 @@ public class MainWindow extends FrameLayout {
     public static int windowHeight;
 
     public static MediaPlayer[] soundPlayer = new MediaPlayer[2];
+    private GameWindow gameWindow;
 
     public MainWindow(Context context) {
         this(context, null);
@@ -70,6 +70,7 @@ public class MainWindow extends FrameLayout {
             case 1://游戏设置
                 break;
             case 2://战绩排行
+                showRanking();
                 break;
             case 3://游戏说明
                 break;
@@ -85,7 +86,8 @@ public class MainWindow extends FrameLayout {
     public void startGame(SelectPlayerMenu menu, int player) {
         removeAllViews();
         stopPlayMedia();
-        addView(new GameWindow(mContext, player), buildCenterLayoutParams());
+        gameWindow = new GameWindow(mContext, player);
+        addView(gameWindow, buildCenterLayoutParams());
     }
 
     private void stopPlayMedia() {
@@ -108,5 +110,24 @@ public class MainWindow extends FrameLayout {
 
     public void showRanking() {
         addView(new RankingMenu(mContext), buildCenterLayoutParams());
+    }
+
+    public void handleCloseRanking() {
+        if (gameWindow != null) {
+            removeAllViews();
+            gameWindow = null;
+            loadMainMenu();
+        }else{
+            removeView(RankingMenu.class);
+        }
+    }
+
+
+    public void removeView(Class clazz) {
+        for (int childCount = getChildCount(); childCount > 0; childCount--) {
+            if (getChildAt(childCount - 1).getClass() == clazz) {
+                removeView(getChildAt(childCount - 1));
+            }
+        }
     }
 }

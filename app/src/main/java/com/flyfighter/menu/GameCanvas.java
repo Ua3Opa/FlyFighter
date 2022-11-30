@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
+import com.alibaba.fastjson.JSON;
 import com.flyfighter.entity.Bomb;
 import com.flyfighter.entity.Boss;
 import com.flyfighter.entity.Bullet;
@@ -23,14 +24,18 @@ import com.flyfighter.entity.Laser;
 import com.flyfighter.entity.Missile;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
+import com.flyfighter.entity.Spirit;
 import com.flyfighter.interf.Controller;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.res.SoundHelper;
+import com.flyfighter.room.PlayRecord;
 import com.flyfighter.utils.UiUtils;
 import com.flyfighter.view.MainWindow;
+import com.tencent.mmkv.MMKV;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -38,14 +43,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private Context context;
     private MediaPlayer[] mediaPlayers = new MediaPlayer[13];
-
+    private SoundHelper soundHelper = new SoundHelper();
     private int playerType;
     private int difficulty;
+    private int playerLife = 6;
     private PlayerPlane mPlayer;
     private List<EnemyPlane> enemys = new ArrayList<>();
     private Random random;
 
-    private final int maxEnemy = 5;
+    private final int maxEnemy = 4;
     private final int maxItem = 6;
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
@@ -78,7 +84,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private boolean mIsPlayerDestroyed;
     private int mDifficulty;
     private int mBackgroundHeight;
-
     public List<Bullet> bullets = new ArrayList<>();
     public List<Laser> lasers = new ArrayList<>();
     public List<PlayerBullet> playerBullets = new ArrayList<>();
@@ -135,7 +140,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     {2, -50, 1, 0, -23, 1}, {1, -20, -5, 0, -30, 0}, {1, 20, -5, 0, -30, 0}, {2, 50, 1, 0, -23, 1},
                     {2, -55, -2, 0, -23, 1}, {1, -25, -5, 0, -30, 2}, {1, 0, -2, 0, -30, 0}, {1, 25, -5, 0, -30, 2}, {2, 55, -2, 0, -23, 1}};
 
-    public static final int[] bulletSize = new int[]{7, 22, 9, 20, 2, 20, 8, 8, 10, 8, 8, 8, 8, 8, 8, 8, 14, 13, 14, 13, 10, 9, 10, 9, 10, 9, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16, 16, 16, 16, 16, 8, 320};
+    private static final int[] scoreLevel = new int[]{5000, 20000, 50000, 120000, 200000, 300000, 350000, 400000, 450000, 500000, 600000, 650000, 700000, 750000, 800000, 850000, 900000, 950000, 1000000, 1050000, 1100000, 1150000, 1200000, 1250000, 1300000};
 
     public static final int[] bulletSpeedSL = new int[]{-2, 4, -2, 8, -1, 8, -1, 12, 0, 12, 1, 12, 1, 8, 2, 8, 2, 4};
 
@@ -170,8 +175,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void gameInit() {
         ResInit.loadPlayer(context, playerType);
-        SoundHelper.loadGameSounds(context, mediaPlayers);
+        soundHelper.loadGameSounds(context, mediaPlayers);
 
+        playSound(12);
         this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.gIsSaved = false;
         this.gContinueNum = 3;
@@ -184,21 +190,26 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void stageInit() {
-        this.gGamePause = 0;
-        this.mIsMissionComplete = false;
-        this.gTempDelay = 0;
-        this.mIsEnableEnemy = false;
-        this.gIsGameOver = false;
-        this.mIsBossAppear = false;
-        this.gScreenMove = 1;
-        this.gBackgroundOffset = 0;
-        this.gEnemyCount = 0;
-        this.gApearEnemyType = 1;
-        this.mIsPlayerDestroyed = false;
-        this.mStage = 1;
-        if (this.mMission == 1) {
+        mPlayer.resetState();
+        gGamePause = 0;
+        mIsMissionComplete = false;
+        gTempDelay = 0;
+        mIsEnableEnemy = false;
+        gIsGameOver = false;
+        mIsBossAppear = false;
+        gScreenMove = 1;
+        gBackgroundOffset = 0;
+        gEnemyCount = 0;
+        gApearEnemyType = 1;
+        mIsPlayerDestroyed = false;
+
+        mStage = 1;
+        //0 : 1,2,4,3,5
+        //1 : 2,3,4,1,5
+        //2 : 3,1,4,2,5
+        if (this.mStage == 1) {
             this.mMission = playerType + 1;
-        } else if (this.mMission == 2) {
+        } else if (this.mStage == 2) {
             if (this.playerType == 0) {
                 this.mMission = 2;
             } else if (this.playerType == 1) {
@@ -206,9 +217,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             } else {
                 this.mMission = 1;
             }
-        } else if (this.mMission == 3) {
+        } else if (this.mStage == 3) {
             this.mMission = 4;
-        } else if (this.mMission == 4) {
+        } else if (this.mStage == 4) {
             if (this.playerType == 0) {
                 this.mMission = 3;
             } else if (this.playerType == 1) {
@@ -217,10 +228,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 this.mMission = 2;
             }
         } else {
+            this.mMission = 5;
         }
 
-        ResInit.loadStagePic(context, mStage);
-        this.mBackgroundHeight = ResInit.BackgroundImage[mStage - 1].getHeight();
+        ResInit.loadStagePic(context, mMission);
+        this.mBackgroundHeight = ResInit.BackgroundImage[mMission - 1].getHeight();
     }
 
     private void driveObjects() {
@@ -272,6 +284,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             explodes.add(explode4);
             mGameScore += boss.reward;
 
+            this.playSound(2);
             mIsBossAppear = false;
             mIsMissionComplete = true;
             mPlayer.onFire = false;
@@ -484,7 +497,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 enemy.pauseDelay = 0;
             }
         } else if (boss == null) {
-            boss = Boss.makeBossByMission(mStage, mDifficulty);
+            boss = Boss.makeBossByMission(mMission, mDifficulty);
         }
     }
 
@@ -555,7 +568,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             checkMissileOutScreen(ms);
             if (ms[0] == null && ms[1] == null) {
                 missiles.remove(ms);
-            } else if (checkBulletHitEnemy(ms)) {
+            } else if (checkBulletHitEnemy(ms)) {//或者是boss的导弹hit player
                 //在checkMissileHitEnemy处理逻辑
             }
         }
@@ -568,6 +581,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         mMissileShootTime = System.currentTimeMillis();
         missiles.add(Missile.makeMissiles(mMissileType, getPlayerCenterX(), mPlayer.y));
+        if (mMissileType == 2) {
+            playSound(9);
+        } else {
+            playSound(10);
+        }
     }
 
     private void checkMissileOutScreen(Missile[] ms) {
@@ -627,7 +645,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).firstFrame())) {
                 bullets.remove(bullets.get(i));
             } else if (checkHitPlayer(bullets.get(i))) {
-
+                onPlayerDestroyed();
+                bullets.remove(bullets.get(i));
             }
         }
 
@@ -650,21 +669,38 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
             if (System.currentTimeMillis() - laser.createTime >= 1000) {
                 lasers.remove(laser);
+            } else if (checkHitPlayer(laser)) {
+                onPlayerDestroyed();
             }
         }
+    }
+
+    private void onPlayerDestroyed() {
+        explodes.add(Explode.dealExplodeState(mPlayer.x, mPlayer.y, getRand(5) + 3));
+        mIsPlayerDestroyed = true;
+        mPlayer = null;
+        playerLife--;
     }
 
     private boolean checkBulletHitEnemy(Missile[] ms) {
         for (EnemyPlane enemy : enemys) {
             if (ms[0] != null && checkIfHit(ms[0].x, ms[0].y, ms[0].width, ms[0].height, enemy.x, enemy.y, enemy.width, enemy.height)) {
-                enemy.health -= ms[0].power;
-                mGameScore += 28;
-                ms[0] = null;
+                if (ms[0].from == 0) {
+                    enemy.health -= ms[0].power;
+                    mGameScore += 28;
+                    ms[0] = null;
+                } else {
+                    onPlayerDestroyed();
+                }
             }
             if (ms[1] != null && checkIfHit(ms[1].x, ms[1].y, ms[1].width, ms[1].height, enemy.x, enemy.y, enemy.width, enemy.height)) {
-                enemy.health -= ms[1].power;
-                mGameScore += 28;
-                ms[1] = null;
+                if (ms[1].from == 0) {
+                    enemy.health -= ms[1].power;
+                    mGameScore += 28;
+                    ms[1] = null;
+                } else {
+                    onPlayerDestroyed();
+                }
             }
         }
         return false;
@@ -688,8 +724,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return false;
     }
 
-    //@TODO 先保持无敌状态
-    private boolean checkHitPlayer(Bullet bullets) {
+    private boolean checkHitPlayer(Spirit spirit) {
+        if (checkIfHit(spirit.x, spirit.y, spirit.width, spirit.height, mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
+            return true;
+        }
         return false;
     }
 
@@ -698,6 +736,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (enemys.get(i).health <= 0) {
                 //3,4,5,6,7
                 explodes.add(Explode.dealExplodeState(enemys.get(i), getRand(4) + 2));
+                this.playSound(2);
                 makeGoods(enemys.get(i));
                 mGameScore += enemys.get(i).reward;
                 enemys.remove(i);
@@ -740,7 +779,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void handleGetItems(Item item) {
-        //this.playSound(4);
+        playSound(4);
         switch (item.type) {
             case 1://boom类型
             case 2:
@@ -787,8 +826,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             case 12:
             case 13:
             case 14:
-                if (mPlayer.life < 6) {
-                    mPlayer.life++;
+                if (playerLife < 6) {
+                    playerLife++;
                 }
                 break;
             default:
@@ -1013,11 +1052,12 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             type = (18 + this.getRand(28));
         }
-        enemys.add(EnemyPlane.mallocEnemy(mMission, type, mDifficulty));
+        enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty));
         gEnemyCount++;
         gApearEnemyType++;
-        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
-            //playSound(3);
+//        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
+        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
+            playSound(3);
             this.mIsBossAppear = true;
             this.mIsEnableEnemy = false;
         }
@@ -1029,19 +1069,27 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         if (mIsPlayerDestroyed) {
             mIsPlayerDestroyed = false;
+
+            if (playerLife <= 0) {
+                this.playSound(11);
+                this.gIsGameOver = true;
+                this.gTempDelay = 0;
+            } else {
+                mPlayer = PlayerPlane.createPlayerPlane(playerType);
+            }
         } else {
             if (mPlayer.state == -1) {//进场
                 mPlayer.y -= 5;
                 if (mPlayer.y <= MainWindow.windowHeight - 350) {
                     mPlayer.state = 0;
+                    mPlayer.onFire = true;
                 }
             } else {//正常状态
                 if (mIsMissionComplete) {
                     return;
                 }
                 mPlayer.handleMove();
-
-                if (playerBullets.size() == 0) {
+                if (playerBullets.isEmpty()) {
                     makePlayerBullet();
                 } else {
                     PlayerBullet lastBullet = playerBullets.get(playerBullets.size() - 1);
@@ -1057,7 +1105,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     long lastTime;
 
     private void makePlayerBullet() {
-        //playSound(this.gSelectedPlayer + 5);
+        playSound(playerType + 5);
         int bulletNum;
 //        if (lastTime !=0 && System.currentTimeMillis() - lastTime >= 5000) {
 //            player.power++;
@@ -1373,6 +1421,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showGameOver(Canvas canvas) {
         if (this.mIsGameFinished) {
             this.isThreadAlive = false;
+            RMS.playRecords.add(new PlayRecord(getScoreLevel(), mPlayer.type, mGameScore));
+            Collections.sort(RMS.playRecords, (o1, o2) -> o1.score - o2.score);
+            MMKV.defaultMMKV().encode("Records", JSON.toJSONString(RMS.playRecords));
             ((MainWindow) (getParent())).showRanking();
         }
     }
@@ -1402,16 +1453,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
 
         //按60帧算的话这里应该是6秒左右
-        if (this.gTempDelay > 400) {
-            if (this.mMission >= 5) {
+        if (gTempDelay > 400) {
+            if (mMission > 5) {
                 drawBitmapCenter(canvas, ResInit.otherImage[0]);
                 if (this.gTempDelay > 800) {
                     this.mIsGameFinished = true;
                 }
                 return;
             }
-
-            this.mMission = (this.mMission + 1);
+            this.mMission++;
+            this.mStage++;
             this.gScreenMove = 0;
             this.gTempDelay = 0;
             this.mIsMissionComplete = false;
@@ -1438,23 +1489,17 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showActiveLife(Canvas canvas) {
-        for (int i = 0; i < this.mPlayer.life - 1; i = (i + 1)) {
+        for (int i = 0; i < playerLife - 1; i = (i + 1)) {
             int x = (27 + i * 45);
             drawBitmapXY(canvas, ResInit.lifeIcon[this.playerType], x, 50);
         }
     }
 
     private void showPlayer(Canvas canvas) {
-        if (this.gIsGameOver) {
+        if (this.gIsGameOver || mPlayer == null) {
             return;
         }
         drawBitmapXY(canvas, mPlayer.getFrame(), mPlayer.x, mPlayer.y);
-        //if (mPlayer.state == -1 && (this.gScreenMove & 3) != 0) {
-        //    drawBitmapXY(canvas, mPlayer.stateImg[5], mPlayer.x, mPlayer.y);
-        //} else {
-        //    drawBitmapXY(canvas, mPlayer.stateImg[0], mPlayer.x, mPlayer.y);
-        //}
-
         if (mPlayer.onFire && mPlayer.getFireFrame() != null) {
             drawBitmapXY(canvas, mPlayer.getFireFrame(), mPlayer.x, mPlayer.y);
         }
@@ -1537,6 +1582,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return false;
     }
 
+    private void playSound(int i) {
+        try {
+            soundHelper.playSound(context, i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public boolean outScreen(int posX, int posY, Bitmap source) {
         if (posX < -source.getWidth() || posX > MainWindow.windowWidth) {
             return true;
@@ -1547,5 +1600,15 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return false;
     }
 
+    public int getScoreLevel() {
+        int index = 0;
+        for (int i = 0; i < scoreLevel.length - 1; i++) {
+            if (mGameScore >= scoreLevel[i] && mGameScore < scoreLevel[i]) {
+                return i;
+            }
+            index++;
+        }
+        return index >= 25 ? 25 : index;
+    }
 
 }

@@ -58,15 +58,9 @@ public class PlayerPlane extends Spirit {
                 data[3], data[4], data[5], data[6]);
 
         player.bombType = playerType;
-//        for (int i = 0; i < player.bomb; i++) {
-//            player.bombTypes.add(playerType + 1);
-//        }
-        player.bombTypes.add(3);
-        player.bombTypes.add(2);
-        player.bombTypes.add(1);
-        player.bombTypes.add(3);
-        player.bombTypes.add(2);
-        player.bombTypes.add(1);
+        for (int i = 0; i < player.bomb; i++) {
+            player.bombTypes.add(playerType + 1);
+        }
         return player;
     }
 
@@ -130,5 +124,11 @@ public class PlayerPlane extends Spirit {
             return source.get(4);
         }
         return null;
+    }
+
+    public void resetState() {
+        x = (MainWindow.windowWidth - width) / 2;
+        y = MainWindow.windowHeight + height;
+        state = -1;
     }
 }

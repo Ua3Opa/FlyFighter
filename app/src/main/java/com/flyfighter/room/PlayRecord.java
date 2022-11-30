@@ -2,31 +2,17 @@ package com.flyfighter.room;
 
 public class PlayRecord {
 
-    int id;
-    int role;
-    int score;
+    public int scoreLevel;
+    public int role;
+    public int score;
 
-    public int getId() {
-        return id;
+    public PlayRecord() {
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getRole() {
-        return role;
-    }
-
-    public void setRole(int role) {
+    public PlayRecord(int scoreLevel, int role, int score) {
+        this.scoreLevel = scoreLevel;
         this.role = role;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void setScore(int score) {
         this.score = score;
     }
+
 }
