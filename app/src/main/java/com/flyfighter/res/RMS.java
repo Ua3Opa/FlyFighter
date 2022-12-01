@@ -12,7 +12,7 @@ public class RMS {
     public static int[] gConfigData = new int[3];
     public static boolean loadSound;
     public static float volume;
-    public static int difficulty;
+    public static int difficulty;//0:简单,1:困难
     public static byte lastScoreIndex;
     public static List<PlayRecord> playRecords = new ArrayList<>();
     private static int aint;

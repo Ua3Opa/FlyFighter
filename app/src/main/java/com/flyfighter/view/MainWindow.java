@@ -10,7 +10,9 @@ import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.flyfighter.menu.ConfigMenu;
 import com.flyfighter.menu.GameWindow;
+import com.flyfighter.menu.HelpMenu;
 import com.flyfighter.menu.MainMenu;
 import com.flyfighter.menu.MainMenuBackground;
 import com.flyfighter.menu.RankingMenu;
@@ -68,11 +70,13 @@ public class MainWindow extends FrameLayout {
                 addView(new SelectPlayerMenu(mContext), buildCenterLayoutParams());
                 break;
             case 1://游戏设置
+                addView(new ConfigMenu(mContext), buildCenterLayoutParams());
                 break;
             case 2://战绩排行
                 showRanking();
                 break;
             case 3://游戏说明
+                addView(new HelpMenu(mContext), buildCenterLayoutParams());
                 break;
             case 4://退出游戏
                 ((Activity) mContext).finish();

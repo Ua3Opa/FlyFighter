@@ -307,4 +307,34 @@ public class ResInit {
             e.printStackTrace();
         }
     }
+
+    public static void initHelpMenu(Context context) {
+        helpImage = new Bitmap[3];
+        try {
+            for (int i = 0; i < 3; i++) {
+                helpImage[i] = loadRes(context, "Help/fly_help" + (i + 1) + ".png");
+            }
+        } catch (Exception var5) {
+            var5.printStackTrace();
+        }
+    }
+
+    public static void initConfigMenu(Context context) {
+        configImage = new Bitmap[4];
+        try {
+            for (int i = 0; i < 4; i++) {
+                configImage[i] = loadRes(context, "Config/fly_config" + (i + 1) + ".png");
+            }
+        } catch (Exception var7) {
+            var7.printStackTrace();
+        }
+        configNumImage = new Bitmap[4];
+        try {
+            for (int i = 0; i < 4; i++) {
+                configNumImage[i] = loadRes(context, "Config/fly_number" + i + ".png");
+            }
+        } catch (Exception var6) {
+            var6.printStackTrace();
+        }
+    }
 }
