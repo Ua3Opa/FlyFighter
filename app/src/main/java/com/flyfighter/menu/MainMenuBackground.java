@@ -40,9 +40,7 @@ public class MainMenuBackground extends androidx.appcompat.widget.AppCompatImage
 
     private void init(Context context) {
         this.context = context;
-        if (RMS.loadSound) {
-            loadSound();
-        }
+        loadSound();
         ResInit.loadMainMenuImg(context);
         setScaleType(ScaleType.CENTER_CROP);
         setImageBitmap(ResInit.mainFormImage[0]);
@@ -63,8 +61,8 @@ public class MainMenuBackground extends androidx.appcompat.widget.AppCompatImage
 
             MainWindow.soundPlayer[0].setDataSource(assets.openFd("sound/0menuselect.wav"));
             MainWindow.soundPlayer[1].setDataSource(assets.openFd("sound/13menumusic.wav"));
-
-            MainWindow.soundPlayer[1].setVolume(RMS.volume, RMS.volume);
+            float volume = RMS.loadSound ? RMS.volume : 0;
+            MainWindow.soundPlayer[1].setVolume(volume, volume);
             MainWindow.soundPlayer[1].prepare();
             MainWindow.soundPlayer[1].setLooping(true);
             MainWindow.soundPlayer[1].start();
