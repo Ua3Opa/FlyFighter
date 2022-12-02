@@ -26,6 +26,12 @@ public class MainWindow extends FrameLayout {
     public static int windowWidth;
     public static int windowHeight;
 
+    //以1080 * 1920 dpi 480为基准计算缩放比
+    public static float scaleW;
+    public static float scaleH;
+    public static float scaleDes;
+
+
     public static MediaPlayer[] soundPlayer = new MediaPlayer[2];
     private GameWindow gameWindow;
 
@@ -50,9 +56,12 @@ public class MainWindow extends FrameLayout {
         this.mContext = context;
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        wm.getDefaultDisplay().getMetrics(metrics);
+        wm.getDefaultDisplay().getRealMetrics(metrics);
         windowWidth = metrics.widthPixels;
         windowHeight = metrics.heightPixels;
+        scaleW = windowWidth * 1.0f / 1080;
+        scaleH = windowHeight * 1.0f / 1920;
+
         ResInit.loadPicInit(context);
         RMS.readConfigData();
         loadMainMenu();
@@ -121,7 +130,7 @@ public class MainWindow extends FrameLayout {
             removeAllViews();
             gameWindow = null;
             loadMainMenu();
-        }else{
+        } else {
             removeView(RankingMenu.class);
         }
     }

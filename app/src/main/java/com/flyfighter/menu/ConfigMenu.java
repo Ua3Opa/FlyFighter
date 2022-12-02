@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -21,9 +22,9 @@ public class ConfigMenu extends FrameLayout {
 
     //以原始图片1080p下的左上角的偏移值
     private Rect[] clickRect = new Rect[]{
-            //音量小
+            //难度小
             new Rect(530, 195, 720, 300),
-            //音量大
+            //难度大
             new Rect(730, 195, 920, 300),
             //音效开
             new Rect(530, 325, 720, 430),
@@ -34,9 +35,14 @@ public class ConfigMenu extends FrameLayout {
             //关闭
             new Rect(430, 584, 650, 700),
     };
+
+    Rect backgroundRect;
+
     private int offX;
     private int offY;
     private ImageView ivProgress;
+
+    private boolean initialized = false;
 
     public ConfigMenu(Context context) {
         this(context, null);
@@ -94,10 +100,16 @@ public class ConfigMenu extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
+        if (initialized) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
+        initialized = true;
         imgBg.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
         offX = (MainWindow.windowWidth - imgBg.getMeasuredWidth()) / 2;
         offY = (MainWindow.windowHeight - imgBg.getMeasuredHeight()) / 2;
+
+        backgroundRect = new Rect(offX, offY + 150, offX + imgBg.getMeasuredWidth(), offY + imgBg.getMeasuredHeight());
 
         Rect rect = RMS.difficulty == 1 ? clickRect[1] : clickRect[0];
         ivDifficulty.setLayoutParams(setPosition(rect, ivDifficulty.getLayoutParams()));
@@ -113,7 +125,7 @@ public class ConfigMenu extends FrameLayout {
         FrameLayout.LayoutParams lp = (LayoutParams) iv.getLayoutParams();
         rect = scaleRect(rect);
         lp.setMargins(rect.left, rect.top, 0, 0);
-        lp.width = rect.width();
+        lp.width = (int) (rect.width() * (RMS.volume / 0.3f));
         lp.height = rect.height();
         return lp;
     }
@@ -129,9 +141,93 @@ public class ConfigMenu extends FrameLayout {
     }
 
     private Rect scaleRect(Rect rect) {
-        rect.left += offX;
-        rect.top += offY;
-        return rect;
+        return new Rect(rect.left + offX, rect.top + offY, rect.right + offX, rect.bottom + offY);
     }
 
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        return true;
+    }
+
+
+    private int downX;
+    private int downY;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                downX = (int) event.getX();
+                downY = (int) event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (inRect(clickRect[4], downX, downY)) {
+                    setProgressWidth(event, clickRect[4]);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                //范音量条范围外,click
+                if (!(inRect(clickRect[4], downX, downY)) && Math.abs(event.getX() - downX) <= 10 && Math.abs(event.getY() - downY) <= 10) {
+                    handleClickEvent(event.getX(), event.getY());
+                }
+                break;
+        }
+        return true;
+    }
+
+    private void setProgressWidth(MotionEvent event, Rect rect) {
+        if (!inRect(rect, event.getX(), event.getY())) {
+            return;
+        }
+        FrameLayout.LayoutParams lp = (LayoutParams) ivProgress.getLayoutParams();
+        rect = scaleRect(rect);
+        lp.setMargins(rect.left, rect.top, 0, 0);
+        lp.width = (int) (event.getX() - rect.left);
+        ivProgress.setLayoutParams(lp);
+        RMS.volume = 0.3f * (lp.width * 1.0f / clickRect[4].width());
+    }
+
+    private void handleClickEvent(float x, float y) {
+        if (!inRect(backgroundRect, x, y, false)) {
+            ((MainWindow) getParent()).removeView(ConfigMenu.class);
+            RMS.saveConfigSetting();
+            return;
+        }
+        if (inRect(clickRect[0], x, y)) {
+            ivDifficulty.setLayoutParams(setPosition(clickRect[0], ivDifficulty.getLayoutParams()));
+            RMS.difficulty = 0;
+        } else if (inRect(clickRect[1], x, y)) {
+            ivDifficulty.setLayoutParams(setPosition(clickRect[1], ivDifficulty.getLayoutParams()));
+            RMS.difficulty = 1;
+        } else if (inRect(clickRect[2], x, y)) {
+            ivSound.setLayoutParams(setPosition(clickRect[2], ivSound.getLayoutParams()));
+            RMS.loadSound = true;
+        } else if (inRect(clickRect[3], x, y)) {
+            ivSound.setLayoutParams(setPosition(clickRect[3], ivSound.getLayoutParams()));
+            RMS.loadSound = false;
+        } else if (inRect(clickRect[5], x, y)) {
+            ((MainWindow) getParent()).removeView(ConfigMenu.class);
+        }
+        RMS.saveConfigSetting();
+    }
+
+
+    public boolean inRect(Rect rect, float x, float y) {
+        rect = scaleRect(rect);
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            return true;
+        }
+        return inRect(rect, x, y, true);
+    }
+
+    public boolean inRect(Rect rect, float x, float y, boolean scale) {
+        if (scale) {
+            rect = scaleRect(rect);
+        }
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            return true;
+        }
+        return false;
+    }
 }

@@ -26,7 +26,6 @@ public class SelectPlayerMenu extends FrameLayout {
         return false;
     });
     private ImageView ivRect;
-    private int rectY;
     private ImageView ivPlayerBg;
 
     public SelectPlayerMenu(Context context) {
@@ -50,7 +49,6 @@ public class SelectPlayerMenu extends FrameLayout {
     private void initSelectImage() {
         ivPlayerBg = new ImageView(context);
         ivPlayerBg.setImageBitmap(ResInit.playerSelectImage[selectPlayer]);
-        ivPlayerBg.setScaleType(ImageView.ScaleType.CENTER_CROP);
         LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         layoutParams.gravity = Gravity.CENTER;
         ivPlayerBg.setLayoutParams(layoutParams);
@@ -68,7 +66,7 @@ public class SelectPlayerMenu extends FrameLayout {
         ivRect.setImageBitmap(ResInit.playerSelectImage[3 + rectIndex % 2]);
         FrameLayout.LayoutParams params = (LayoutParams) ivRect.getLayoutParams();
         params.gravity = Gravity.LEFT | Gravity.BOTTOM;
-        params.leftMargin = getWidth() / 2 - 90 + 190 * this.selectPlayer;
+        params.leftMargin = getWidth() / 2 - 90 + 195 * this.selectPlayer;
         params.bottomMargin = (int) (getHeight() - ivPlayerBg.getY() - ivPlayerBg.getHeight());
         ivRect.setLayoutParams(params);
         handler.sendEmptyMessageDelayed(0, 500);
@@ -97,6 +95,11 @@ public class SelectPlayerMenu extends FrameLayout {
         return true;
     }
 
+    /**
+     * 这里是相对坐标没有影响
+     * @param x
+     * @param y
+     */
     public void handleSelectPlayerByPosition(int x, int y) {
         int playerBgBottom = (int) (ivPlayerBg.getY() + ivPlayerBg.getHeight());
         if(y< ivPlayerBg.getY() || y > playerBgBottom){
@@ -108,11 +111,11 @@ public class SelectPlayerMenu extends FrameLayout {
             return;
         }
 
-        if (x < getWidth() / 2 - 90 || x > getWidth() / 2 - 90 + 190 * 3) {
+        if (x < getWidth() / 2 - 90 || x > getWidth() / 2 - 90 + 195 * 3) {
             return;
         }
 
-        int selectNum = (x - (getWidth() / 2 - 90)) / 190;
+        int selectNum = (x - (getWidth() / 2 - 90)) / 195;
         if (selectPlayer == selectNum) {
             ((MainWindow) getParent()).startGame(this, selectPlayer);
         } else {

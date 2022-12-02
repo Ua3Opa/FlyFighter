@@ -1,5 +1,7 @@
 package com.flyfighter.res;
 
+import android.util.Log;
+
 import com.alibaba.fastjson.JSON;
 import com.flyfighter.room.PlayRecord;
 import com.tencent.mmkv.MMKV;
@@ -21,7 +23,7 @@ public class RMS {
     public static void readConfigData() {
         init();
         loadSound = MMKV.defaultMMKV().decodeBool("loadSound", true);
-        volume = MMKV.defaultMMKV().decodeFloat("loadSound", 0.3f);
+        volume = MMKV.defaultMMKV().decodeFloat("volume", 0.3f);
         difficulty = MMKV.defaultMMKV().decodeInt("difficulty", 1);
     }
 
@@ -40,7 +42,10 @@ public class RMS {
     }
 
 
-
-
-
+    public static void saveConfigSetting() {
+        MMKV.defaultMMKV().encode("difficulty", RMS.difficulty);
+        MMKV.defaultMMKV().encode("loadSound", RMS.loadSound);
+        MMKV.defaultMMKV().encode("volume", RMS.volume);
+        Log.d("TAG", "saveConfigSetting: "+RMS.difficulty+"  "+RMS.loadSound+"   "+RMS.volume);
+    }
 }
