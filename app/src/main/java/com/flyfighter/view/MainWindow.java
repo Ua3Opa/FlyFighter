@@ -10,7 +10,9 @@ import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.flyfighter.interf.Controller;
 import com.flyfighter.menu.ConfigMenu;
+import com.flyfighter.menu.ContinueMenu;
 import com.flyfighter.menu.GameWindow;
 import com.flyfighter.menu.HelpMenu;
 import com.flyfighter.menu.MainMenu;
@@ -142,5 +144,26 @@ public class MainWindow extends FrameLayout {
                 removeView(getChildAt(childCount - 1));
             }
         }
+    }
+
+    public void showContinue(Controller controller, int continueNum) {
+        if (hasWindow(ContinueMenu.class)) {
+            return;
+        }
+        addView(new ContinueMenu(mContext, controller, continueNum), buildCenterLayoutParams());
+    }
+
+    public void showPause() {
+
+    }
+
+
+    public boolean hasWindow(Class clazz) {
+        for (int childCount = getChildCount(); childCount > 0; childCount--) {
+            if (getChildAt(childCount - 1).getClass() == clazz) {
+                return true;
+            }
+        }
+        return false;
     }
 }

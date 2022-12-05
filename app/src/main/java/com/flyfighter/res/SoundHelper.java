@@ -45,9 +45,8 @@ public class SoundHelper {
     int playCount = 0;
 
     public void playSound(Context context, int index) throws Exception {
-        Log.d("TAG", "playSound: "+mediaPlayerPool.size());
+        Log.d("TAG", "playSound: " + mediaPlayerPool.size());
         String source = soundRes[index];
-        AssetManager assets = context.getAssets();
 
         MediaPlayer player;
 
@@ -64,8 +63,8 @@ public class SoundHelper {
         if (index == 3) {
             player.setLooping(true);
         }
-
-        player.setDataSource(assets.openFd(source));
+        player.reset();
+        player.setDataSource(context.getAssets().openFd(source));
         player.setOnPreparedListener(mp -> {
             player.start();
         });
@@ -74,11 +73,9 @@ public class SoundHelper {
                 playCount++;
                 if (playCount >= 5) {
                     playCount = 0;
-                    mp.reset();
                     mediaPlayerPool.add(player);
                 }
             } else {
-                mp.reset();
                 mediaPlayerPool.add(player);
             }
         });

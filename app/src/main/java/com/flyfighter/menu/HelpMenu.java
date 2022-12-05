@@ -46,7 +46,7 @@ public class HelpMenu extends FrameLayout {
             if (helpIndex < 3) {
                 imageView.setImageBitmap(ResInit.helpImage[helpIndex]);
             } else {
-                ((MainWindow) getParent()).removeView(ConfigMenu.class);
+                ((MainWindow) getParent()).removeView(HelpMenu.class);
             }
         });
     }

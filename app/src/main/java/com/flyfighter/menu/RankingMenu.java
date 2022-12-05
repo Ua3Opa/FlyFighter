@@ -149,9 +149,7 @@ public class RankingMenu extends FrameLayout {
         String[] split = score.split("");
 
         int numberCount = 0;
-
-        for (int length = split.length; length > 0; length--) {
-            String spNum = split[length - 1];
+        for (String spNum : split) {
             if (spNum == null || "".equals(spNum)) {
                 continue;
             }
@@ -164,7 +162,7 @@ public class RankingMenu extends FrameLayout {
             for (int i = 8 - numberCount; i > 0; i--) {
                 ImageView ivNum = new ImageView(context);
                 ivNum.setImageBitmap(source[0]);
-                ll.addView(ivNum);
+                ll.addView(ivNum,0);
             }
         }
         return ll;
