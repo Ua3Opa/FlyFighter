@@ -49,6 +49,7 @@ public class PlayerPlane extends Spirit {
     public static PlayerPlane createPlayerPlane(int playerType) {
         PlayerPlane player = new PlayerPlane();
         int[] data = playerData[playerType];
+        player.type = playerType;
         player.initSpiritBitmap();
         player.initSpiritSize();
 
@@ -87,7 +88,7 @@ public class PlayerPlane extends Spirit {
     }
 
     public PlayerBullet makeBullet(int[] data) {
-        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + data[1], y + data[2], data[3], data[4], data[5]);
+        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + data[1], y + data[2] -5, data[3], data[4], data[5]);
         return bullet;
     }
 

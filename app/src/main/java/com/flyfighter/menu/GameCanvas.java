@@ -46,7 +46,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private SoundHelper soundHelper = new SoundHelper();
     private int playerType;
     private int difficulty;
-    private int playerLife = 1;
+    private int playerLife = 3;
     private PlayerPlane mPlayer;
     private List<EnemyPlane> enemys = new ArrayList<>();
     private Random random;
@@ -69,6 +69,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private int gGameSecretNum;
     private boolean mGamePause;
+    private boolean mResLoaded;
     //无敌时间为5秒
     private long shieldMaxMills = 5 * 1000;
     private long bombMaxMills = 4 * 1000;
@@ -172,6 +173,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         gameInit();
         stageInit();
+        mResLoaded = true;
     }
 
     private void gameInit() {
@@ -844,7 +846,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             case 12:
             case 13:
             case 14:
-                if (playerLife < 6) {
+                if (playerLife < 3) {
                     playerLife++;
                 }
                 break;
@@ -987,8 +989,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private Bullet makeEnemyBullet(EnemyPlane enemy) {
-        int shootX = enemy.x + enemy.width / 2;
-        int shootY = enemy.y + enemy.height - 5;
+        int shootX = enemy.width / 2;
+        int shootY = enemy.height - 5;
         int[] shootPoint = new int[2];
         shootPoint[0] = shootX;
         shootPoint[1] = shootY;
@@ -1330,6 +1332,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         while (this.isThreadAlive) {
             Canvas lockCanvas = null;
             try {
+                if (!mResLoaded) {
+                    continue;
+                }
                 lockCanvas = surfaceHolder.lockCanvas();
                 //清空画布
                 lockCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
@@ -1364,7 +1369,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         showActiveBomb(canvas);
         showActiveScore(canvas);
         showMissionInfo(canvas);
-        showGameOver(canvas);
     }
 
     private void showBoss(Canvas canvas) {
@@ -1427,7 +1431,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
     }
 
-    private void showGameOver(Canvas canvas) {
+    private void showGameOver() {
         if (this.mIsGameFinished) {
             this.isThreadAlive = false;
             RMS.playRecords.add(new PlayRecord(getScoreLevel(), playerType, mGameScore));
@@ -1475,23 +1479,22 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[9], ResInit.otherImage[3], 50);
                 }
             }
-        }
-
-        //按60帧算的话这里应该是6秒左右
-        if (gTempDelay > 400) {
-            if (mMission > 5) {
-                drawBitmapCenter(canvas, ResInit.otherImage[0]);
-                if (this.gTempDelay > 800) {
-                    this.mIsGameFinished = true;
+            //按60帧算的话这里应该是6秒左右
+            if (gTempDelay > 400) {
+                if (mMission > 5) {
+                    drawBitmapCenter(canvas, ResInit.otherImage[0]);
+                    if (this.gTempDelay > 800) {
+                        this.mIsGameFinished = true;
+                    }
+                    return;
                 }
-                return;
+                this.mMission++;
+                this.mStage++;
+                this.gScreenMove = 0;
+                this.gTempDelay = 0;
+                this.mIsMissionComplete = false;
+                stageInit();
             }
-            this.mMission++;
-            this.mStage++;
-            this.gScreenMove = 0;
-            this.gTempDelay = 0;
-            this.mIsMissionComplete = false;
-            stageInit();
         }
     }
 
@@ -1603,7 +1606,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     @Override
     public void continuePlay(int continueCount) {
         mContinueNum = continueCount;
-        playerLife = 1;
+        playerLife = 3;
         mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.mPlayerPower = mPlayer.power;
         mIsGameOver = false;
@@ -1613,7 +1616,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     @Override
     public void quit() {
         mIsGameFinished = true;
-        ((MainWindow) getParent().getParent()).showRanking();
+        showGameOver();
     }
 
     public boolean inScreen(int posX, int posY, Bitmap source) {

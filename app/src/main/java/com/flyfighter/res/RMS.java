@@ -16,7 +16,7 @@ public class RMS {
     public static float volume;
     public static int difficulty;//0:简单,1:困难
     public static byte lastScoreIndex;
-    public static List<PlayRecord> playRecords = new ArrayList<>();
+    public static volatile List<PlayRecord> playRecords = new ArrayList<>();
     private static int aint;
 
 

@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -17,7 +16,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flyfighter.interf.Controller;
-import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
@@ -26,7 +24,7 @@ public class ContinueMenu extends FrameLayout {
 
     Context context;
     int counter = 9;
-    Handler handler = new Handler(Looper.getMainLooper(),new Handler.Callback() {
+    Handler handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
@@ -34,8 +32,7 @@ public class ContinueMenu extends FrameLayout {
                     counter--;
                     if (counter <= 0) {
                         handler.removeCallbacksAndMessages(null);
-                        ((MainWindow) getParent()).showRanking();
-                        ((MainWindow) getParent()).removeView(ContinueMenu.class);
+                        handleQuit();
                         return false;
                     }
                     ivCounter.setImageBitmap(ResInit.numberImageValue[0][counter]);
@@ -46,21 +43,6 @@ public class ContinueMenu extends FrameLayout {
         }
     });
 
-    //以原始图片1080p下的左上角的偏移值
-    private Rect[] clickRect = new Rect[]{
-            //难度小
-            new Rect(530, 195, 720, 300),
-            //难度大
-            new Rect(730, 195, 920, 300),
-            //音效开
-            new Rect(530, 325, 720, 430),
-            //音效开
-            new Rect(730, 325, 920, 430),
-            //音量大小
-            new Rect(590, 490, 885, 530),
-            //关闭
-            new Rect(430, 584, 650, 700),
-    };
     Controller controller;
     int continueNum;
     Rect backgroundRect;
@@ -119,13 +101,17 @@ public class ContinueMenu extends FrameLayout {
         tvQuit = buildTextView(26);
         tvQuit.setText("Quit");
         tvQuit.setOnClickListener(v -> {
-            controller.quit();
-            handler.removeCallbacksAndMessages(null);
-            ((MainWindow) getParent()).removeView(ContinueMenu.class);
+            handleQuit();
         });
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 
         handler.sendEmptyMessageDelayed(0, 1000);
+    }
+
+    private void handleQuit() {
+        controller.quit();
+        handler.removeCallbacksAndMessages(null);
+        ((MainWindow) getParent()).removeView(ContinueMenu.class);
     }
 
     private void initMenuGroup() {
@@ -176,6 +162,7 @@ public class ContinueMenu extends FrameLayout {
         TextView textView = new TextView(context);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
         textView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+        textView.setTextColor(Color.WHITE);
         return textView;
     }
 
