@@ -67,6 +67,10 @@ public class RankingMenu extends FrameLayout {
         loaded = true;
         handleAddTop();
 
+        if (RMS.playRecords.size() >= 10) {
+            RMS.playRecords = RMS.playRecords.subList(0, 10);
+        }
+
         int offsetY = (getMeasuredHeight() - imageView.getMeasuredHeight()) / 2 + 490;
         for (PlayRecord playRecord : RMS.playRecords) {
             RelativeLayout.LayoutParams rlp = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);

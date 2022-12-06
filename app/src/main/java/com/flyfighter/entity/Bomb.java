@@ -210,6 +210,9 @@ public class Bomb extends Spirit {
         Bitmap bitmap = null;
         switch (type) {
             case 1:
+                if (mPlayer ==null) {
+                    return;
+                }
                 bitmap = source.get(0);
                 x = mPlayer.x + mPlayer.width / 2 - bitmap.getWidth() / 2;
                 y = mPlayer.y + mPlayer.height - bitmap.getHeight() + 120;

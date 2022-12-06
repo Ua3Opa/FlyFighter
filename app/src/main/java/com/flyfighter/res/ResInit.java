@@ -20,13 +20,10 @@ public class ResInit {
     public static Bitmap[] configNumImage = null;
     public static Bitmap[] configImage = null;
     public static Bitmap[] playerSelectImage = null;
-    public static Bitmap titleImage = null;
     public static Bitmap rankingImage = null;
     public static Bitmap[] BackgroundImage = null;
     public static Bitmap[] playerImage = null;
     public static Bitmap[] playerStateImage = null;
-    public static Bitmap[] playerBullet = null;
-    public static Bitmap[] enemyBullet = null;
     public static Bitmap[] pauseImage = null;
     public static Bitmap[] bombIcon = null;
     public static Bitmap[] lifeIcon = null;

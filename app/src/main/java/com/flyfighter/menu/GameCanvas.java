@@ -45,17 +45,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private MediaPlayer[] mediaPlayers = new MediaPlayer[13];
     private SoundHelper soundHelper = new SoundHelper();
     private int playerType;
-    private int difficulty;
     private int playerLife = 3;
     private PlayerPlane mPlayer;
     private List<EnemyPlane> enemys = new ArrayList<>();
     private Random random;
 
     private final int maxEnemy = 4;
-    private final int maxItem = 6;
+    private final int maxItem = 3;
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
-    private boolean gIsSaved;
+
     private int mContinueNum = 5;
     private int mPlayerPower;
     private boolean mIsGameFinished;
@@ -83,7 +82,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private int gEnemyCount;
     private int mDestroyCount;
     private int gApearEnemyType;
-    private boolean mIsPlayerDestroyed;
     private int mDifficulty;
     private int mBackgroundHeight;
     public List<Bullet> bullets = new ArrayList<>();
@@ -167,7 +165,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         surfaceHolder.addCallback(this);
 
         this.playerType = playerType;
-        this.difficulty = RMS.difficulty;
+        this.mDifficulty = RMS.difficulty;
 
         this.random = new Random();
 
@@ -183,13 +181,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         playSound(12);
         this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.mPlayerPower = mPlayer.power;
-        this.gIsSaved = false;
         this.mIsGameFinished = false;
         this.mGameScore = 0;
         this.mMissileType = 0;
         this.mMissileMax = 0;
         this.gGameSecretNum = -1;
         this.mMission = 1;
+        this.mStage = 1;
     }
 
     private void stageInit() {
@@ -203,9 +201,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gBackgroundOffset = 0;
         gEnemyCount = 0;
         gApearEnemyType = 1;
-        mIsPlayerDestroyed = false;
-
-        mStage = 1;
         //0 : 1,2,4,3,5
         //1 : 2,3,4,1,5
         //2 : 3,1,4,2,5
@@ -670,6 +665,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         for (int i = lasers.size() - 1; i >= 0; i--) {
             Laser laser = lasers.get(i);
+            if (boss == null) {
+                lasers.remove(laser);
+                break;
+            }
             laser.dealMoveState(boss);
 
             if (System.currentTimeMillis() - laser.createTime >= 1000) {
@@ -682,7 +681,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void onPlayerDestroyed() {
         explodes.add(Explode.dealExplodeState(mPlayer.x, mPlayer.y, getRand(5) + 3));
-        mIsPlayerDestroyed = true;
         playerLife--;
         this.playSound(playerType);
         mPlayer = null;
@@ -742,7 +740,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private boolean checkHitPlayer(Spirit spirit) {
-        if (mPlayer == null || mPlayer.state == -1) {
+        if (mPlayer == null || mPlayer.state == -1 || mPlayer.state == 2) {
             return false;
         }
         if (checkIfHit(spirit.x, spirit.y, spirit.width, spirit.height, mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
@@ -775,9 +773,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     public void makeEnemyBullet(EnemyPlane enemy, PlayerPlane player) {
-
-        int delay = (int) (enemy.fireDelay * 1.0f / 30 * 1000);//按原来数据的25帧,换算成时间 ms
-        if (System.currentTimeMillis() - enemy.shootTime <= delay) {
+        if (System.currentTimeMillis() - enemy.shootTime <= enemy.fireDelay) {
             return;
         }
         enemy.shootTime = System.currentTimeMillis();
@@ -790,9 +786,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             int ranVal = this.getRand(4 - mDifficulty);
             Bullet bullet = makeEnemyBullet(enemy);
             //makeBulletToPlayer(enemy, bullet, bulletNum);
-            if (bulletNum <= 3 && ranVal == 0) {
+            if (ranVal == 0) {
                 makeBulletToPlayer(enemy, bullet, bulletNum);
-            } else if (ranVal >= 0) {
+            } else {
                 makeBulletToFront(enemy, bulletNum);
             }
         }
@@ -989,17 +985,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private Bullet makeEnemyBullet(EnemyPlane enemy) {
-        int shootX = enemy.width / 2;
-        int shootY = enemy.height - 5;
-        int[] shootPoint = new int[2];
-        shootPoint[0] = shootX;
-        shootPoint[1] = shootY;
+        int[] shootPoint = new int[]{0, 0};
         return makeEnemyBullet(enemy, shootPoint);
     }
 
     private Bullet makeEnemyBullet(EnemyPlane enemy, int[] shootPoint) {
         int shootX = enemy.x + enemy.width / 2 + shootPoint[0];
-        int shootY = enemy.y - 5 + shootPoint[1];
+        int shootY = enemy.y + enemy.height - 15 + shootPoint[1];
         int bulletTypeNum = GameCanvas.bulletPic[enemy.bulletType];
 
         int picIndex = 0;
@@ -1078,8 +1070,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty));
         gEnemyCount++;
         gApearEnemyType++;
-//        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
-        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
+        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
+//        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
             playSound(3);
             this.mIsBossAppear = true;
             this.mIsEnableEnemy = false;
@@ -1093,7 +1085,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 0;
+                mPlayer.state = 2;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1436,7 +1428,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             this.isThreadAlive = false;
             RMS.playRecords.add(new PlayRecord(getScoreLevel(), playerType, mGameScore));
             Collections.sort(RMS.playRecords, (o1, o2) -> o2.score - o1.score);
-
+            if (RMS.playRecords.size() >= 10) {
+                RMS.playRecords = RMS.playRecords.subList(0, 10);
+            }
             MMKV.defaultMMKV().encode("Records", JSON.toJSONString(RMS.playRecords));
             post(() -> ((MainWindow) (getParent().getParent())).showRanking());
         }
@@ -1454,7 +1448,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 });
                 continueWindowShow = true;
             }
-
             return;
         }
 
@@ -1481,11 +1474,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
             //按60帧算的话这里应该是6秒左右
             if (gTempDelay > 400) {
-                if (mMission > 5) {
-                    drawBitmapCenter(canvas, ResInit.otherImage[0]);
-                    if (this.gTempDelay > 800) {
-                        this.mIsGameFinished = true;
-                    }
+                if (mMission >= 5) {
+                    this.mIsGameFinished = true;
+                    showGameOver();
                     return;
                 }
                 this.mMission++;
@@ -1582,7 +1573,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     @Override
     public void playBomb() {
-        if (mPlayer == null || mPlayer.state != 0 || mIsGameFinished || mIsMissionComplete) {
+        if (mPlayer == null || mPlayer.state == -1 || mIsGameFinished || mIsMissionComplete) {
             return;
         }
         //

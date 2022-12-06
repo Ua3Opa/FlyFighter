@@ -16,6 +16,7 @@ public class PlayerPlane extends Spirit {
             {3, 105, 320, 24, 6, 6, 1}};
     //-1 : 初始化完成,需要进场
     // 0 : 正常可控制状态
+    // 2 : 无敌
     public int state = -1;
 
     public int type;//类型
