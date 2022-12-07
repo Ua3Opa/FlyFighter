@@ -53,7 +53,7 @@ public class RankingMenu extends FrameLayout {
         addView(imageView, lp);
 
         imageView.setOnClickListener(v -> {
-            ((MainWindow)getParent()).handleCloseRanking();
+            ((MainWindow)getParent()).hideRanking();
         });
     }
 

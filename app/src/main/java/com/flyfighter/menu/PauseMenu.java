@@ -2,16 +2,11 @@ package com.flyfighter.menu;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,45 +15,21 @@ import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
 
-public class ContinueMenu extends FrameLayout {
+public class PauseMenu extends FrameLayout {
 
     Context context;
     int counter = 9;
-    Handler handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            switch (msg.what) {
-                case 0:
-                    counter--;
-                    if (counter <= 0) {
-                        handler.removeCallbacksAndMessages(null);
-                        handleQuit();
-                        return false;
-                    }
-                    ivCounter.setImageBitmap(ResInit.numberImageValue[0][counter]);
-                    handler.sendEmptyMessageDelayed(0, 1000);
-                    break;
-            }
-            return false;
-        }
-    });
 
     Controller controller;
-    int continueNum;
-    Rect backgroundRect;
     private RelativeLayout rlContent;
-    private ImageView ivGameOver;
-    private ImageView ivContinue;
-    private ImageView ivCounter;
     private TextView tvContinue;
     private TextView tvQuit;
     private RelativeLayout rlButton;
+    private TextView tvGamePause;
 
-
-    public ContinueMenu(Context context, Controller controller, int continueNum) {
+    public PauseMenu(Context context, Controller controller) {
         super(context, null, 0);
         this.controller = controller;
-        this.continueNum = continueNum;
         init(context);
     }
 
@@ -71,17 +42,9 @@ public class ContinueMenu extends FrameLayout {
 
     private void initImageBitmap() {
         RelativeLayout.LayoutParams rl = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        ivGameOver = new ImageView(context);
-        ivGameOver.setImageBitmap(ResInit.otherImage[6]);
-        rlContent.addView(ivGameOver, rl);
-
-        ivContinue = new ImageView(context);
-        ivContinue.setImageBitmap(ResInit.otherImage[4]);
-        rlContent.addView(ivContinue, new RelativeLayout.LayoutParams(rl));
-
-        ivCounter = new ImageView(context);
-        ivCounter.setImageBitmap(ResInit.numberImageValue[0][counter]);
-        rlContent.addView(ivCounter, new RelativeLayout.LayoutParams(rl));
+        tvGamePause = buildTextView(32);
+        tvGamePause.setText("Game Pause");
+        rlContent.addView(tvGamePause, rl);
 
         LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.CENTER;
@@ -93,25 +56,17 @@ public class ContinueMenu extends FrameLayout {
         rlButton.addView(tvContinue, new RelativeLayout.LayoutParams(rl));
 
         tvContinue.setOnClickListener(v -> {
-            controller.setPause(continueNum--);
-            handler.removeCallbacksAndMessages(null);
-            ((MainWindow) getParent()).hideContinue();
+            controller.setPause(false);
+            ((MainWindow) getParent()).hidePause();
         });
 
         tvQuit = buildTextView(26);
         tvQuit.setText("Quit");
         tvQuit.setOnClickListener(v -> {
-            handleQuit();
+            controller.handleQuit();
         });
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 
-        handler.sendEmptyMessageDelayed(0, 1000);
-    }
-
-    private void handleQuit() {
-        controller.stopContinue();
-        handler.removeCallbacksAndMessages(null);
-        ((MainWindow) getParent()).hideContinue();
     }
 
     private void initMenuGroup() {
@@ -126,22 +81,14 @@ public class ContinueMenu extends FrameLayout {
         measureChild(rlContent);
         measureChild(rlButton);
 
-        RelativeLayout.LayoutParams lpGameOver = (RelativeLayout.LayoutParams) ivGameOver.getLayoutParams();
-        lpGameOver.setMargins((MainWindow.windowWidth - ivGameOver.getMeasuredWidth()) / 2,
-                MainWindow.windowHeight / 2 - ivGameOver.getMeasuredHeight() * 3, 0, 0);
-
-        RelativeLayout.LayoutParams lpContinue = (RelativeLayout.LayoutParams) ivContinue.getLayoutParams();
-        lpContinue.setMargins((MainWindow.windowWidth - ivContinue.getMeasuredWidth()) / 2,
-                MainWindow.windowHeight / 2 - 50, 0, 0);
-
-        RelativeLayout.LayoutParams lpCounter = (RelativeLayout.LayoutParams) ivCounter.getLayoutParams();
-        lpCounter.setMargins((MainWindow.windowWidth - ivCounter.getMeasuredWidth()) / 2,
-                MainWindow.windowHeight / 2 + ivContinue.getMeasuredHeight(), 0, 0);
+        RelativeLayout.LayoutParams lpGameOver = (RelativeLayout.LayoutParams) tvGamePause.getLayoutParams();
+        lpGameOver.setMargins((MainWindow.windowWidth - tvGamePause.getMeasuredWidth()) / 2,
+                MainWindow.windowHeight / 2 - tvGamePause.getMeasuredHeight(), 0, 0);
 
         RelativeLayout.LayoutParams btnLp = (RelativeLayout.LayoutParams) rlButton.getLayoutParams();
         btnLp.width = tvContinue.getMeasuredWidth() + tvQuit.getMeasuredWidth() + 200;
         btnLp.setMargins((MainWindow.windowWidth - btnLp.width) / 2,
-                MainWindow.windowHeight / 2 + ivContinue.getMeasuredHeight() + 140, 0, 0);
+                MainWindow.windowHeight / 2 + tvGamePause.getMeasuredHeight() + 50, 0, 0);
 
         RelativeLayout.LayoutParams lpTvContinue = (RelativeLayout.LayoutParams) tvContinue.getLayoutParams();
         lpTvContinue.addRule(RelativeLayout.ALIGN_PARENT_START);
@@ -161,7 +108,7 @@ public class ContinueMenu extends FrameLayout {
     public TextView buildTextView(int textSize) {
         TextView textView = new TextView(context);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
-        textView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+        textView.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD_ITALIC));
         textView.setTextColor(Color.WHITE);
         return textView;
     }

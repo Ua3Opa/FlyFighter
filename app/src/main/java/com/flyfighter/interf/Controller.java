@@ -4,7 +4,12 @@ public interface Controller {
     void updatePosition(double x, double y);
     void playBomb();
 
-    void continuePlay(int continueCount);
+    void setPause(int continueCount);
 
-    void quit();
+    void setPause(boolean continuePlay);
+
+    void stopContinue();
+
+    void removeAllRunnable();
+    void handleQuit();
 }

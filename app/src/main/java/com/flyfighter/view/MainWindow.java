@@ -17,6 +17,7 @@ import com.flyfighter.menu.GameWindow;
 import com.flyfighter.menu.HelpMenu;
 import com.flyfighter.menu.MainMenu;
 import com.flyfighter.menu.MainMenuBackground;
+import com.flyfighter.menu.PauseMenu;
 import com.flyfighter.menu.RankingMenu;
 import com.flyfighter.menu.SelectPlayerMenu;
 import com.flyfighter.res.RMS;
@@ -36,6 +37,9 @@ public class MainWindow extends FrameLayout {
 
     public static MediaPlayer[] soundPlayer = new MediaPlayer[2];
     private GameWindow gameWindow;
+    private PauseMenu pauseMenu;
+    private ContinueMenu continueMenu;
+    private RankingMenu rankingMenu;
 
     public MainWindow(Context context) {
         this(context, null);
@@ -124,17 +128,27 @@ public class MainWindow extends FrameLayout {
     }
 
     public void showRanking() {
-        addView(new RankingMenu(mContext), buildCenterLayoutParams());
+        if (rankingMenu != null) {
+            return;
+        }
+        rankingMenu = new RankingMenu(mContext);
+        addView(rankingMenu, buildCenterLayoutParams());
     }
 
-    public void handleCloseRanking() {
+    public void hideRanking() {
         if (gameWindow != null) {
-            removeAllViews();
+            removeView(gameWindow);
             gameWindow = null;
             loadMainMenu();
-        } else {
-            removeView(RankingMenu.class);
         }
+        removeView(rankingMenu);
+        rankingMenu = null;
+    }
+
+    public void reloadMainMenu() {
+        removeAllViews();
+        resetMenuData();
+        loadMainMenu();
     }
 
 
@@ -147,22 +161,45 @@ public class MainWindow extends FrameLayout {
     }
 
     public void showContinue(Controller controller, int continueNum) {
-        if (hasWindow(ContinueMenu.class)) {
+        if (continueMenu != null) {
             return;
         }
-        addView(new ContinueMenu(mContext, controller, continueNum), buildCenterLayoutParams());
+        continueMenu = new ContinueMenu(mContext, controller, continueNum);
+        addView(continueMenu, buildCenterLayoutParams());
     }
 
-    public void showPause() {
-
+    public void hideContinue() {
+        removeView(continueMenu);
+        continueMenu = null;
     }
 
+    public void showPause(Controller controller) {
+        if (pauseMenu != null) {
+            return;
+        }
+        pauseMenu = new PauseMenu(mContext, controller);
+        addView(pauseMenu, buildCenterLayoutParams());
+    }
 
-    public boolean hasWindow(Class clazz) {
-        for (int childCount = getChildCount(); childCount > 0; childCount--) {
-            if (getChildAt(childCount - 1).getClass() == clazz) {
+    public void hidePause() {
+        removeView(pauseMenu);
+        pauseMenu = null;
+    }
+
+    public void resetMenuData() {
+        gameWindow = null;
+        pauseMenu = null;
+        continueMenu = null;
+        rankingMenu = null;
+    }
+
+    public boolean onBackPressed() {
+        if (gameWindow != null) {
+            if (gameWindow.handlePause()) {
                 return true;
             }
+            reloadMainMenu();
+            return true;
         }
         return false;
     }

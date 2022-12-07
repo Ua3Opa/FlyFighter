@@ -67,7 +67,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private long mMissileShootTime;
 
     private int gGameSecretNum;
-    private boolean mGamePause;
+    public boolean mGamePause;
     private boolean mResLoaded;
     //无敌时间为5秒
     private long shieldMaxMills = 5 * 1000;
@@ -1085,7 +1085,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 2;
+                mPlayer.state = 0;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1275,6 +1275,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void drawBitmapCenterHorizontal(Canvas canvas, Bitmap bitmapL, Bitmap bitmapR, int offset) {
+        if (bitmapL == null || bitmapR == null) {
+            return;
+        }
         int lWidth = bitmapL.getWidth();
         int lHeight = bitmapL.getHeight();
         int rWidth = bitmapR.getWidth();
@@ -1333,7 +1336,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (!mGamePause) {
                     driveObjects();
                 } else {//暂停状态
-                    post(() -> ((MainWindow) getParent().getParent()).showPause());
+                    post(() -> ((MainWindow) getParent().getParent()).showPause(this));
                 }
                 if (this.gIsLoadGame) {
                     drawLoading(lockCanvas);
@@ -1442,12 +1445,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mIsGameOver && !mIsGameFinished) {
             gTempDelay++;
             mIsGameOver = true;
-            if (!continueWindowShow) {
-                post(() -> {
-                    ((MainWindow) getParent().getParent()).showContinue(this, mContinueNum);
-                });
-                continueWindowShow = true;
-            }
+            post(() -> {
+                ((MainWindow) getParent().getParent()).showContinue(this, mContinueNum);
+            });
             return;
         }
 
@@ -1531,6 +1531,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, offsetY);
 
+        if (mGamePause) {
+            return;
+        }
         if (offsetY >= MainWindow.windowHeight) {
             this.gBackgroundOffset = 0;
         }
@@ -1595,7 +1598,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     @Override
-    public void continuePlay(int continueCount) {
+    public void setPause(int continueCount) {
+        removeAllRunnable();
         mContinueNum = continueCount;
         playerLife = 3;
         mPlayer = PlayerPlane.createPlayerPlane(playerType);
@@ -1605,7 +1609,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     @Override
-    public void quit() {
+    public void setPause(boolean b) {
+        mGamePause = b;
+        getHandler().removeCallbacksAndMessages(null);
+    }
+
+    @Override
+    public void stopContinue() {
+        removeAllRunnable();
         mIsGameFinished = true;
         showGameOver();
     }
@@ -1623,6 +1634,17 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void handleQuit() {
+        isThreadAlive = false;
+        removeAllRunnable();
+        ((MainWindow) getParent().getParent()).reloadMainMenu();
+    }
+
+    @Override
+    public void removeAllRunnable() {
+        getHandler().removeCallbacksAndMessages(null);
     }
 
     public boolean outScreen(int posX, int posY, Bitmap source) {
@@ -1646,4 +1668,12 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         return index >= 25 ? 25 : index;
     }
 
+    public boolean handlePause() {
+        if (!mGamePause) {
+            mGamePause = true;
+            return true;
+        }
+        isThreadAlive = false;
+        return false;
+    }
 }
