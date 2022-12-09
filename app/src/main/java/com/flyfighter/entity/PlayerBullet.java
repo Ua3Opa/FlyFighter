@@ -47,6 +47,7 @@ public class PlayerBullet extends Spirit {
 
     @Override
     public void dealMoveState() {
+        recordMovePosition();
         x += speedX;
         y += speedY;
     }

@@ -79,6 +79,7 @@ public class Missile extends Spirit {
      */
 
     public void dealMoveState(EnemyPlane enemy) {
+        recordMovePosition();
         if (from == 1) {//速度翻转
             y += speedY;
             speedY++;
@@ -176,8 +177,4 @@ public class Missile extends Spirit {
         }
     }
 
-    @Override
-    public void dealMoveState() {
-
-    }
 }

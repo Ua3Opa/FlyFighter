@@ -1,6 +1,7 @@
 package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,10 @@ public abstract class Spirit {
     public int type;
     public int x;
     public int y;
+
+    public int perX;
+    public int perY;
+
     public int speedX;
     public int speedY;
 
@@ -36,9 +41,15 @@ public abstract class Spirit {
 
     //处理移动逻辑
     public void dealMoveState() {
-
     }
 
+    /**
+     * 记录上一次的位置用于碰撞检测防止过穿
+     */
+    public void recordMovePosition() {
+        perX = x;
+        perY = y;
+    }
 
     public Bitmap getFrame() {
         if (System.currentTimeMillis() - lastFrameTime >= animDuration) {
@@ -66,4 +77,14 @@ public abstract class Spirit {
     public Bitmap firstFrame() {
         return source.get(0);
     }
+
+    public int[][] buildRect() {
+        int[][] rect = new int[4][2];
+        rect[0] = new int[]{x, y};//t
+        rect[1] = new int[]{x + width, y};//r
+        rect[2] = new int[]{x + width, y + height};//b
+        rect[3] = new int[]{x, y + height};//b
+        return rect;
+    }
+
 }

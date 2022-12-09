@@ -207,10 +207,11 @@ public class Bomb extends Spirit {
     }
 
     public void dealMoveState(PlayerPlane mPlayer) {
+        recordMovePosition();
         Bitmap bitmap = null;
         switch (type) {
             case 1:
-                if (mPlayer ==null) {
+                if (mPlayer == null) {
                     return;
                 }
                 bitmap = source.get(0);
@@ -236,11 +237,6 @@ public class Bomb extends Spirit {
 
     @Override
     protected void initSpiritBitmap() {
-
-    }
-
-    @Override
-    public void dealMoveState() {
 
     }
 }

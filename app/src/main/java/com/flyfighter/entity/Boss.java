@@ -62,6 +62,7 @@ public class Boss extends EnemyPlane {
 
     @Override
     public void dealMoveState() {
+        recordMovePosition();
         initBossMoveAction();
         // ↑ ↓ ← → ↖ ↗ ↘ ↙ ↕
         switch (moveAction) {

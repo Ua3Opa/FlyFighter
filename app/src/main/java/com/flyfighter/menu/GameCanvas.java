@@ -30,6 +30,7 @@ import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.res.SoundHelper;
 import com.flyfighter.room.PlayRecord;
+import com.flyfighter.utils.MathHelper;
 import com.flyfighter.utils.UiUtils;
 import com.flyfighter.view.MainWindow;
 import com.tencent.mmkv.MMKV;
@@ -608,9 +609,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                     bombs.remove(bomb);
                     return;
                 } else {
-                    Size imgSize = bomb.getImgSize();
-                    bomb.x = mPlayer.x + mPlayer.width / 2 - imgSize.getWidth() / 2;
-                    bomb.y = mPlayer.y + mPlayer.height / 2 - imgSize.getHeight() / 2;
+                    bomb.dealMoveState(mPlayer);
                 }
             }
         }
@@ -640,8 +639,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void dealBullet() {
         for (int i = bullets.size() - 1; i >= 0; i--) {
-            bullets.get(i).x += bullets.get(i).speedX;
-            bullets.get(i).y += bullets.get(i).speedY;
+            bullets.get(i).dealMoveState();
             if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).firstFrame())) {
                 bullets.remove(bullets.get(i));
             } else if (checkHitPlayer(bullets.get(i))) {
@@ -718,9 +716,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private boolean checkBulletHitEnemy(PlayerBullet bullet) {
-
         for (EnemyPlane enemy : enemys) {
-            if (checkIfHit(bullet.x, bullet.y, bullet.width, bullet.height, enemy.x, enemy.y, enemy.width, enemy.height)) {
+            if (checkHitWithCross(bullet, enemy)) {
                 //{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}
                 enemy.health -= playerBulletFloorPower[playerType][mPlayerPower - 1] - 1;
                 return true;
@@ -728,6 +725,34 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         return false;
     }
+
+    /**
+     * @param collider 碰撞体,bullet
+     * @param trigger  触发器.飞机
+     * @return
+     */
+    public boolean checkHitWithCross(Spirit collider, Spirit trigger) {
+        if (collider.perX == 0) {
+            collider.perX = collider.x;
+        }
+        if (collider.perY == 0) {
+            collider.perY = collider.y;
+        }
+        int[][] rect = trigger.buildRect();
+        int[] cp = new int[]{
+                collider.x + collider.width / 2, collider.y + collider.height / 2,
+                collider.perX + collider.width / 2, collider.perY + collider.height / 2,
+        };
+        for (int i = 0; i < rect.length; i++) {
+            int[] point = rect[i];
+            int[] nextPoint = rect[i == rect.length - 1 ? 0 : i + 1];
+            if (MathHelper.crossLine(point[0], point[1], nextPoint[0], nextPoint[1], cp[0], cp[1], cp[2], cp[3])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private boolean checkHitPlayer(Item item) {
         if (mPlayer == null || mPlayer.state == -1) {
@@ -1085,7 +1110,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 0;
+                mPlayer.state = 2;
                 mPlayer.onFire = true;
             }
         } else {//正常状态

@@ -34,6 +34,7 @@ public class Item extends Spirit {
 
     @Override
     public void dealMoveState() {
+        recordMovePosition();
         x += speedX;
         y += speedY;
         if (x < 0 || x > (MainWindow.windowWidth - width)) {

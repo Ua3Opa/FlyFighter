@@ -9,8 +9,7 @@ import java.util.Random;
 
 public class Bullet extends Spirit {
 
-    public static final int[] bulletSpeedToPlayer = new int[]
-            {0,8,4,8,4,4,8,4,8,4,8,4,8,0,8,-4,8,-4,8,-8,4,-8,4,-8,0,-12,-4,-12,-4,-4,-8,-4,-8,-4,-8,-4,-8,0,-12,4,-8,4,-4,4,-4,4,-4,12};
+    public static final int[] bulletSpeedToPlayer = new int[]{0, 8, 4, 8, 4, 4, 8, 4, 8, 4, 8, 4, 8, 0, 8, -4, 8, -4, 8, -8, 4, -8, 4, -8, 0, -12, -4, -12, -4, -4, -8, -4, -8, -4, -8, -4, -8, 0, -12, 4, -8, 4, -4, 4, -4, 4, -4, 12};
 
     Random random = new Random();
 
@@ -55,6 +54,8 @@ public class Bullet extends Spirit {
 
     @Override
     public void dealMoveState() {
-
+        recordMovePosition();
+        x += speedX;
+        y += speedY;
     }
 }
