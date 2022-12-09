@@ -10,8 +10,8 @@ import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.flyfighter.enums.RunState;
 import com.flyfighter.holder.MainDataHolder;
-import com.flyfighter.interf.Controller;
 import com.flyfighter.menu.ConfigMenu;
 import com.flyfighter.menu.ContinueMenu;
 import com.flyfighter.menu.GameWindow;
@@ -33,7 +33,6 @@ public class MainWindow extends FrameLayout {
     //以1080 * 1920 dpi 480为基准计算缩放比
     public static float scaleW;
     public static float scaleH;
-    public static float scaleDes;
 
 
     public static MediaPlayer[] soundPlayer = new MediaPlayer[2];
@@ -41,6 +40,8 @@ public class MainWindow extends FrameLayout {
     private PauseMenu pauseMenu;
     private ContinueMenu continueMenu;
     private RankingMenu rankingMenu;
+    private ConfigMenu configMenu;
+    private SelectPlayerMenu selectPlayerMenu;
 
     public MainWindow(Context context) {
         this(context, null);
@@ -83,13 +84,13 @@ public class MainWindow extends FrameLayout {
     public void handleMenuClicked(int position) {
         switch (position) {
             case 0://开始游戏-先选择角色
-                addView(new SelectPlayerMenu(mContext), buildCenterLayoutParams());
+                MainDataHolder.runState.setValue(RunState.SelectPlayer);
                 break;
             case 1://游戏设置
-                addView(new ConfigMenu(mContext), buildCenterLayoutParams());
+                MainDataHolder.runState.setValue(RunState.Config);
                 break;
             case 2://战绩排行
-                showRanking();
+                MainDataHolder.runState.setValue(RunState.Ranking);
                 break;
             case 3://游戏说明
                 addView(new HelpMenu(mContext), buildCenterLayoutParams());
@@ -103,7 +104,7 @@ public class MainWindow extends FrameLayout {
         }
     }
 
-    public void startGame(SelectPlayerMenu menu, int player) {
+    public void startGame(int player) {
         removeAllViews();
         stopPlayMedia();
         gameWindow = new GameWindow(mContext, player);
@@ -129,24 +130,6 @@ public class MainWindow extends FrameLayout {
         super.onDraw(canvas);
     }
 
-    public void showRanking() {
-        if (rankingMenu != null) {
-            return;
-        }
-        rankingMenu = new RankingMenu(mContext);
-        addView(rankingMenu, buildCenterLayoutParams());
-    }
-
-    public void hideRanking() {
-        if (gameWindow != null) {
-            removeView(gameWindow);
-            gameWindow = null;
-            loadMainMenu();
-        }
-        removeView(rankingMenu);
-        rankingMenu = null;
-    }
-
     public void reloadMainMenu() {
         removeAllViews();
         resetMenuData();
@@ -162,30 +145,22 @@ public class MainWindow extends FrameLayout {
         }
     }
 
-    public void showContinue(Controller controller, int continueNum) {
-        if (continueMenu != null) {
-            return;
-        }
-        continueMenu = new ContinueMenu(mContext, controller, continueNum);
+    public void showSelectPlayer() {
+        selectPlayerMenu = new SelectPlayerMenu(mContext);
+        addView(selectPlayerMenu, buildCenterLayoutParams());
+    }
+
+    public void showContinue() {
+        continueMenu = new ContinueMenu(mContext);
         addView(continueMenu, buildCenterLayoutParams());
     }
 
     public void hideContinue() {
-        removeView(continueMenu);
-        continueMenu = null;
-    }
-
-    public void showPause(Controller controller) {
-        if (pauseMenu != null) {
+        if (continueMenu == null) {
             return;
         }
-        pauseMenu = new PauseMenu(mContext, controller);
-        addView(pauseMenu, buildCenterLayoutParams());
-    }
-
-    public void hidePause() {
-        removeView(pauseMenu);
-        pauseMenu = null;
+        removeView(continueMenu);
+        continueMenu = null;
     }
 
     public void resetMenuData() {
@@ -195,21 +170,92 @@ public class MainWindow extends FrameLayout {
         rankingMenu = null;
     }
 
-    public boolean onBackPressed() {
-        if (gameWindow != null) {
-            if (gameWindow.handlePause()) {
-                return true;
-            }
-            reloadMainMenu();
-            return true;
+    public void handleRunState(RunState state) {
+        switch (state) {
+            case Main:
+                break;
+            case SelectPlayer:
+                showSelectPlayer();
+                break;
+            case Running:
+                hideContinue();
+                hideRanking();
+                removePause();
+                removeContinue();
+                break;
+            case Pause:
+                showPause();
+                break;
+            case GameOver:
+                showContinue();
+                break;
+            case ContinuePlay:
+                gameWindow.handleContinuePlay();
+                break;
+            case Config:
+                showConfig();
+                break;
+            case Close_Config:
+                closeConfig();
+                break;
+            case Ranking:
+                showRanking();
+                break;
+            case Close_Ranking:
+                if (gameWindow != null) {
+                    reloadMainMenu();
+                    return;
+                }
+                hideRanking();
+                break;
+            case Quit:
+                gameWindow.handleQuitGame();
+                break;
         }
-        return false;
+
     }
 
-    public void handleRewordAddWatched() {
-        if (continueMenu==null) {
+    private void showConfig() {
+        configMenu = new ConfigMenu(mContext);
+        addView(configMenu, buildCenterLayoutParams());
+    }
+
+    private void closeConfig() {
+        if (configMenu == null) {
             return;
         }
-        continueMenu.handleContinue();
+        removeView(configMenu);
+        configMenu = null;
+    }
+
+    public void showRanking() {
+        rankingMenu = new RankingMenu(mContext);
+        addView(rankingMenu, buildCenterLayoutParams());
+    }
+
+
+    public void hideRanking() {
+        if (rankingMenu == null) {
+            return;
+        }
+        removeView(rankingMenu);
+        rankingMenu = null;
+    }
+
+    public void showPause() {
+        pauseMenu = new PauseMenu(mContext);
+        addView(pauseMenu, buildCenterLayoutParams());
+    }
+
+    private void removePause() {
+        if (pauseMenu == null) {
+            return;
+        }
+        removeView(pauseMenu);
+        pauseMenu = null;
+    }
+
+    private void removeContinue() {
+
     }
 }

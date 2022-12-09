@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.flyfighter.config.Config;
+import com.flyfighter.enums.RunState;
 import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.view.MainWindow;
 import com.google.android.gms.ads.AdError;
@@ -21,8 +22,6 @@ import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.admanager.AdManagerAdRequest;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
@@ -59,9 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initObserver() {
         MainDataHolder.mainAdState.observe(this, show -> {
-            if (show == null) {
-                return;
-            }
             adsContainer.setVisibility(show ? View.VISIBLE : View.GONE);
         });
         MainDataHolder.mainRewordAdState.observe(this, show -> {
@@ -71,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
             if (show) {
                 showRewardedVideo();
             }
+        });
+        MainDataHolder.runState.observe(this, state -> {
+            mainWindow.handleRunState(state);
         });
     }
 
@@ -85,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (mainWindow.onBackPressed()) {
+        if (MainDataHolder.runState.getValue() == RunState.Running) {
+            MainDataHolder.runState.setValue(RunState.Pause);
             return;
         }
         super.onBackPressed();
@@ -155,17 +155,28 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "onAdDismissedFullScreenContent");
                         rewardedAd = null;
                         MainActivity.this.initRewordAds();
-                        if(!MainDataHolder.mainRewordAdState.getValue()){
-                            mainWindow.handleRewordAddWatched();
+                        if (MainDataHolder.getReward) {
+                            MainDataHolder.runState.setValue(RunState.ContinuePlay);
                         }
+                        MainDataHolder.mainRewordAdState.setValue(false);
                     }
                 });
+        MainDataHolder.getReward = false;
         rewardedAd.show(this, rewardItem -> {
             // Handle the reward.
             Log.d("TAG", "The user earned the reward.");
 //            int rewardAmount = rewardItem.getAmount();
 //            String rewardType = rewardItem.getType();
-            MainDataHolder.mainRewordAdState.setValue(false);
+            MainDataHolder.getReward = true;
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!MainDataHolder.mainRewordAdState.getValue()) {
+            MainDataHolder.runState.postValue(RunState.Pause);
+        }
+
     }
 }

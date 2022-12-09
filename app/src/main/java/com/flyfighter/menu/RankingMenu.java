@@ -10,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import com.flyfighter.enums.RunState;
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.room.PlayRecord;
@@ -53,7 +55,7 @@ public class RankingMenu extends FrameLayout {
         addView(imageView, lp);
 
         imageView.setOnClickListener(v -> {
-            ((MainWindow)getParent()).hideRanking();
+            MainDataHolder.runState.setValue(RunState.Close_Ranking);
         });
     }
 

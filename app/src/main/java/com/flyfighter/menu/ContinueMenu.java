@@ -14,8 +14,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.flyfighter.enums.RunState;
 import com.flyfighter.holder.MainDataHolder;
-import com.flyfighter.interf.Controller;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
@@ -24,27 +24,33 @@ public class ContinueMenu extends FrameLayout {
 
     Context context;
     int counter = 9;
+
     Handler handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
-                    counter--;
-                    if (counter <= 0) {
-                        handler.removeCallbacksAndMessages(null);
-                        handleQuit();
-                        return false;
+                    if (MainDataHolder.mainRewordAdState.getValue()) {//正在观看广告暂停
+                        handler.sendEmptyMessageDelayed(0, 1000);
+                        return true;
                     }
-                    ivCounter.setImageBitmap(ResInit.numberImageValue[0][counter]);
-                    handler.sendEmptyMessageDelayed(0, 1000);
+                    if (!MainDataHolder.getReward) {
+                        counter--;
+                        if (counter <= 0) {
+                            handler.removeCallbacksAndMessages(null);
+                            MainDataHolder.runState.setValue(RunState.Quit);
+                            return false;
+                        }
+                        ivCounter.setImageBitmap(ResInit.numberImageValue[0][counter]);
+                        handler.sendEmptyMessageDelayed(0, 1000);
+                    }
                     break;
             }
             return false;
         }
     });
 
-    Controller controller;
-    int continueNum;
+
     private RelativeLayout rlContent;
     private ImageView ivGameOver;
     private ImageView ivContinue;
@@ -53,10 +59,8 @@ public class ContinueMenu extends FrameLayout {
     private TextView tvQuit;
     private RelativeLayout rlButton;
 
-    public ContinueMenu(Context context, Controller controller, int continueNum) {
+    public ContinueMenu(Context context) {
         super(context, null, 0);
-        this.controller = controller;
-        this.continueNum = continueNum;
         init(context);
     }
 
@@ -91,35 +95,25 @@ public class ContinueMenu extends FrameLayout {
         rlButton.addView(tvContinue, new RelativeLayout.LayoutParams(rl));
 
         tvContinue.setOnClickListener(v -> {
-            continueNum--;
-            if (continueNum > 2) {
-                handleContinue();
+            tvContinue.setClickable(false);
+            MainDataHolder.continueNum--;
+            handler.removeCallbacksAndMessages(null);
+            if (MainDataHolder.continueNum > 2) {
+                MainDataHolder.runState.setValue(RunState.ContinuePlay);
             } else {
-                handler.removeCallbacksAndMessages(null);
                 MainDataHolder.mainRewordAdState.setValue(true);
             }
+            postDelayed(() -> tvContinue.setClickable(true), 3000);
         });
 
         tvQuit = buildTextView(26);
         tvQuit.setText("Quit");
         tvQuit.setOnClickListener(v -> {
-            handleQuit();
+            MainDataHolder.runState.setValue(RunState.Quit);
         });
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 
         handler.sendEmptyMessageDelayed(0, 1000);
-    }
-
-    public void handleContinue() {
-        controller.setPause(continueNum);
-        handler.removeCallbacksAndMessages(null);
-        ((MainWindow) getParent()).hideContinue();
-    }
-
-    private void handleQuit() {
-        controller.stopContinue();
-        handler.removeCallbacksAndMessages(null);
-        ((MainWindow) getParent()).hideContinue();
     }
 
     private void initMenuGroup() {

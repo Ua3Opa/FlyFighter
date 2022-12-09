@@ -10,7 +10,8 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.flyfighter.interf.Controller;
+import com.flyfighter.enums.RunState;
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
@@ -18,18 +19,14 @@ import com.flyfighter.view.MainWindow;
 public class PauseMenu extends FrameLayout {
 
     Context context;
-    int counter = 9;
-
-    Controller controller;
     private RelativeLayout rlContent;
     private TextView tvContinue;
     private TextView tvQuit;
     private RelativeLayout rlButton;
     private TextView tvGamePause;
 
-    public PauseMenu(Context context, Controller controller) {
+    public PauseMenu(Context context) {
         super(context, null, 0);
-        this.controller = controller;
         init(context);
     }
 
@@ -56,14 +53,13 @@ public class PauseMenu extends FrameLayout {
         rlButton.addView(tvContinue, new RelativeLayout.LayoutParams(rl));
 
         tvContinue.setOnClickListener(v -> {
-            controller.setPause(false);
-            ((MainWindow) getParent()).hidePause();
+            MainDataHolder.runState.postValue(RunState.Running);
         });
 
         tvQuit = buildTextView(26);
         tvQuit.setText("Quit");
         tvQuit.setOnClickListener(v -> {
-            controller.handleQuit();
+            MainDataHolder.runState.setValue(RunState.Quit);
         });
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 

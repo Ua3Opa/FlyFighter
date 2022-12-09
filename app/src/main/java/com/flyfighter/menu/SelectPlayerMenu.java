@@ -117,7 +117,7 @@ public class SelectPlayerMenu extends FrameLayout {
 
         int selectNum = (x - (getWidth() / 2 - 90)) / 195;
         if (selectPlayer == selectNum) {
-            ((MainWindow) getParent()).startGame(this, selectPlayer);
+            ((MainWindow) getParent()).startGame(selectPlayer);
         } else {
             selectPlayer = selectNum;
             handler.sendEmptyMessage(0);

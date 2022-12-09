@@ -24,6 +24,8 @@ import com.flyfighter.entity.Missile;
 import com.flyfighter.entity.PlayerBullet;
 import com.flyfighter.entity.PlayerPlane;
 import com.flyfighter.entity.Spirit;
+import com.flyfighter.enums.RunState;
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.interf.Controller;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
@@ -55,7 +57,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
 
-    private int mContinueNum = 0;
     private int mPlayerPower;
     private boolean mIsGameFinished;
     private int mMission;
@@ -67,7 +68,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private long mMissileShootTime;
 
     private int gGameSecretNum;
-    public boolean mGamePause;
     private boolean mResLoaded;
     //无敌时间为5秒
     private long shieldMaxMills = 5 * 1000;
@@ -172,6 +172,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gameInit();
         stageInit();
         mResLoaded = true;
+        MainDataHolder.continueNum = 2;
+        MainDataHolder.runState.setValue(RunState.Running);
     }
 
     private void gameInit() {
@@ -1358,10 +1360,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 lockCanvas = surfaceHolder.lockCanvas();
                 //清空画布
                 lockCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
-                if (!mGamePause) {
+                if (MainDataHolder.runState.getValue() == RunState.Running) {
                     driveObjects();
-                } else {//暂停状态
-                    post(() -> ((MainWindow) getParent().getParent()).showPause(this));
                 }
                 if (this.gIsLoadGame) {
                     drawLoading(lockCanvas);
@@ -1422,6 +1422,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showExplode(Canvas canvas) {
+        if (MainDataHolder.runState.getValue() != RunState.Running) {
+            return;
+        }
         for (Explode explode : explodes) {
             drawBitmapXY(canvas, explode.getFrame(), explode.x, explode.y);
         }
@@ -1460,22 +1463,20 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 RMS.playRecords = RMS.playRecords.subList(0, 10);
             }
             MMKV.defaultMMKV().encode("Records", JSON.toJSONString(RMS.playRecords));
-            post(() -> ((MainWindow) (getParent().getParent())).showRanking());
+            if (MainDataHolder.runState.getValue() != RunState.Ranking) {
+                MainDataHolder.runState.setValue(RunState.Ranking);
+            }
         }
     }
-
-    boolean continueWindowShow;
 
     private void showMissionInfo(Canvas canvas) {
         if (mIsGameOver && !mIsGameFinished) {
             gTempDelay++;
-            if (mContinueNum == 0) {
+            if (MainDataHolder.continueNum == 0) {
                 this.mIsGameFinished = true;
                 showGameOver();
-            } else {
-                post(() -> {
-                    ((MainWindow) getParent().getParent()).showContinue(this, mContinueNum);
-                });
+            } else if (MainDataHolder.runState.getValue() != RunState.GameOver) {
+                MainDataHolder.runState.postValue(RunState.GameOver);
             }
             return;
         }
@@ -1548,6 +1549,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         drawBitmapXY(canvas, mPlayer.getFrame(), mPlayer.x, mPlayer.y);
+
+        if (MainDataHolder.runState.getValue() != RunState.Running) {
+            return;
+        }
         if (mPlayer.onFire && mPlayer.getFireFrame() != null) {
             drawBitmapXY(canvas, mPlayer.getFireFrame(), mPlayer.x, mPlayer.y);
         }
@@ -1560,9 +1565,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         drawBitmapXY(canvas, ResInit.BackgroundImage[this.mMission - 1], 0, offsetY);
 
-        if (mGamePause) {
+        if (MainDataHolder.runState.getValue() != RunState.Running) {
             return;
         }
+
         if (offsetY >= MainWindow.windowHeight) {
             this.gBackgroundOffset = 0;
         }
@@ -1627,35 +1633,20 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     @Override
-    public void setPause(int continueCount) {
-        removeAllRunnable();
-        mContinueNum = continueCount;
+    public void continuePlay() {
         playerLife = 3;
         mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.mPlayerPower = mPlayer.power;
         mIsGameOver = false;
-        continueWindowShow = false;
+        MainDataHolder.runState.postValue(RunState.Running);
     }
 
     @Override
-    public void setPause(boolean b) {
-        mGamePause = b;
-        getHandler().removeCallbacksAndMessages(null);
-    }
-
-    @Override
-    public void stopContinue() {
-        removeAllRunnable();
+    public void QuitGame() {
         mIsGameFinished = true;
         showGameOver();
     }
 
-    public boolean inScreen(int posX, int posY, Bitmap source) {
-        if ((posX >= 0 && posX <= MainWindow.windowWidth - source.getWidth()) && posY >= 0 && posY <= MainWindow.windowHeight - source.getHeight()) {
-            return true;
-        }
-        return false;
-    }
 
     private void playSound(int i) {
         try {
@@ -1663,17 +1654,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public void handleQuit() {
-        isThreadAlive = false;
-        removeAllRunnable();
-        ((MainWindow) getParent().getParent()).reloadMainMenu();
-    }
-
-    @Override
-    public void removeAllRunnable() {
-        getHandler().removeCallbacksAndMessages(null);
     }
 
     public boolean outScreen(int posX, int posY, Bitmap source) {
@@ -1695,14 +1675,5 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             index++;
         }
         return index >= 25 ? 25 : index;
-    }
-
-    public boolean handlePause() {
-        if (!mGamePause) {
-            mGamePause = true;
-            return true;
-        }
-        isThreadAlive = false;
-        return false;
     }
 }

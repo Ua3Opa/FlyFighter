@@ -18,7 +18,11 @@ public class GameWindow extends FrameLayout {
         addView(new GameController(context, gameCanvas));
     }
 
-    public boolean handlePause() {
-        return gameCanvas.handlePause();
+    public void handleQuitGame() {
+        gameCanvas.QuitGame();
+    }
+
+    public void handleContinuePlay() {
+        gameCanvas.continuePlay();
     }
 }
