@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     buildToolsVersion '30.0.3'
 
     defaultConfig {
         applicationId "com.flyfighter"
         minSdkVersion 28
-        targetSdkVersion 28
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
 
@@ -63,4 +63,6 @@ dependencies {
     api "androidx.room:room-runtime:2.3.0"
     annotationProcessor "androidx.room:room-compiler:2.3.0"
     api "androidx.room:room-rxjava3:2.3.0"
+
+    implementation 'com.google.android.gms:play-services-ads:21.3.0'
 }

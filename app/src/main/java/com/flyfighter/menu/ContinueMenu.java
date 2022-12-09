@@ -2,7 +2,6 @@ package com.flyfighter.menu;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.interf.Controller;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
@@ -45,7 +45,6 @@ public class ContinueMenu extends FrameLayout {
 
     Controller controller;
     int continueNum;
-    Rect backgroundRect;
     private RelativeLayout rlContent;
     private ImageView ivGameOver;
     private ImageView ivContinue;
@@ -53,7 +52,6 @@ public class ContinueMenu extends FrameLayout {
     private TextView tvContinue;
     private TextView tvQuit;
     private RelativeLayout rlButton;
-
 
     public ContinueMenu(Context context, Controller controller, int continueNum) {
         super(context, null, 0);
@@ -93,9 +91,13 @@ public class ContinueMenu extends FrameLayout {
         rlButton.addView(tvContinue, new RelativeLayout.LayoutParams(rl));
 
         tvContinue.setOnClickListener(v -> {
-            controller.setPause(continueNum--);
-            handler.removeCallbacksAndMessages(null);
-            ((MainWindow) getParent()).hideContinue();
+            continueNum--;
+            if (continueNum > 2) {
+                handleContinue();
+            } else {
+                handler.removeCallbacksAndMessages(null);
+                MainDataHolder.mainRewordAdState.setValue(true);
+            }
         });
 
         tvQuit = buildTextView(26);
@@ -106,6 +108,12 @@ public class ContinueMenu extends FrameLayout {
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 
         handler.sendEmptyMessageDelayed(0, 1000);
+    }
+
+    public void handleContinue() {
+        controller.setPause(continueNum);
+        handler.removeCallbacksAndMessages(null);
+        ((MainWindow) getParent()).hideContinue();
     }
 
     private void handleQuit() {

@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
-import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -56,7 +55,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
 
-    private int mContinueNum = 5;
+    private int mContinueNum = 0;
     private int mPlayerPower;
     private boolean mIsGameFinished;
     private int mMission;
@@ -960,6 +959,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
             if (bulletNum >= 6) {
                 Bullet nb = makeEnemyBullet(enemy, shootPoint);
+                nb.speedY = getRand(8) + 5;
                 this.bulletGoToPlayer(nb, mPlayer);
             }
         }
@@ -1110,7 +1110,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 2;
+                mPlayer.state = 0;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1469,10 +1469,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showMissionInfo(Canvas canvas) {
         if (mIsGameOver && !mIsGameFinished) {
             gTempDelay++;
-            mIsGameOver = true;
-            post(() -> {
-                ((MainWindow) getParent().getParent()).showContinue(this, mContinueNum);
-            });
+            if (mContinueNum == 0) {
+                this.mIsGameFinished = true;
+                showGameOver();
+            } else {
+                post(() -> {
+                    ((MainWindow) getParent().getParent()).showContinue(this, mContinueNum);
+                });
+            }
             return;
         }
 

@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.interf.Controller;
 import com.flyfighter.menu.ConfigMenu;
 import com.flyfighter.menu.ContinueMenu;
@@ -107,6 +108,7 @@ public class MainWindow extends FrameLayout {
         stopPlayMedia();
         gameWindow = new GameWindow(mContext, player);
         addView(gameWindow, buildCenterLayoutParams());
+        MainDataHolder.mainAdState.postValue(false);
     }
 
     private void stopPlayMedia() {
@@ -202,5 +204,12 @@ public class MainWindow extends FrameLayout {
             return true;
         }
         return false;
+    }
+
+    public void handleRewordAddWatched() {
+        if (continueMenu==null) {
+            return;
+        }
+        continueMenu.handleContinue();
     }
 }
