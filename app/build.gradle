@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+
     compileSdkVersion 31
     buildToolsVersion '30.0.3'
 
@@ -20,10 +21,29 @@ android {
         noCompress ""
     }
 
+    signingConfigs {
+        debug {
+            storeFile file('E:\\AsProject\\FlyFighter\\app\\flyfighter.jks')
+            storePassword 'songmdff'
+            keyAlias 'flyfighter'
+            keyPassword 'songmdff'
+        }
+        release {
+            storeFile file('E:\\AsProject\\FlyFighter\\app\\flyfighter.jks')
+            storePassword 'songmdff'
+            keyAlias 'flyfighter'
+            keyPassword 'songmdff'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug{
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {

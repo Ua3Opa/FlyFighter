@@ -6,7 +6,7 @@ import com.flyfighter.BuildConfig;
 public class Config {
 
     public static final String testUnityId = "ca-app-pub-3940256099942544/6300978111";
-    public static final String myUnityId = "ca-app-pub-3940256099942544/6300978111";
+    public static final String myUnityId = "ca-app-pub-1715892515960984/5809938336";
 
 
     public static String getBannerUnitId() {
@@ -14,7 +14,7 @@ public class Config {
     }
 
     public static final String testRewordUnityId = "ca-app-pub-3940256099942544/5224354917";
-    public static final String myRewordUnityId = "ca-app-pub-3940256099942544/5224354917";
+    public static final String myRewordUnityId = "ca-app-pub-1715892515960984/2470578689";
 
     public static String getRewordUnitId() {
         return BuildConfig.BUILD_TYPE.equals("debug") ? testRewordUnityId : myRewordUnityId;

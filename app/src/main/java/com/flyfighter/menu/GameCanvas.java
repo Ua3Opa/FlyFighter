@@ -93,7 +93,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public List<Missile[]> missiles = new ArrayList<>();
     public Boss boss;
     public static final int[][] stageEnemy = new int[][]{
-            {45, 45, 45, 46, 45, 46, 45, 46, 45, 45, 46, 46, 45, 46, 45},
+            {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
             {5, 2, 4, 24, 29, 27, 46, 21, 23, 39, 45, 30, 28, 33, 35},
             {6, 4, 3, 43, 20, 39, 23, 31, 45, 34, 38, 46, 37, 32, 41},
             {19, 45, 20, 46, 19, 45, 20, 46, 19, 45, 20, 46, 19, 45, 20},
@@ -1151,7 +1151,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 2;
+                mPlayer.state = 0;
                 mPlayer.onFire = true;
             }
         } else {//正常状态

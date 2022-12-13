@@ -54,10 +54,9 @@ public class GameController extends FrameLayout {
             return;
         }
         downTime = System.currentTimeMillis();
-        if (Math.abs(downX - event.getX()) <= 10 && Math.abs(downY - event.getY()) <= 10) {
+        if (Math.abs(downX - event.getX()) <= 30 && Math.abs(downY - event.getY()) <= 30) {
             controller.playBomb();
         }
-
     }
 
     private void handleCalculateMoveDirection(int moveX, int moveY) {

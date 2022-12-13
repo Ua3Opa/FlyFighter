@@ -12,7 +12,7 @@
         android:theme="@style/Theme.FlyFighter">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-9939518381636264~1092563270"/>
+            android:value="ca-app-pub-1715892515960984~4162896319"/>
 
         <activity android:name=".MainActivity"
             android:exported="true">
