@@ -13,7 +13,7 @@ public class Boss extends EnemyPlane {
     public int bulletDirect2;
     public int bulletDirect3;
 
-    public int moveDownRange = 200;
+    public int moveDownRange = 250;
     public int moveUpRange = 90;
     public int moveAction;
 
@@ -23,13 +23,13 @@ public class Boss extends EnemyPlane {
     public long shootDuration;
     public int bulletSequence;
     public int bulletNum;
+    public boolean bossAppear = false;
 
     public Boss() {
     }
 
-
     public static Boss makeBossByMission(int mMission, int gameDifficulty) {
-        int type = 46 + mMission - 1;
+        int type = 45 + mMission;
         Boss enemy = new Boss();
         enemy.setValue(enemyData[type][0], enemyData[type][1],
                 enemyData[type][2], enemyData[type][3], enemyData[type][4],
@@ -39,7 +39,7 @@ public class Boss extends EnemyPlane {
                 enemyData[type][14], enemyData[type][15], enemyData[type][16]);
 
         enemy.type = type;
-        enemy.moveAction = 1;
+        enemy.moveAction = enemy.getRand(3);
         enemy.picNum = 3;
         enemy.initSpiritBitmap();
         enemy.initSpiritSize();
@@ -52,16 +52,37 @@ public class Boss extends EnemyPlane {
         return enemy;
     }
 
-    @Override
-    public Bitmap getFrame() {
-        if (System.currentTimeMillis() - lastFrameTime >= animDuration) {
-            frameIndex++;
-        }
-        return source.get(frameIndex % 2);
-    }
+    boolean appear = false;
+
 
     @Override
     public void dealMoveState() {
+        if (!appear) {
+            if (x == 0 && y == 0) {
+                if (moveAction == 0) {
+                    x = -width;
+                    y = getRand(moveDownRange);
+                } else if (moveAction == 1) {
+                    x = MainWindow.windowWidth / 2 - width / 2;
+                    y = -height;
+                } else {
+                    x = MainWindow.windowWidth;
+                    y = getRand(moveDownRange);
+                }
+            }
+            if (moveAction == 0) {
+                x += speedX;
+            } else if (moveAction == 1) {
+                y += speedY;
+            } else {
+                x -= speedX;
+            }
+            if ((x > 0 && x < MainWindow.windowWidth - width) && y >= 0) {
+                appear = true;
+                moveAction = 1;
+            }
+            return;
+        }
         recordMovePosition();
         initBossMoveAction();
         // ↑ ↓ ← → ↖ ↗ ↘ ↙ ↕
@@ -252,8 +273,23 @@ public class Boss extends EnemyPlane {
 
     @Override
     protected void initSpiritBitmap() {
-        Bitmap bm = ResInit.enemyImage[type][0];
-        source.addAll(splitBitmap(bm, picNum));
+        Bitmap source = ResInit.enemyImage[type][0];
+        this.source.addAll(splitBitmap(source, 3));
+    }
+
+    @Override
+    public Bitmap getFrame() {
+        if (System.currentTimeMillis() - lastFrameTime >= animDuration) {
+            frameIndex++;
+        }
+        int picIndex;
+        if (hit) {
+            picIndex = 2;
+            hit = false;
+        } else {
+            picIndex = frameIndex % (2);
+        }
+        return source.get(picIndex);
     }
 
     public int getRand(int i) {
@@ -263,9 +299,5 @@ public class Boss extends EnemyPlane {
         int r = random.nextInt();
         r = (r >> 24) + (r >> 16) + (r >> 8) + r & 0xFF;
         return Math.abs(r % i);
-    }
-
-    public void makeBossBullets() {
-
     }
 }

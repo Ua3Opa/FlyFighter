@@ -60,28 +60,30 @@ public class EnemyPlane extends Spirit {
             {43, 4, 1, 0, 0, 5, 0, 120, 1, 1, 0, 0, 366, 1533, 4, 7, 5},
             {44, 3, 1, 0, 0, 5, 0, 100, 1, 1, 0, 0, 356, 1233, 3, 6, 6},
             {45, 4, 1, 0, 0, 15, 0, 15, 0, 0, 0, 0, 388, 1400, 3, 11, 5},
+            //45
             {46, 3, 1, 0, 0, 15, 0, 15, 0, 0, 0, 0, 366, 1366, 3, 15, 6},
-            {201, 1, 50, 0, 5, 5, 60, 5000, 0, 170, 0, 0, 6688, 1333, 0, 0, 8},
-            {202, 1, 50, 0, 5, 5, 60, 5000, 0, 170, 0, 0, 6686, 1333, 0, 0, 8},
-            {203, 1, 50, 0, 5, 5, 60, 5000, 0, 170, 0, 0, 6886, 1333, 0, 0, 8},
-            {204, 1, 50, 0, 5, 5, 60, 7000, 0, 170, 0, 0, 8888, 1333, 0, 0, 8},
-            {205, 1, 50, 0, 5, 5, 60, 9000, 0, 170, 0, 0, 9999, 1333, 0, 0, 8}};
+            //46
+            {201, 1, 0, 0, 5, 5, 60, 3000, 0, 170, 0, 0, 6688, 1333, 0, 0, 8},
+            {202, 1, 0, 0, 5, 5, 60, 4000, 0, 170, 0, 0, 6686, 1333, 0, 0, 8},
+            {203, 1, 0, 0, 5, 5, 60, 5000, 0, 170, 0, 0, 6886, 1333, 0, 0, 8},
+            {204, 1, 0, 0, 5, 5, 60, 6000, 0, 170, 0, 0, 8888, 1333, 0, 0, 8},
+            {205, 1, 0, 0, 5, 5, 60, 8000, 0, 170, 0, 0, 9999, 1333, 0, 0, 8}};
     public static final int[] enemyPic = new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 12, 6, 3, 3, 3, 3, 3};
 
     public static float[] offsetY = new float[]{
-            0.8f,0.8f,0.8f,0.8f,0.8f,
-            0.8f,0.8f,0.8f,0.8f,0.8f,
-            0.8f,0.8f,0.8f,0.8f,0.8f,
-            0.8f,0.8f,0.8f,0.8f,0.8f,
-            0.8f,0.8f,0.7f,0.8f,0.8f,
-            0.8f,0.8f,0.8f,0.8f,0.7f,
-            0.8f,0.8f,0.8f,0.8f,0.8f,
-            0.8f,0.8f,0.8f,0.8f,0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.7f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.7f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
 
-            0.8f,0.8f,0.8f,0.8f,0.8f,
+            0.8f, 0.8f, 0.8f, 0.8f, 0.8f,
             0.8f,
-            0.8f,0.9f,0.8f,0.8f,0.8f,//boss
+            0.8f, 0.9f, 0.8f, 0.8f, 0.8f,//boss
     };
 
     public int colors;
@@ -103,6 +105,8 @@ public class EnemyPlane extends Spirit {
 
     public long shootTime;//发射时间,默认为创建时间
 
+    public boolean hit;
+
     public EnemyPlane() {
     }
 
@@ -122,8 +126,8 @@ public class EnemyPlane extends Spirit {
                 enemyData[type][14], enemyData[type][15], enemyData[type][16]);
 
         enemy.initSpiritBitmap();
+        enemy.initSpiritSize();
         enemy.makeRandomAction();
-        enemy.makeRandomColors();//这里是通过初始化的默认enemyData进行初始化行为
         enemy.makeRandomSpeedAndPosition();
 
         enemy.shootTime = System.currentTimeMillis() - enemy.getRand(enemy.fireDelay) - enemy.fireDelay / 2;
@@ -138,23 +142,11 @@ public class EnemyPlane extends Spirit {
         return enemy;
     }
 
-    private void makeRandomColors() {
-        colors = getRand(enemyData[type - 1][1]);
-    }
-
     private void makeRandomSpeedAndPosition() {
-        patrolX = getRand(MainWindow.windowWidth / 2);
+        patrolX = getRand(MainWindow.windowWidth / 2) + MainWindow.windowWidth / 4;
         patrolY = getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
     }
 
-    @Override
-    protected void initSpiritBitmap() {
-        Bitmap source = ResInit.enemyImage[type - 1][colors - 1];
-        //Log.d("TAG", "calculateEnemySize: " + (source == null) + "    " + type + "  " + colors);
-        this.source.add(Bitmap.createBitmap(source, source.getWidth() / enemyPic[type - 1] * picId, 0, source.getWidth() / enemyPic[type - 1], source.getHeight()));
-        width = this.source.get(0).getWidth();
-        height = this.source.get(0).getHeight();
-    }
 
     private void makeRandomAction() {
         //3,4位 00是横向的,需要根据速度去判断屏幕左右侧出现
@@ -189,7 +181,10 @@ public class EnemyPlane extends Spirit {
 
             y = 0 - height;
             x = getRand(MainWindow.windowWidth - width);
-
+            if (type == 45 || type == 46) {
+                speedY += getRand(6);
+                return;
+            }
             if (getRand(2) == 1) {
                 switch (getRand(4)) {
                     case 0:
@@ -254,27 +249,6 @@ public class EnemyPlane extends Spirit {
         this.explode = explode;
     }
 
-
-    public void setValue(int value) {
-        this.type = value;
-        this.colors = value;
-        this.x = value;
-        this.y = value;
-        this.speedX = value;
-        this.speedY = value;
-        this.offset = value;
-        this.health = value;
-        this.aliveTime = value;
-        this.pauseDelay = value;
-        this.picId = value;
-        this.item = value;
-        this.reward = value;
-        this.fireDelay = value;
-        this.bulletMax = value;
-        this.bulletType = value;
-        this.explode = value;
-    }
-
     private int getRand(int i) {
         return new Random().nextInt(i);
     }
@@ -305,8 +279,22 @@ public class EnemyPlane extends Spirit {
     }
 
     @Override
+    protected void initSpiritBitmap() {
+        Bitmap source = ResInit.enemyImage[type - 1][getRand(colors)];
+        this.source.addAll(splitBitmap(source, enemyPic[type - 1]));
+    }
+
+    @Override
     public Bitmap getFrame() {
-        return firstFrame();
+        super.getFrame();
+        int picIndex;
+        if (hit) {
+            picIndex = enemyPic[type - 1] - 1;
+            hit = false;
+        } else {
+            picIndex = frameIndex % (enemyPic[type - 1] - 1);
+        }
+        return source.get(picIndex);
     }
 
     @Override
@@ -314,8 +302,8 @@ public class EnemyPlane extends Spirit {
         int[][] rect = new int[4][2];
         rect[0] = new int[]{x, y};//t
         rect[1] = new int[]{x + width, y};//r
-        rect[2] = new int[]{x + width, (int) (y + height*offsetY[type])};//b
-        rect[3] = new int[]{x, (int) (y + height*offsetY[type])};//lb
+        rect[2] = new int[]{x + width, (int) (y + height * offsetY[type])};//b
+        rect[3] = new int[]{x, (int) (y + height * offsetY[type])};//lb
         return rect;
     }
 }

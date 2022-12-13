@@ -52,7 +52,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private List<EnemyPlane> enemys = new ArrayList<>();
     private Random random;
 
-    private final int maxEnemy = 4;
+    private int maxEnemy = 4;
     private final int maxItem = 3;
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
@@ -172,14 +172,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gameInit();
         stageInit();
         mResLoaded = true;
-        MainDataHolder.continueNum = 2;
+        MainDataHolder.continueNum = 5;
         MainDataHolder.runState.setValue(RunState.Running);
     }
 
     private void gameInit() {
         ResInit.loadPlayer(context, playerType);
         soundHelper.loadGameSounds(context, mediaPlayers);
-
+        maxEnemy = RMS.difficulty == 1 ? 4 : 3;
         playSound(12);
         this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.mPlayerPower = mPlayer.power;
@@ -301,7 +301,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (boss.bulletSequence >= 8) {
             boss.bulletSequence = 0;
         }
-
         if (System.currentTimeMillis() - boss.lastShootTime <= (bossBullet[bossType][boss.bulletSequence][3] * 1.0f / 25 * 1000 * 2)) {
             return;
         }
@@ -339,6 +338,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 }
                 boss.bulletSequence++;
                 boss.lastShootTime = System.currentTimeMillis();
+                break;
             case 4:
             case 5:
             case 6:
@@ -443,7 +443,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void makeBossBullet_SG(int bossType, int direction, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
         boss.bulletType = bb[2] - 2;
-        shootPoint[1] += boss.height;
         Bullet bullet = makeEnemyBullet(boss, shootPoint);
         bullet.speedX = bulletSpeedSG[direction * 2];
         bullet.speedY = bulletSpeedSG[direction * 2 + 1];
@@ -453,7 +452,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void makeBossBullet_SL(int bossType, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
         boss.bulletType = bb[2] - 2;
-        shootPoint[1] += boss.height;
         Bullet bullet = makeEnemyBullet(boss, shootPoint);
 
         int rand = getRand(9);
@@ -471,7 +469,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void makeBossBullet_S(int bossType, int[] shootPoint) {
         int[] bb = bossBullet[bossType][boss.bulletSequence];
         boss.bulletType = bb[2] - 2;
-        shootPoint[1] += boss.height;
         makeBulletToFront(boss, shootPoint, bb[1]);
     }
 
@@ -497,6 +494,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
         } else if (boss == null) {
             boss = Boss.makeBossByMission(mMission, mDifficulty);
+            playSound(3);
         }
     }
 
@@ -508,8 +506,19 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 bombs.remove(bomb);
             } else if (BombHitEnemy(bomb)) {
             } else if (BombHitBullets(bomb)) {
+            } else if (BombHitBoss(bomb)) {
             }
         }
+    }
+
+    private boolean BombHitBoss(Bomb bomb) {
+        if (boss == null) {
+            return false;
+        }
+        if (checkIfHit(boss.x, boss.y, boss.width, boss.height, bomb.x, bomb.y, bomb.source.get(0).getWidth(), bomb.source.get(0).getHeight())) {
+            boss.height -= bomb.power;
+        }
+        return false;
     }
 
     private boolean BombHitBullets(Bomb bomb) {
@@ -616,6 +625,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
     }
 
+
     private void dealItems() {
         for (int i = items.size() - 1; i >= 0; i--) {
             Item item = items.get(i);
@@ -679,10 +689,14 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void onPlayerDestroyed() {
+        if (mPlayer == null) {
+            return;
+        }
         explodes.add(Explode.dealExplodeState(mPlayer.x, mPlayer.y, getRand(5) + 3));
         playerLife--;
         this.playSound(playerType);
         mPlayer = null;
+        bombs.clear();
         if (playerLife <= 0) {
             mIsGameOver = true;
             gTempDelay = 0;
@@ -720,6 +734,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         for (EnemyPlane enemy : enemys) {
             if (checkHitWithCross(bullet, enemy)) {
                 //{6, 6, 5, 4, 4}, {13, 11, 8, 7, 6}, {11, 6, 6, 6, 5}
+                enemy.hit = true;
                 enemy.health -= playerBulletFloorPower[playerType][mPlayerPower - 1] - 1;
                 return true;
             }
@@ -770,6 +785,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return false;
         }
         if (checkIfHit(spirit.x, spirit.y, spirit.width, spirit.height, mPlayer.x, mPlayer.y, mPlayer.width, mPlayer.height)) {
+            onPlayerDestroyed();
             return true;
         }
         return false;
@@ -803,7 +819,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         enemy.shootTime = System.currentTimeMillis();
-        int bulletNum = enemy.bulletMax;
+        int bulletNum = enemy.bulletMax - mDifficulty;
         int rand = getRand(3);
         if (bulletNum < 3 || rand == 0) {
             if (this.getRand(4 - mMission - mDifficulty) < 0) {
@@ -1072,7 +1088,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void makeEnemy() {
-        if (enemys.size() >= maxEnemy || !mIsEnableEnemy || mIsBossAppear) {
+        if (enemys.size() >= maxEnemy || !mIsEnableEnemy || mIsBossAppear || mIsMissionComplete) {
             return;
         }
         int randomType;
@@ -1099,7 +1115,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gApearEnemyType++;
         if (mDestroyCount >= 30 && gEnemyCount >= 150) {
 //        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
-            playSound(3);
             this.mIsBossAppear = true;
             this.mIsEnableEnemy = false;
         }
@@ -1124,7 +1139,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 makePlayerBullet();
             } else {
                 PlayerBullet lastBullet = playerBullets.get(playerBullets.size() - 1);
-                if (System.currentTimeMillis() - lastBullet.createTime <= 100) {
+                if (System.currentTimeMillis() - lastBullet.createTime <= 150) {
                     return;
                 }
                 makePlayerBullet();
@@ -1169,7 +1184,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private EnemyPlane getNearestEnemy(Missile missile) {
         if (enemys.isEmpty()) {
-            return null;
+            return boss == null ? null : boss;
         }
         EnemyPlane nearest = null;
         for (EnemyPlane enemy : enemys) {
@@ -1200,25 +1215,29 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (items.size() >= maxItem || mPlayer == null) {
             return;
         }
-        int itemType = 0;
-        if (enemy.type <= 18) {
-            if (getRand(10) == 0) {
-                itemType = 5;
-            } else if (this.mPlayerPower == 1 && getRand(10) == 1) {
-                itemType = 7;
-            }
-        } else {
-            if (this.mPlayerPower < 3 && getRand(4) == 0) {
-                itemType = 7;
-                return;
-            }
-            if (getRand(6) == 0) {
-                itemType = gGetItemsList[getRand(20)];
-                if (12 == itemType) {
-                    itemType += playerType;
-                }
-            }
-        }
+
+        int itemType = 9;
+//        if (enemy.type <= 18) {//轻型
+//            if (getRand(10) == 0) {
+//                itemType = 5;//500分
+//            } else if (this.mPlayerPower <= 2 && getRand(10) == 1) {
+//                itemType = 7;//子弹+1
+//            } else if (getRand(5) == 0) {
+//                itemType = 9;
+//            }
+//        } else {//重型
+//            if (this.mPlayerPower < 3 && getRand(3) == 0) {
+//                itemType = 7;
+//            }
+//            if (getRand(6) == 0) {
+//                itemType = gGetItemsList[getRand(20)];
+//                if (12 == itemType) {
+//                    itemType += playerType;
+//                }
+//            } else if (getRand(5) == 0) {
+//                itemType = 10;
+//            }
+//        }
         Item item = new Item(itemType, enemy.x, enemy.y);
         items.add(item);
     }
@@ -1347,6 +1366,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         this.isThreadAlive = false;
+        MainDataHolder.runState.postValue(RunState.Main);
     }
 
     @Override
@@ -1456,7 +1476,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
     private void showGameOver() {
         if (this.mIsGameFinished) {
-            this.isThreadAlive = false;
             RMS.playRecords.add(new PlayRecord(getScoreLevel(), playerType, mGameScore));
             Collections.sort(RMS.playRecords, (o1, o2) -> o2.score - o1.score);
             if (RMS.playRecords.size() >= 10) {
@@ -1464,8 +1483,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             }
             MMKV.defaultMMKV().encode("Records", JSON.toJSONString(RMS.playRecords));
             if (MainDataHolder.runState.getValue() != RunState.Ranking) {
-                MainDataHolder.runState.setValue(RunState.Ranking);
+                MainDataHolder.runState.postValue(RunState.Ranking);
             }
+            this.isThreadAlive = false;
         }
     }
 
@@ -1548,7 +1568,12 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (this.mIsGameOver || mPlayer == null) {
             return;
         }
-        drawBitmapXY(canvas, mPlayer.getFrame(), mPlayer.x, mPlayer.y);
+
+        if (mIsMissionComplete) {
+            drawBitmapXY(canvas, mPlayer.firstFrame(), mPlayer.x, mPlayer.y);
+        } else {
+            drawBitmapXY(canvas, mPlayer.getFrame(), mPlayer.x, mPlayer.y);
+        }
 
         if (MainDataHolder.runState.getValue() != RunState.Running) {
             return;

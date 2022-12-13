@@ -173,6 +173,7 @@ public class MainWindow extends FrameLayout {
     public void handleRunState(RunState state) {
         switch (state) {
             case Main:
+                reloadMainMenu();
                 break;
             case SelectPlayer:
                 showSelectPlayer();
@@ -243,6 +244,9 @@ public class MainWindow extends FrameLayout {
     }
 
     public void showPause() {
+        if (gameWindow == null) {
+            return;
+        }
         pauseMenu = new PauseMenu(mContext);
         addView(pauseMenu, buildCenterLayoutParams());
     }
