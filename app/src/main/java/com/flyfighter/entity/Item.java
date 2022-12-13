@@ -29,7 +29,7 @@ public class Item extends Spirit {
 
     @Override
     protected void initSpiritBitmap() {
-        source.addAll(splitBitmap(ResInit.itemImage[type], picNum));
+        source.addAll(splitBitmap(ResInit.itemImage[type-1], picNum));
     }
 
     @Override

@@ -124,7 +124,9 @@ public class EnemyPlane extends Spirit {
                 enemyData[type][8], enemyData[type][9], enemyData[type][10],
                 enemyData[type][11], enemyData[type][12], enemyData[type][13],
                 enemyData[type][14], enemyData[type][15], enemyData[type][16]);
-
+        if (type == 45 || type == 46) {
+            enemy.animDuration *= 3;
+        }
         enemy.initSpiritBitmap();
         enemy.initSpiritSize();
         enemy.makeRandomAction();
@@ -288,11 +290,16 @@ public class EnemyPlane extends Spirit {
     public Bitmap getFrame() {
         super.getFrame();
         int picIndex;
-        if (hit) {
-            picIndex = enemyPic[type - 1] - 1;
-            hit = false;
-        } else {
+
+        if (type == 45 || type == 46) {
             picIndex = frameIndex % (enemyPic[type - 1] - 1);
+        } else {
+            if (hit) {
+                picIndex = enemyPic[type - 1] - 1;
+                hit = false;
+            } else {
+                picIndex = frameIndex % (enemyPic[type - 1] - 1);
+            }
         }
         return source.get(picIndex);
     }

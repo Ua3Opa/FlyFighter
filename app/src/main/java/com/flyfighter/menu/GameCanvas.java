@@ -93,7 +93,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     public List<Missile[]> missiles = new ArrayList<>();
     public Boss boss;
     public static final int[][] stageEnemy = new int[][]{
-            {1, 2, 4, 38, 44, 19, 39, 22, 45, 26, 46, 25, 43, 36, 40},
+            {45, 45, 45, 46, 45, 46, 45, 46, 45, 45, 46, 46, 45, 46, 45},
             {5, 2, 4, 24, 29, 27, 46, 21, 23, 39, 45, 30, 28, 33, 35},
             {6, 4, 3, 43, 20, 39, 23, 31, 45, 34, 38, 46, 37, 32, 41},
             {19, 45, 20, 46, 19, 45, 20, 46, 19, 45, 20, 46, 19, 45, 20},
@@ -565,9 +565,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
      * 为了保证y轴的位置相同 必须使用 List<Missile[]> 结构的数据
      */
     private void dealMissile() {
-        if (mPlayer == null) {
-            return;
-        }
         for (int i = 0; i < missiles.size(); i++) {
             Missile[] ms = missiles.get(i);
             if (ms[0] != null) {
@@ -581,7 +578,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 missiles.remove(ms);
             } else if (checkBulletHitEnemy(ms)) {//或者是boss的导弹hit player
                 //在checkMissileHitEnemy处理逻辑
+            } else if (checkBulletHitBoss(ms)) {//或者是boss的导弹hit player
             }
+        }
+        if (mMissileType == 0) {
+            return;
         }
         if (missiles.size() >= mMissileMax) {
             return;
@@ -591,6 +592,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         mMissileShootTime = System.currentTimeMillis();
+        if (mPlayer == null) {
+            return;
+        }
         missiles.add(Missile.makeMissiles(mMissileType, getPlayerCenterX(), mPlayer.y));
         if (mMissileType == 2) {
             playSound(9);
@@ -654,7 +658,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (outScreen(bullets.get(i).x, bullets.get(i).y, bullets.get(i).firstFrame())) {
                 bullets.remove(bullets.get(i));
             } else if (checkHitPlayer(bullets.get(i))) {
-                onPlayerDestroyed();
                 bullets.remove(bullets.get(i));
             }
         }
@@ -683,7 +686,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             if (System.currentTimeMillis() - laser.createTime >= 1000) {
                 lasers.remove(laser);
             } else if (checkHitPlayer(laser)) {
-                onPlayerDestroyed();
             }
         }
     }
@@ -696,6 +698,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         playerLife--;
         this.playSound(playerType);
         mPlayer = null;
+        mMissileType = 0;
         bombs.clear();
         if (playerLife <= 0) {
             mIsGameOver = true;
@@ -725,6 +728,27 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 } else {
                     onPlayerDestroyed();
                 }
+            }
+        }
+        return false;
+    }
+
+    private boolean checkBulletHitBoss(Missile[] ms) {
+        if (boss == null) {
+            return false;
+        }
+        if (ms[0] != null && checkHitWithCross(ms[0], boss)) {
+            if (ms[0].from == 0) {
+                boss.health -= ms[0].power;
+                mGameScore += 28;
+                ms[0] = null;
+            }
+        }
+        if (ms[1] != null && checkHitWithCross(ms[1], boss)) {
+            if (ms[1].from == 0) {
+                boss.health -= ms[1].power;
+                mGameScore += 28;
+                ms[1] = null;
             }
         }
         return false;
@@ -1113,7 +1137,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty));
         gEnemyCount++;
         gApearEnemyType++;
-        if (mDestroyCount >= 30 && gEnemyCount >= 150) {
+        if (mDestroyCount >= 40 && gEnemyCount >= 150) {
 //        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
             this.mIsBossAppear = true;
             this.mIsEnableEnemy = false;
@@ -1127,7 +1151,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 0;
+                mPlayer.state = 2;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1216,28 +1240,32 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
 
-        int itemType = 9;
-//        if (enemy.type <= 18) {//轻型
-//            if (getRand(10) == 0) {
-//                itemType = 5;//500分
-//            } else if (this.mPlayerPower <= 2 && getRand(10) == 1) {
-//                itemType = 7;//子弹+1
-//            } else if (getRand(5) == 0) {
-//                itemType = 9;
-//            }
-//        } else {//重型
-//            if (this.mPlayerPower < 3 && getRand(3) == 0) {
-//                itemType = 7;
-//            }
-//            if (getRand(6) == 0) {
-//                itemType = gGetItemsList[getRand(20)];
-//                if (12 == itemType) {
-//                    itemType += playerType;
-//                }
-//            } else if (getRand(5) == 0) {
-//                itemType = 10;
-//            }
-//        }
+        int itemType = 0;
+        if (enemy.type <= 18) {//轻型
+            if (getRand(10) == 0) {
+                itemType = 5;//500分
+            } else if (this.mPlayerPower <= 2 && getRand(5) == 1) {
+                itemType = 7;//子弹+1
+            } else if (getRand(5) == 0) {
+                itemType = 9;//追踪弹
+            }
+        } else {//重型
+            if (this.mPlayerPower < 3 && getRand(3) == 0) {
+                itemType = 7;
+            }
+            if (getRand(6) == 0) {
+                //{5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11}
+                itemType = gGetItemsList[getRand(20)];
+                if (12 == itemType) {
+                    itemType += playerType;
+                }
+            } else if (getRand(5) == 0) {
+                itemType = 10;//双导弹
+            }
+        }
+        if (itemType == 0) {
+            return;
+        }
         Item item = new Item(itemType, enemy.x, enemy.y);
         items.add(item);
     }
@@ -1419,6 +1447,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void showMissile(Canvas canvas) {
+        if (mIsMissionComplete) {
+            return;
+        }
         for (Missile[] missile : missiles) {
             if (missile[0] != null) {
                 drawBitmapXY(canvas, missile[0].getFrame(), missile[0].x, missile[0].y);
@@ -1640,12 +1671,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         //
-        if (mPlayer.bombTypes.size() == 0 || bombs.size() > 2) {
+        if (mPlayer.bombTypes.size() == 0 || bombs.size() > 1) {
             return;
         }
         //当前没有炸弹,或者是有无敌护盾的时候也可释放
         if (bombs.size() == 0 || (bombs.size() == 1 && bombs.get(0).type == 4)) {
             int lastBombType = mPlayer.bombTypes.get(mPlayer.bombTypes.size() - 1);
+            mPlayer.bombTypes.remove(mPlayer.bombTypes.size() - 1);
             if (lastBombType == 3) {
                 Bomb[] b = Bomb.makeBomb3(3, mPlayer);
                 bombs.add(b[0]);
@@ -1653,7 +1685,6 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             } else {
                 bombs.add(Bomb.makeBomb(lastBombType, mPlayer));
             }
-            mPlayer.bombTypes.remove(mPlayer.bombTypes.size() - 1);
         }
     }
 
