@@ -1,7 +1,6 @@
 package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,4 +86,10 @@ public abstract class Spirit {
         return rect;
     }
 
+    public int getCenterX(Spirit spirit) {
+        return x + width / 2;
+    }
+    public int getCenterY(Spirit spirit) {
+        return y + height / 2;
+    }
 }

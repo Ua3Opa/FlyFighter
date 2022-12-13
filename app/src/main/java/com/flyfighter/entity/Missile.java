@@ -7,7 +7,7 @@ import com.flyfighter.res.ResInit;
 
 public class Missile extends Spirit {
 
-    private static final byte[] bulletSpeedMissile = new byte[]{0, -10, -4, -10, -7, -7, -10, -4, -10, 0, -10, 4, -7, 7, -4, 10, 0, 10, 4, 10, 7, 7, 10, 4, 10, 0, 10, -4, 7, -7, 4, -10};
+    private static final byte[] bulletSpeedMissile = new byte[]{0, -14, -6, -14, -10, -10, -14, -6, -14, 0, -14, 6, -10, 10, -6, 14, 0, 14, 6, 14, 10, 10, 14, 6, 14, 0, 14, -6, 10, -10, 6, -14};
     public static int[][] missileOffset = new int[][]{{-42, -5}, {42, -5}, {-40, -5}, {40, -5}};
 
     public int power;//伤害
@@ -117,7 +117,7 @@ public class Missile extends Spirit {
         int nextX = x + bulletSpeedMissile[missileDirection * 2];
         int nextY = y + bulletSpeedMissile[missileDirection * 2 + 1];
 
-        int distance1 = (int) Math.sqrt(Math.pow(nextX - enemy.x, 2) + Math.pow(nextY - enemy.y, 2));
+        int distance1 = (int) Math.sqrt(Math.pow(nextX - getCenterX(enemy), 2) + Math.pow(nextY - getCenterY(enemy), 2));
         if (missileDirection + 1 >= 16) {
             temp = 0;
         } else {
@@ -127,7 +127,7 @@ public class Missile extends Spirit {
         int next2X = x + bulletSpeedMissile[temp * 2];
         int next2Y = y + bulletSpeedMissile[temp * 2 + 1];
 
-        int distance2 = (int) Math.sqrt(Math.pow(next2X - enemy.x, 2) + Math.pow(next2Y - enemy.y, 2));
+        int distance2 = (int) Math.sqrt(Math.pow(next2X - getCenterX(enemy), 2) + Math.pow(next2Y - getCenterY(enemy), 2));
 
         if (missileDirection - 1 < 0) {
             temp = 15;
@@ -138,7 +138,7 @@ public class Missile extends Spirit {
         int next3X = x + bulletSpeedMissile[temp * 2];
         int next3Y = y + bulletSpeedMissile[temp * 2 + 1];
 
-        int distance3 = (int) Math.sqrt(Math.pow(next3X - enemy.x, 2) + Math.pow(next3Y - enemy.y, 2));
+        int distance3 = (int) Math.sqrt(Math.pow(next3X - getCenterX(enemy), 2) + Math.pow(next3Y - getCenterY(enemy), 2));
         temp = missileDirection;
 
 
@@ -158,7 +158,6 @@ public class Missile extends Spirit {
         }
         return temp;
     }
-
     @Override
     protected void initSpiritBitmap() {
         if (from == 1) {

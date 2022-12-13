@@ -919,10 +919,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void handleGetBomb(Item item) {
-        if (mPlayer.bomb < 6) {
+        if (mPlayer.bombTypes.size()<6) {
             mPlayer.bombTypes.add(item.type - 1);
-            mPlayer.bomb++;
-        } else {
+        }else{
             mGameScore += 888;
         }
     }
@@ -1151,7 +1150,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 0;
+                mPlayer.state = 2;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1246,20 +1245,20 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 itemType = 5;//500分
             } else if (this.mPlayerPower <= 2 && getRand(5) == 1) {
                 itemType = 7;//子弹+1
-            } else if (getRand(5) == 0) {
+            } else if (getRand(10) == 0) {
                 itemType = 9;//追踪弹
             }
         } else {//重型
             if (this.mPlayerPower < 3 && getRand(3) == 0) {
                 itemType = 7;
             }
-            if (getRand(6) == 0) {
+            if (getRand(5) == 0) {
                 //{5, 5, 5, 6, 6, 6, 7, 7, 8, 1, 2, 3, 4, 12, 9, 9, 10, 10, 11, 11}
                 itemType = gGetItemsList[getRand(20)];
                 if (12 == itemType) {
                     itemType += playerType;
                 }
-            } else if (getRand(5) == 0) {
+            } else if (getRand(10) == 0) {
                 itemType = 10;//双导弹
             }
         }
