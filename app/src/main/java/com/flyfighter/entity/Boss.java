@@ -44,10 +44,10 @@ public class Boss extends EnemyPlane {
         enemy.initSpiritBitmap();
         enemy.initSpiritSize();
 
-        if (1 == gameDifficulty) {//hard模式
-            enemy.health = enemy.health + enemy.health >> 2;
-            enemy.fireDelay = enemy.fireDelay - 5;
-            enemy.reward = enemy.reward + enemy.reward >> 1;
+        if (0 == gameDifficulty) {//hard模式
+            enemy.health = (int) (enemy.health * 0.75);
+        } else {
+            enemy.health = (int) (enemy.health * 1.25);
         }
         return enemy;
     }

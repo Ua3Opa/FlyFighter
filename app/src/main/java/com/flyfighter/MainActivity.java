@@ -88,6 +88,19 @@ public class MainActivity extends AppCompatActivity {
             MainDataHolder.runState.setValue(RunState.Pause);
             return;
         }
+        if (MainDataHolder.runState.getValue() == RunState.Config) {
+            MainDataHolder.runState.setValue(RunState.Close_Config);
+            return;
+        }
+        if (MainDataHolder.runState.getValue() == RunState.Ranking) {
+            MainDataHolder.runState.setValue(RunState.Close_Ranking);
+            return;
+        }
+        if (MainDataHolder.runState.getValue() == RunState.Help) {
+            MainDataHolder.runState.setValue(RunState.Close_Help);
+            return;
+        }
+
         super.onBackPressed();
     }
 

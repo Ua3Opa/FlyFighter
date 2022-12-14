@@ -42,6 +42,7 @@ public class MainWindow extends FrameLayout {
     private RankingMenu rankingMenu;
     private ConfigMenu configMenu;
     private SelectPlayerMenu selectPlayerMenu;
+    private HelpMenu helpMenu;
 
     public MainWindow(Context context) {
         this(context, null);
@@ -93,7 +94,7 @@ public class MainWindow extends FrameLayout {
                 MainDataHolder.runState.setValue(RunState.Ranking);
                 break;
             case 3://游戏说明
-                addView(new HelpMenu(mContext), buildCenterLayoutParams());
+                MainDataHolder.runState.setValue(RunState.Help);
                 break;
             case 4://退出游戏
                 ((Activity) mContext).finish();
@@ -209,6 +210,12 @@ public class MainWindow extends FrameLayout {
                 }
                 hideRanking();
                 break;
+            case Help:
+                showHelpMenu();
+                break;
+            case Close_Help:
+                closeHelpMenu();
+                break;
             case Quit:
                 gameWindow.handleQuitGame();
                 break;
@@ -241,6 +248,20 @@ public class MainWindow extends FrameLayout {
         }
         removeView(rankingMenu);
         rankingMenu = null;
+    }
+
+    public void showHelpMenu() {
+        helpMenu = new HelpMenu(mContext);
+        addView(helpMenu, buildCenterLayoutParams());
+    }
+
+
+    public void closeHelpMenu() {
+        if (helpMenu == null) {
+            return;
+        }
+        removeView(helpMenu);
+        helpMenu = null;
     }
 
     public void showPause() {

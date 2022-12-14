@@ -77,7 +77,7 @@ public class PlayerPlane extends Spirit {
         //在屏幕范围之内
         if ((x > 0 && x <= MainWindow.windowWidth - width) ||
                 (x <= 0 && speedX >= 0) ||
-                (x >= MainWindow.windowWidth - height && speedX <= 0)) {
+                (x >= MainWindow.windowWidth - width && speedX <= 0)) {
             x += speedX;
         }
         //在屏幕范围之内
@@ -89,7 +89,7 @@ public class PlayerPlane extends Spirit {
     }
 
     public PlayerBullet makeBullet(int[] data) {
-        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + data[1], y + data[2] -5, data[3], data[4], data[5]);
+        PlayerBullet bullet = PlayerBullet.mallocBullet(type, x + width / 2 + data[1], y + data[2] - 5, data[3], data[4], data[5]);
         return bullet;
     }
 

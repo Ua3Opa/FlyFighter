@@ -52,8 +52,10 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private List<EnemyPlane> enemys = new ArrayList<>();
     private Random random;
 
-    private int maxEnemy = 4;
+    private int maxEnemy = 3;
     private final int maxItem = 3;
+    private int destoryCount = 30;
+    private int maxShowNum = 150;
     public volatile boolean isThreadAlive = false;
     private boolean gIsLoadGame = true;
 
@@ -169,6 +171,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
 
         this.random = new Random();
 
+        loadDifficultyLevel();
         gameInit();
         stageInit();
         mResLoaded = true;
@@ -176,10 +179,16 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         MainDataHolder.runState.setValue(RunState.Running);
     }
 
+    private void loadDifficultyLevel() {
+        maxEnemy = RMS.difficulty == 1 ? 3 : 2;
+        playerLife = RMS.difficulty == 1 ? 4 : 3;
+        destoryCount = RMS.difficulty == 1 ? 40 : 30;
+        maxShowNum = RMS.difficulty == 1 ? 180 : 100;
+    }
+
     private void gameInit() {
         ResInit.loadPlayer(context, playerType);
         soundHelper.loadGameSounds(context, mediaPlayers);
-        maxEnemy = RMS.difficulty == 1 ? 4 : 3;
         playSound(12);
         this.mPlayer = PlayerPlane.createPlayerPlane(playerType);
         this.mPlayerPower = mPlayer.power;
@@ -592,7 +601,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return;
         }
         mMissileShootTime = System.currentTimeMillis();
-        if (mPlayer == null) {
+        if (mPlayer == null || mPlayer.state == -1) {
             return;
         }
         missiles.add(Missile.makeMissiles(mMissileType, getPlayerCenterX(), mPlayer.y));
@@ -919,9 +928,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private void handleGetBomb(Item item) {
-        if (mPlayer.bombTypes.size()<6) {
-            mPlayer.bombTypes.add(item.type - 1);
-        }else{
+        if (mPlayer.bombTypes.size() < 6) {
+            mPlayer.bombTypes.add(item.type);
+        } else {
             mGameScore += 888;
         }
     }
@@ -1136,8 +1145,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty));
         gEnemyCount++;
         gApearEnemyType++;
-        if (mDestroyCount >= 40 && gEnemyCount >= 150) {
-//        if (mDestroyCount >= 10 && gEnemyCount >= 50) {
+        if (mDestroyCount >= destoryCount && gEnemyCount >= maxShowNum) {
             this.mIsBossAppear = true;
             this.mIsEnableEnemy = false;
         }
@@ -1549,6 +1557,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (this.mMission >= 5) {
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[5], ResInit.otherImage[3], 50);
                 } else {
+                    if (ResInit.otherImage[9] ==null) {
+                        ResInit.loadPicInit(context);
+                    }
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[9], ResInit.otherImage[3], 50);
                 }
             }
@@ -1675,6 +1686,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         //当前没有炸弹,或者是有无敌护盾的时候也可释放
         if (bombs.size() == 0 || (bombs.size() == 1 && bombs.get(0).type == 4)) {
+            //从最后一个开始消耗
             int lastBombType = mPlayer.bombTypes.get(mPlayer.bombTypes.size() - 1);
             mPlayer.bombTypes.remove(mPlayer.bombTypes.size() - 1);
             if (lastBombType == 3) {

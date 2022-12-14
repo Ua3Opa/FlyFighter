@@ -133,6 +133,7 @@ public class EnemyPlane extends Spirit {
         enemy.makeRandomSpeedAndPosition();
 
         enemy.shootTime = System.currentTimeMillis() - enemy.getRand(enemy.fireDelay) - enemy.fireDelay / 2;
+        enemy.fireDelay = (int) (enemy.fireDelay * 1.4);
 
         if (1 == gameDifficulty) {//hard模式
             enemy.health = enemy.health + enemy.health >> 2;
@@ -145,7 +146,7 @@ public class EnemyPlane extends Spirit {
     }
 
     private void makeRandomSpeedAndPosition() {
-        patrolX = getRand(MainWindow.windowWidth / 2) + MainWindow.windowWidth / 4;
+        patrolX = getRand(MainWindow.windowWidth / 4);
         patrolY = getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
     }
 
@@ -178,7 +179,8 @@ public class EnemyPlane extends Spirit {
                 return;
             }
             //10是竖直向下的,
-            speedX = speedX + 2 - getRand(5);
+            int dirX = getRand(2) == 0 ? -1 : 1;
+            speedX = dirX * getRand(5) + 2;
             speedY = speedY + getRand(3);
 
             y = 0 - height;
@@ -271,9 +273,9 @@ public class EnemyPlane extends Spirit {
                 } else if (System.currentTimeMillis() - patrolTime > pauseDelay) {
                     y = y + speedY;
                 }
-                if (x <= 0 || x >= MainWindow.windowWidth - width) {
+                if ((x <= 0 && speedX < 0) || (x >= MainWindow.windowWidth - width && speedX > 0)) {
                     speedX = -speedX;
-                } else if (Math.abs(x - patrolX) <= 10) {
+                } else if (x <= patrolX || x >= MainWindow.windowWidth - patrolX) {
                     speedX = -speedX;
                 }
             }
