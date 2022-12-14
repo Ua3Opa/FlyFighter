@@ -86,10 +86,11 @@ public abstract class Spirit {
         return rect;
     }
 
-    public int getCenterX(Spirit spirit) {
+    public int getCenterX() {
         return x + width / 2;
     }
-    public int getCenterY(Spirit spirit) {
+
+    public int getCenterY() {
         return y + height / 2;
     }
 }

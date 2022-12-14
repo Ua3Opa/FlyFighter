@@ -1142,7 +1142,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             type = (18 + this.getRand(28));
         }
-        enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty));
+        int patrolNum =0;
+        for (EnemyPlane enemy : enemys) {
+            if (enemy.pauseDelay !=0) {
+                patrolNum++;
+            }
+        }
+        enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty,patrolNum));
         gEnemyCount++;
         gApearEnemyType++;
         if (mDestroyCount >= destoryCount && gEnemyCount >= maxShowNum) {
@@ -1214,8 +1220,11 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private EnemyPlane getNearestEnemy(Missile missile) {
+        if (boss!=null) {
+            return boss;
+        }
         if (enemys.isEmpty()) {
-            return boss == null ? null : boss;
+            return null;
         }
         EnemyPlane nearest = null;
         for (EnemyPlane enemy : enemys) {

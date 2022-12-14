@@ -116,7 +116,7 @@ public class EnemyPlane extends Spirit {
      * @param type
      * @return
      */
-    public static EnemyPlane mallocEnemy(int type, int gameDifficulty) {
+    public static EnemyPlane mallocEnemy(int type, int gameDifficulty, int patrolNum) {
         EnemyPlane enemy = new EnemyPlane();
         enemy.setValue(enemyData[type][0], enemyData[type][1],
                 enemyData[type][2], enemyData[type][3], enemyData[type][4],
@@ -129,11 +129,11 @@ public class EnemyPlane extends Spirit {
         }
         enemy.initSpiritBitmap();
         enemy.initSpiritSize();
-        enemy.makeRandomAction();
+        enemy.makeRandomAction(patrolNum);
         enemy.makeRandomSpeedAndPosition();
 
         enemy.shootTime = System.currentTimeMillis() - enemy.getRand(enemy.fireDelay) - enemy.fireDelay / 2;
-        enemy.fireDelay = (int) (enemy.fireDelay * 1.4);
+        enemy.fireDelay = (int) (enemy.fireDelay * 1.2);
 
         if (1 == gameDifficulty) {//hard模式
             enemy.health = enemy.health + enemy.health >> 2;
@@ -151,7 +151,7 @@ public class EnemyPlane extends Spirit {
     }
 
 
-    private void makeRandomAction() {
+    private void makeRandomAction(int patrolNum) {
         //3,4位 00是横向的,需要根据速度去判断屏幕左右侧出现
         //3,4位 10是竖直向下的,
         //3,4位 1, -1 ,向或者右下
@@ -187,6 +187,9 @@ public class EnemyPlane extends Spirit {
             x = getRand(MainWindow.windowWidth - width);
             if (type == 45 || type == 46) {
                 speedY += getRand(6);
+                return;
+            }
+            if (patrolNum != 0) {
                 return;
             }
             if (getRand(2) == 1) {
@@ -263,6 +266,14 @@ public class EnemyPlane extends Spirit {
         if (pauseDelay == 0) {
             x = (x + speedX);
             y = (y + speedY);
+
+            if (type == 45 || type == 46) {
+                if (getRand(2) == 0 && y == getRand(MainWindow.windowHeight / 4) + MainWindow.windowHeight / 4) {
+                    speedX = -speedX;
+                }
+                return;
+            }
+
         } else {
             x = x + speedX;
             if (y <= patrolY) {

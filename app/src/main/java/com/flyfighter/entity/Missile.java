@@ -2,12 +2,13 @@ package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.util.Log;
 
 import com.flyfighter.res.ResInit;
 
 public class Missile extends Spirit {
 
-    private static final byte[] bulletSpeedMissile = new byte[]{0, -14, -6, -14, -10, -10, -14, -6, -14, 0, -14, 6, -10, 10, -6, 14, 0, 14, 6, 14, 10, 10, 14, 6, 14, 0, 14, -6, 10, -10, 6, -14};
+    private static final int[] bulletSpeedMissile = new int[]{0, -14, -6, -14, -10, -10, -14, -6, -14, 0, -14, 6, -10, 10, -6, 14, 0, 14, 6, 14, 10, 10, 14, 6, 14, 0, 14, -6, 10, -10, 6, -14};
     public static int[][] missileOffset = new int[][]{{-42, -5}, {42, -5}, {-40, -5}, {40, -5}};
 
     public int power;//伤害
@@ -117,7 +118,11 @@ public class Missile extends Spirit {
         int nextX = x + bulletSpeedMissile[missileDirection * 2];
         int nextY = y + bulletSpeedMissile[missileDirection * 2 + 1];
 
-        int distance1 = (int) Math.sqrt(Math.pow(nextX - getCenterX(enemy), 2) + Math.pow(nextY - getCenterY(enemy), 2));
+        int eX = enemy.getCenterX();
+        int eY = enemy.getCenterY();
+
+        double distance1 = Math.pow(nextX - eX, 2) + Math.pow(nextY - eY, 2);
+
         if (missileDirection + 1 >= 16) {
             temp = 0;
         } else {
@@ -127,7 +132,7 @@ public class Missile extends Spirit {
         int next2X = x + bulletSpeedMissile[temp * 2];
         int next2Y = y + bulletSpeedMissile[temp * 2 + 1];
 
-        int distance2 = (int) Math.sqrt(Math.pow(next2X - getCenterX(enemy), 2) + Math.pow(next2Y - getCenterY(enemy), 2));
+        double distance2 = Math.pow(next2X - eX, 2) + Math.pow(next2Y - eY, 2);
 
         if (missileDirection - 1 < 0) {
             temp = 15;
@@ -138,7 +143,7 @@ public class Missile extends Spirit {
         int next3X = x + bulletSpeedMissile[temp * 2];
         int next3Y = y + bulletSpeedMissile[temp * 2 + 1];
 
-        int distance3 = (int) Math.sqrt(Math.pow(next3X - getCenterX(enemy), 2) + Math.pow(next3Y - getCenterY(enemy), 2));
+        double distance3 = Math.pow(next3X - eX, 2) + Math.pow(next3Y - eY, 2);
         temp = missileDirection;
 
 
@@ -158,6 +163,7 @@ public class Missile extends Spirit {
         }
         return temp;
     }
+
     @Override
     protected void initSpiritBitmap() {
         if (from == 1) {
