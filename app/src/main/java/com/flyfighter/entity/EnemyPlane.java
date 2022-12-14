@@ -100,7 +100,8 @@ public class EnemyPlane extends Spirit {
     public int explode;
 
     public int patrolY;//最大的巡逻Y范围
-    public int patrolX;//最大的巡逻X范围
+    public int patrolStartX;//最小的巡逻X范围
+    public int patrolEnd;//最大的巡逻X范围
     public long patrolTime;//开始巡逻的时间
 
     public long shootTime;//发射时间,默认为创建时间
@@ -146,7 +147,8 @@ public class EnemyPlane extends Spirit {
     }
 
     private void makeRandomSpeedAndPosition() {
-        patrolX = getRand(MainWindow.windowWidth / 4);
+        patrolStartX = getRand(MainWindow.windowWidth / 4);
+        patrolEnd = getRand(MainWindow.windowWidth / 4) + getRand(MainWindow.windowWidth / 2);
         patrolY = getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
     }
 
@@ -286,7 +288,7 @@ public class EnemyPlane extends Spirit {
                 }
                 if ((x <= 0 && speedX < 0) || (x >= MainWindow.windowWidth - width && speedX > 0)) {
                     speedX = -speedX;
-                } else if (x <= patrolX || x >= MainWindow.windowWidth - patrolX) {
+                } else if (x <= patrolStartX || x >= patrolEnd) {
                     speedX = -speedX;
                 }
             }

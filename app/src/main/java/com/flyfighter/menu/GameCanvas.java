@@ -1163,8 +1163,8 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         }
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
-            if (mPlayer.y <= MainWindow.windowHeight - 350) {
-                mPlayer.state = 2;
+            if (mPlayer.y <= MainWindow.windowHeight - 400) {
+                mPlayer.state = -1;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
