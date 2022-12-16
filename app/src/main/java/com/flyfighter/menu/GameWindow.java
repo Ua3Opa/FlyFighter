@@ -19,7 +19,9 @@ public class GameWindow extends FrameLayout {
     }
 
     public void handleQuitGame() {
-        gameCanvas.QuitGame();
+        if (gameCanvas!=null) {
+            gameCanvas.QuitGame();
+        }
     }
 
     public void handleContinuePlay() {

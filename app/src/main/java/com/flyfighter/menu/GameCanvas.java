@@ -175,7 +175,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gameInit();
         stageInit();
         mResLoaded = true;
-        MainDataHolder.continueNum = 5;
+        MainDataHolder.continueNum = 3;
         MainDataHolder.runState.setValue(RunState.Running);
     }
 
@@ -525,7 +525,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
             return false;
         }
         if (checkIfHit(boss.x, boss.y, boss.width, boss.height, bomb.x, bomb.y, bomb.source.get(0).getWidth(), bomb.source.get(0).getHeight())) {
-            boss.height -= bomb.power;
+            boss.health -= bomb.power;
         }
         return false;
     }
@@ -1142,13 +1142,13 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         } else {
             type = (18 + this.getRand(28));
         }
-        int patrolNum =0;
+        int patrolNum = 0;
         for (EnemyPlane enemy : enemys) {
-            if (enemy.pauseDelay !=0) {
+            if (enemy.pauseDelay != 0) {
                 patrolNum++;
             }
         }
-        enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty,patrolNum));
+        enemys.add(EnemyPlane.mallocEnemy(type, mDifficulty, patrolNum));
         gEnemyCount++;
         gApearEnemyType++;
         if (mDestroyCount >= destoryCount && gEnemyCount >= maxShowNum) {
@@ -1164,7 +1164,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         if (mPlayer.state == -1) {//进场
             mPlayer.y -= 5;
             if (mPlayer.y <= MainWindow.windowHeight - 400) {
-                mPlayer.state = -1;
+                mPlayer.state = 0;
                 mPlayer.onFire = true;
             }
         } else {//正常状态
@@ -1220,7 +1220,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     }
 
     private EnemyPlane getNearestEnemy(Missile missile) {
-        if (boss!=null) {
+        if (boss != null) {
             return boss;
         }
         if (enemys.isEmpty()) {
@@ -1539,10 +1539,9 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
     private void showMissionInfo(Canvas canvas) {
         if (mIsGameOver && !mIsGameFinished) {
             gTempDelay++;
-            if (MainDataHolder.continueNum == 0) {
-                this.mIsGameFinished = true;
-                showGameOver();
-            } else if (MainDataHolder.runState.getValue() != RunState.GameOver) {
+            if (MainDataHolder.continueNum == 0 && MainDataHolder.runState.getValue() == RunState.Running) {
+                MainDataHolder.runState.postValue(RunState.Ranking);
+            } else if (MainDataHolder.runState.getValue() == RunState.Running) {
                 MainDataHolder.runState.postValue(RunState.GameOver);
             }
             return;
@@ -1566,7 +1565,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
                 if (this.mMission >= 5) {
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[5], ResInit.otherImage[3], 50);
                 } else {
-                    if (ResInit.otherImage[9] ==null) {
+                    if (ResInit.otherImage[9] == null) {
                         ResInit.loadPicInit(context);
                     }
                     drawBitmapCenterVertical(canvas, ResInit.otherImage[9], ResInit.otherImage[3], 50);

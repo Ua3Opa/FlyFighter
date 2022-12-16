@@ -2,6 +2,7 @@ package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
 
+import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
@@ -133,8 +134,12 @@ public class EnemyPlane extends Spirit {
         enemy.makeRandomAction(patrolNum);
         enemy.makeRandomSpeedAndPosition();
 
-        enemy.shootTime = System.currentTimeMillis() - enemy.getRand(enemy.fireDelay) - enemy.fireDelay / 2;
-        enemy.fireDelay = (int) (enemy.fireDelay * 1.2);
+        if (RMS.difficulty == 0) {
+            enemy.shootTime = System.currentTimeMillis() - enemy.fireDelay / 2;
+            enemy.fireDelay = (int) (enemy.fireDelay * 1.2);
+        } else {
+            enemy.shootTime = System.currentTimeMillis() - enemy.getRand(enemy.fireDelay);
+        }
 
         if (1 == gameDifficulty) {//hard模式
             enemy.health = enemy.health + enemy.health >> 2;
@@ -148,7 +153,7 @@ public class EnemyPlane extends Spirit {
 
     private void makeRandomSpeedAndPosition() {
         patrolStartX = getRand(MainWindow.windowWidth / 4);
-        patrolEnd = getRand(MainWindow.windowWidth / 4) + getRand(MainWindow.windowWidth / 2);
+        patrolEnd = MainWindow.windowWidth / 4 + getRand(MainWindow.windowWidth / 2);
         patrolY = getRand(MainWindow.windowHeight / 6) + MainWindow.windowHeight / 6;
     }
 
@@ -212,7 +217,7 @@ public class EnemyPlane extends Spirit {
             // 00是横向的
             if (speedX == 0) {
                 int direction = getRand(2) == 1 ? 1 : -1;
-                speedX = direction * (getRand(3) + 1);
+                speedX = direction * (getRand(3) + 2);
             }
 
             if (speedX > 0) {
@@ -286,9 +291,7 @@ public class EnemyPlane extends Spirit {
                 } else if (System.currentTimeMillis() - patrolTime > pauseDelay) {
                     y = y + speedY;
                 }
-                if ((x <= 0 && speedX < 0) || (x >= MainWindow.windowWidth - width && speedX > 0)) {
-                    speedX = -speedX;
-                } else if (x <= patrolStartX || x >= patrolEnd) {
+                if ((x <= patrolStartX && speedX < 0) || (x >= patrolEnd && speedX > 0)) {
                     speedX = -speedX;
                 }
             }

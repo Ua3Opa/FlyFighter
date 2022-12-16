@@ -217,7 +217,9 @@ public class MainWindow extends FrameLayout {
                 closeHelpMenu();
                 break;
             case Quit:
-                gameWindow.handleQuitGame();
+                if (gameWindow!=null) {
+                    gameWindow.handleQuitGame();
+                }
                 break;
         }
 

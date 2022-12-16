@@ -29,7 +29,7 @@ public class Item extends Spirit {
 
     @Override
     protected void initSpiritBitmap() {
-        source.addAll(splitBitmap(ResInit.itemImage[type-1], picNum));
+        source.addAll(splitBitmap(ResInit.itemImage[type - 1], picNum));
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Item extends Spirit {
         recordMovePosition();
         x += speedX;
         y += speedY;
-        if (x < 0 || x > (MainWindow.windowWidth - width)) {
+        if ((x <= 0 && speedX < 0) || (x >= (MainWindow.windowWidth - width) && speedX > 0)) {
             speedX = -speedX;
         }
     }

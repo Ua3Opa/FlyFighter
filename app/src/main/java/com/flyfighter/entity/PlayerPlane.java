@@ -2,6 +2,7 @@ package com.flyfighter.entity;
 
 import android.graphics.Bitmap;
 
+import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
 
@@ -11,9 +12,9 @@ import java.util.List;
 public class PlayerPlane extends Spirit {
 
     public static final int[][] playerData = new int[][]{
-            {1, 106, 320, 20, 6, 6, 1},
-            {2, 105, 320, 16, 6, 6, 1},
-            {3, 105, 320, 24, 6, 6, 1}};
+            {1, 106, 320, 20, 6, 5, 1},
+            {2, 105, 320, 16, 6, 5, 1},
+            {3, 105, 320, 24, 6, 5, 1}};
     //-1 : 初始化完成,需要进场
     // 0 : 正常可控制状态
     // 2 : 无敌
@@ -58,6 +59,8 @@ public class PlayerPlane extends Spirit {
                 (MainWindow.windowWidth - player.width) / 2,
                 (MainWindow.windowHeight + player.height),
                 data[3], data[4], data[5], data[6]);
+
+        player.bomb = RMS.difficulty == 1 ? 5 : 4;
 
         player.bombType = playerType;
         for (int i = 0; i < player.bomb; i++) {
