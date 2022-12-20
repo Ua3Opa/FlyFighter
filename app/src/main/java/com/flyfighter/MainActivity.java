@@ -21,6 +21,7 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.admanager.AdManagerAdRequest;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
@@ -48,6 +49,12 @@ public class MainActivity extends AppCompatActivity {
 
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+        RequestConfiguration requestConfiguration = MobileAds.getRequestConfiguration()
+                .toBuilder()
+                .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_G)
+                .build();
+        MobileAds.setRequestConfiguration(requestConfiguration);
 
         MobileAds.initialize(this, initializationStatus -> {
         });
