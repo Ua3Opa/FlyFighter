@@ -175,7 +175,7 @@ public class GameCanvas extends SurfaceView implements SurfaceHolder.Callback, R
         gameInit();
         stageInit();
         mResLoaded = true;
-        MainDataHolder.continueNum = 3;
+        MainDataHolder.continueNum = 5;
         MainDataHolder.runState.setValue(RunState.Running);
     }
 

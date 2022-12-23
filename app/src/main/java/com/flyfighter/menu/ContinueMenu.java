@@ -98,12 +98,12 @@ public class ContinueMenu extends FrameLayout {
             tvContinue.setClickable(false);
             MainDataHolder.continueNum--;
             handler.removeCallbacksAndMessages(null);
-//            if (MainDataHolder.continueNum > 2) {
+            if (MainDataHolder.continueNum > 2) {
                 MainDataHolder.runState.setValue(RunState.ContinuePlay);
-//            } else {
-//                MainDataHolder.mainRewordAdState.setValue(true);
-//            }
-            //postDelayed(() -> tvContinue.setClickable(true), 3000);
+            } else {
+                MainDataHolder.mainRewordAdState.setValue(true);
+            }
+            postDelayed(() -> tvContinue.setClickable(true), 3000);
         });
 
         tvQuit = buildTextView(26);
