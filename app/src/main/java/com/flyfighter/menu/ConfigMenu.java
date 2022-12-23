@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.flyfighter.enums.RunState;
+import com.flyfighter.holder.MainDataHolder;
 import com.flyfighter.res.RMS;
 import com.flyfighter.res.ResInit;
 import com.flyfighter.view.MainWindow;
@@ -190,7 +192,7 @@ public class ConfigMenu extends FrameLayout {
 
     private void handleClickEvent(float x, float y) {
         if (!inRect(backgroundRect, x, y, false)) {
-            ((MainWindow) getParent()).removeView(ConfigMenu.class);
+            MainDataHolder.runState.setValue(RunState.Close_Config);
             RMS.saveConfigSetting();
             return;
         }
@@ -203,11 +205,13 @@ public class ConfigMenu extends FrameLayout {
         } else if (inRect(clickRect[2], x, y)) {
             ivSound.setLayoutParams(setPosition(clickRect[2], ivSound.getLayoutParams()));
             RMS.loadSound = true;
+            RMS.volume = 0.3f;
         } else if (inRect(clickRect[3], x, y)) {
             ivSound.setLayoutParams(setPosition(clickRect[3], ivSound.getLayoutParams()));
             RMS.loadSound = false;
+            RMS.volume = 0;
         } else if (inRect(clickRect[5], x, y)) {
-            ((MainWindow) getParent()).removeView(ConfigMenu.class);
+            MainDataHolder.runState.setValue(RunState.Close_Config);
         }
         RMS.saveConfigSetting();
     }

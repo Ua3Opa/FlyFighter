@@ -197,6 +197,13 @@ public class MainActivity extends AppCompatActivity {
         if (!MainDataHolder.mainRewordAdState.getValue()) {
             MainDataHolder.runState.postValue(RunState.Pause);
         }
+    }
 
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        if (!MainDataHolder.mainRewordAdState.getValue()) {
+            MainDataHolder.runState.postValue(RunState.Resume);
+        }
     }
 }

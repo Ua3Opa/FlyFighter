@@ -43,6 +43,7 @@ public class MainWindow extends FrameLayout {
     private ConfigMenu configMenu;
     private SelectPlayerMenu selectPlayerMenu;
     private HelpMenu helpMenu;
+    private MainMenuBackground backGroundMenu;
 
     public MainWindow(Context context) {
         this(context, null);
@@ -77,7 +78,7 @@ public class MainWindow extends FrameLayout {
     }
 
     private void loadMainMenu() {
-        addView(new MainMenuBackground(mContext));
+        addView(backGroundMenu = new MainMenuBackground(mContext));
         addView(new MainMenu(mContext), buildCenterLayoutParams());
     }
 
@@ -107,6 +108,7 @@ public class MainWindow extends FrameLayout {
 
     public void startGame(int player) {
         removeAllViews();
+        backGroundMenu = null;
         stopPlayMedia();
         gameWindow = new GameWindow(mContext, player);
         addView(gameWindow, buildCenterLayoutParams());
@@ -186,7 +188,11 @@ public class MainWindow extends FrameLayout {
                 removeContinue();
                 break;
             case Pause:
+                stopPlayMedia();
                 showPause();
+                break;
+            case Resume:
+                loadBackGroundSounds();
                 break;
             case GameOver:
                 showContinue();
@@ -199,6 +205,7 @@ public class MainWindow extends FrameLayout {
                 break;
             case Close_Config:
                 closeConfig();
+                loadBackGroundSounds();
                 break;
             case Ranking:
                 showRanking();
@@ -217,12 +224,18 @@ public class MainWindow extends FrameLayout {
                 closeHelpMenu();
                 break;
             case Quit:
-                if (gameWindow!=null) {
+                if (gameWindow != null) {
                     gameWindow.handleQuitGame();
                 }
                 break;
         }
 
+    }
+
+    private void loadBackGroundSounds() {
+        if (backGroundMenu != null) {
+            backGroundMenu.loadSound();
+        }
     }
 
     private void showConfig() {

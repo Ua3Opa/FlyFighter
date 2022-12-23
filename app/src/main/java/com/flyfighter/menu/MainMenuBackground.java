@@ -53,16 +53,21 @@ public class MainMenuBackground extends androidx.appcompat.widget.AppCompatImage
         handler.sendEmptyMessageDelayed(0, animDuration);
     }
 
-    private void loadSound() {
+    public void loadSound() {
         AssetManager assets = context.getAssets();
         try {
+            if (MainWindow.soundPlayer[1] != null) {
+                MainWindow.soundPlayer[1].stop();
+                MainWindow.soundPlayer[1].reset();
+            }
+
             MainWindow.soundPlayer[0] = new MediaPlayer();
             MainWindow.soundPlayer[1] = new MediaPlayer();
 
             MainWindow.soundPlayer[0].setDataSource(assets.openFd("sound/0menuselect.wav"));
             MainWindow.soundPlayer[1].setDataSource(assets.openFd("sound/13menumusic.wav"));
-            float volume = RMS.loadSound ? RMS.volume : 0;
-            MainWindow.soundPlayer[1].setVolume(volume, volume);
+
+            MainWindow.soundPlayer[1].setVolume(RMS.volume, RMS.volume);
             MainWindow.soundPlayer[1].prepare();
             MainWindow.soundPlayer[1].setLooping(true);
             MainWindow.soundPlayer[1].start();

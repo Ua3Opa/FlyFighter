@@ -80,7 +80,7 @@ public class MainMenu extends LinearLayout {
         }
     }
 
-    private void handlePlayMenuSelectSound() {
+    public void handlePlayMenuSelectSound() {
         try {
             MainWindow.soundPlayer[0].reset();
             MainWindow.soundPlayer[0].setDataSource(context.getAssets().openFd("sound/0menuselect.wav"));
