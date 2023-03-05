@@ -5,6 +5,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -40,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
 
         mainWindow = findViewById(R.id.mainWindow);
         adsContainer = findViewById(R.id.adsContainer);
+
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        getWindow().setAttributes(lp);
+
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(0);
         decorView.setSystemUiVisibility(

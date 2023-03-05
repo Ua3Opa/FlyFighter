@@ -23,13 +23,13 @@ android {
 
     signingConfigs {
         debug {
-            storeFile file('E:\\AsProject\\FlyFighter\\app\\flyfighter.jks')
+            storeFile file('E:\\Files\\FlyFighter\\app\\flyfighter.jks')
             storePassword 'songmdff'
             keyAlias 'flyfighter'
             keyPassword 'songmdff'
         }
         release {
-            storeFile file('E:\\AsProject\\FlyFighter\\app\\flyfighter.jks')
+            storeFile file('E:\\Files\\FlyFighter\\app\\flyfighter.jks')
             storePassword 'songmdff'
             keyAlias 'flyfighter'
             keyPassword 'songmdff'

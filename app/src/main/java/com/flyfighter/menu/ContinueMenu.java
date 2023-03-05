@@ -110,6 +110,7 @@ public class ContinueMenu extends FrameLayout {
         tvQuit.setText("Quit");
         tvQuit.setOnClickListener(v -> {
             MainDataHolder.runState.setValue(RunState.Quit);
+            handler.removeCallbacksAndMessages(null);
         });
         rlButton.addView(tvQuit, new RelativeLayout.LayoutParams(rl));
 
